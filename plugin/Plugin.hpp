@@ -7,6 +7,7 @@
 #ifndef CSP_VESTEC_PLUGIN_HPP
 #define CSP_VESTEC_PLUGIN_HPP
 
+#include "Singleton.hpp"
 #include "../../../src/cs-core/PluginBase.hpp"
 #include "../../../src/cs-utils/Property.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
@@ -23,6 +24,10 @@ class Plugin : public cs::core::PluginBase {
  public:
   struct Properties {
     cs::utils::Property<bool> mEnabled = true;
+  };
+
+  struct Settings {
+    std::optional<std::string>      mSomeInfo;  ///< Some info text
   };
 
   Plugin();

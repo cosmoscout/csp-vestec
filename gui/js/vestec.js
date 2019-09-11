@@ -29,4 +29,5 @@ $(document).ready(function () {
 			isMini = true;
 		}
 	});
+	$('#vestec-system').attr('src', 'http://vestec.epcc.ed.ac.uk/');
 });

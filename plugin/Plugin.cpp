@@ -30,6 +30,13 @@ EXPORT_FN void destroy(cs::core::PluginBase *pluginBase)
 namespace cs::vestec
 {
 
+void from_json(const nlohmann::json& j, Plugin::Settings& o) {
+  cs::core::parseSection("csp-vestec", [&] {
+    o.mSomeInfo = cs::core::parseProperty<std::string>("vestec-info", j);
+  });
+}
+
+
 Plugin::Plugin()
     : mProperties(std::make_shared<Properties>())
 {
@@ -44,15 +51,15 @@ void Plugin::InitGUI()
 void Plugin::init()
 {
 	std::cout << "Init: CosmoScout VR Plugin for the VESTEC EU project" << std::endl;
-	m_pGUIFlowEditor = new cs::gui::GuiItem("file://../share/resources/gui/vestecSidebar.html");
-	mGuiManager->addGuiItem(m_pGUIFlowEditor, 10);
-	m_pGUIFlowEditor->setRelSizeX(1.0f);
-	m_pGUIFlowEditor->setRelSizeY(1.0f);
-	m_pGUIFlowEditor->setRelPositionY(1.f);
-	m_pGUIFlowEditor->setRelPositionX(0.f);
-	m_pGUIFlowEditor->setRelOffsetY(-0.45f);
-	m_pGUIFlowEditor->setRelOffsetX(0.5f);
-	m_pGUIFlowEditor->waitForFinishedLoading();
+	m_pVESTEC_UI = new cs::gui::GuiItem("file://../share/resources/gui/vestecSidebar.html");
+	mGuiManager->addGuiItem(m_pVESTEC_UI, 10);
+	m_pVESTEC_UI->setRelSizeX(1.0f);
+	m_pVESTEC_UI->setRelSizeY(1.0f);
+	m_pVESTEC_UI->setRelPositionY(1.f);
+	m_pVESTEC_UI->setRelPositionX(0.f);
+	m_pVESTEC_UI->setRelOffsetY(-0.45f);
+	m_pVESTEC_UI->setRelOffsetX(0.5f);
+	m_pVESTEC_UI->waitForFinishedLoading();
 
 	//Read the plugin settings from the scene config
 	mPluginSettings = mAllSettings->mPlugins.at("csp-vestec");
@@ -61,9 +68,6 @@ void Plugin::init()
 	mVestecTransform = std::make_shared<cs::scene::CelestialAnchorNode>(mSceneGraph->GetRoot(), mSceneGraph->GetNodeBridge(), "", "Earth", "IAU_Earth");
 	mSolarSystem->registerAnchor(mVestecTransform);
 
-	// Give the flow editor some time to initialize
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	
 	//Initialize and append gui elements
 	InitGUI();
 
