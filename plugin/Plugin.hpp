@@ -14,6 +14,8 @@
 #include "../../../src/cs-gui/GuiItem.hpp"
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 
+#include "NodeEditor/NodeEditor.hpp"
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -59,6 +61,9 @@ class Plugin : public cs::core::PluginBase {
 
   // The node editor is used to create a vestec html side
   cs::gui::GuiItem*		m_pVESTEC_UI = nullptr;
+
+  //Node editor for VESTEC
+  VNE::NodeEditor* m_pNodeEditor;
 };
 
 } // namespace cs::vestec

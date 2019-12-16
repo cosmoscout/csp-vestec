@@ -17,6 +17,9 @@
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
+//Include VESTEC nodes
+#include "VestecNodes/CinemaDBNode.hpp"
+
 EXPORT_FN cs::core::PluginBase *create()
 {
   return new cs::vestec::Plugin;
@@ -71,6 +74,21 @@ void Plugin::init()
 	//Initialize and append gui elements
 	InitGUI();
 
+	//Initialize vestec flow editor
+	m_pNodeEditor = new VNE::NodeEditor(m_pVESTEC_UI);
+
+	// TODO:Create the Node editor
+	m_pNodeEditor->RegisterSocketType("CINEMA_DB");
+
+	// Register our node types for the flow editor
+	m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
+		[](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
+		[](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
+
+	m_pNodeEditor->InitNodeEditor();
+
+	
+
 	std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################"<< std::endl;
 }
 
@@ -78,6 +96,7 @@ void Plugin::deInit()
 {
   mSolarSystem->unregisterAnchor(mVestecTransform);
   mSceneGraph->GetRoot()->DisconnectChild(mVestecTransform.get());
+  delete m_pNodeEditor;
 }
 
 void Plugin::update()

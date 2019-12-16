@@ -18,15 +18,29 @@ file(GLOB SOURCE_FILES *.cpp)
 file(GLOB HEADER_FILES *.hpp)
 source_group(plugin FILES ${SOURCE_FILES} ${HEADER_FILES})
 
+# Node Editor and interfaces
+file(GLOB NODEEDITOR_SOURCE_FILES NodeEditor/*.cpp)
+file(GLOB NODEEDITOR_HEADER_FILES NodeEditor/*.hpp)
+source_group(nodeeditor FILES ${NODEEDITOR_SOURCE_FILES} ${NODEEDITOR_HEADER_FILES})
+
+# VESTEC nodes for the floweditor
+file(GLOB VESTEC_SOURCE_FILES VestecNodes/*.cpp)
+file(GLOB VESTEC_HEADER_FILES VestecNodes/*.hpp)
+source_group(vestecnodes FILES ${VESTEC_SOURCE_FILES} ${VESTEC_HEADER_FILES})
+
+
 # The cosmoscout vr plugin library loaded at runtime by cosmoscout vr
 add_library(csp-vestec SHARED
   ${SOURCE_FILES} ${HEADER_FILES} 
+  ${NODEEDITOR_SOURCE_FILES} ${NODEEDITOR_HEADER_FILES}
+  ${VESTEC_SOURCE_FILES} ${VESTEC_HEADER_FILES}
 )
 
 # Enable OpenMP
 if (UNIX)
     target_compile_options(csp-vestec PUBLIC -fopenmp)
 endif(UNIX)
+
 
 # Define link libraries
 target_link_libraries(csp-vestec
