@@ -10,4 +10,5 @@ cmake_minimum_required(VERSION 3.12)
 add_subdirectory(plugin)
 
 # ------------------------------------- INSTALL FILES REQUIRED BY THE PLUGIN ------------------------------
-install(DIRECTORY "gui"               DESTINATION "share/resources")
+install(DIRECTORY "gui"                DESTINATION "share/resources")
+install(DIRECTORY "data"               DESTINATION "share/vestec/data")

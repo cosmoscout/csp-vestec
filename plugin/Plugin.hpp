@@ -29,7 +29,7 @@ class Plugin : public cs::core::PluginBase {
   };
 
   struct Settings {
-    std::optional<std::string>      mSomeInfo;  ///< Some info text
+    std::string      mVestecDataDir;  ///< Directory where selected simulation data is stored
   };
 
   Plugin();

@@ -35,7 +35,7 @@ namespace cs::vestec
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::parseSection("csp-vestec", [&] {
-    o.mSomeInfo = cs::core::parseProperty<std::string>("vestec-info", j);
+    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
   });
 }
 
@@ -54,7 +54,13 @@ void Plugin::InitGUI()
 void Plugin::init()
 {
 	std::cout << "Init: CosmoScout VR Plugin for the VESTEC EU project" << std::endl;
-	m_pVESTEC_UI = new cs::gui::GuiItem("file://../share/resources/gui/vestecSidebar.html");
+	
+	//Add the VESTEC tab to the sidebar
+    mGuiManager->addPluginTabToSideBarFromHTML("VESTEC", "whatshot", "../share/resources/gui/vestec_tab.html");
+	//mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/vestec_sidebar.js");
+
+	//Adding the main GUI item for VESTEC to cosmoscout
+	m_pVESTEC_UI = new cs::gui::GuiItem("file://../share/resources/gui/vestecWindow.html",1);
 	mGuiManager->addGuiItem(m_pVESTEC_UI, 10);
 	m_pVESTEC_UI->setRelSizeX(1.0f);
 	m_pVESTEC_UI->setRelSizeY(1.0f);
@@ -87,7 +93,8 @@ void Plugin::init()
 
 	m_pNodeEditor->InitNodeEditor();
 
-	
+	//Parse data dir and fill gui items
+	//mPluginSettings.mVestecDataDir
 
 	std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################"<< std::endl;
 }

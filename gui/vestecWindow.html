@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@4.10.2/build/d3.min.js"></script>
 	<script type="text/javascript" src="third-party/js/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="third-party/js/d3-node-editor.js"></script>
-	
+
 	<script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
 	<script type="text/javascript" src="third-party/js/bootstrap-select.min.js"></script>
 	
@@ -27,20 +27,30 @@
 
 <body>
 	<div id="floweditor-resizeable" class="ui-widget-content grey-text text-darken-4 resizeable">
-		<div id="node-editor-body" class="node-editor-container row">
-			<i id="minimize" class="material-icons minimize">picture_in_picture</i>
-			<div id="vestec-info" class="vestec-info">NodeEditor</div>
-			<div id="d3-node-editor" class="node-editor"></div>
+		<div id="vestec-container" class="vestec-container">
+			<!-- Navigation header -->
+			<nav>
+				<div class="row nav nav-tabs" id="vestec-tabs" role="tablist">
+					<a class="nav-item nav-link active" id="nav-vestec-portal-tab" data-toggle="tab" href="#nav-vestec-portal" role="tab" aria-controls="nav-vestec-portal" aria-selected="active">VESTEC Portal</a>
+					<a class="nav-item nav-link" id="nav-node-editor-tab" data-toggle="tab" href="#nav-node-editor" role="tab" aria-controls="nav-node-editor" aria-selected="">VESTEC Data Analysis</a>
+				</div>
+				<i id="minimize" class="material-icons minimize">picture_in_picture</i>
+			</nav>
+			<!-- Tabs content -->
+			<div class="vestec-tabs row" id="nav-tabContents">
+				<!-- VESTEC Portal Tab -->
+				<div class="tab-pane vestec-tab-content fade show active" id="nav-vestec-portal" role="tabpanel" aria-labelledby="nav-vestec-portal-tab">
+					<!--	-disable-site-isolation-trials -->
+					<iframe id="vestec-system" class="vestec-ui vestec-portal" frameborder="2"></iframe>
+				</div>
+
+				<!-- Data Analytics Tab -->
+				<div class="tab-pane vestec-tab-content fade" id="nav-node-editor" role="tabpanel" aria-labelledby="nav-node-editor-tab">
+					<div id="d3-node-editor" class="node-editor"></div>
+				</div>			
+			</div>
 		</div>
 	</div>
-	<!--<div id="vestec-resizeable" class="ui-widget-content grey-text text-darken-4 resizeable">
-			<div id="vestec-editor-body" class="row">
-			    <div id="vestec-info" class="vestec-info">VESTEC</div>
-				<div id="vestec-main-page" class="vestec-main">
-					<iframe id="vestec-system" class="vestec-ui" frameborder="2"></iframe>
-				</div>
-			</div>
-	</div>-->
 </body>
 
 </html>
