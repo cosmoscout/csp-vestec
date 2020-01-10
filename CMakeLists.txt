@@ -11,4 +11,4 @@ add_subdirectory(plugin)
 
 # ------------------------------------- INSTALL FILES REQUIRED BY THE PLUGIN ------------------------------
 install(DIRECTORY "gui"                DESTINATION "share/resources")
-install(DIRECTORY "data"               DESTINATION "share/vestec/data")
+install(DIRECTORY "data"               DESTINATION "share/vestec")

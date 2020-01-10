@@ -22,8 +22,10 @@
 
 namespace cs::vestec {
 
-class Plugin : public cs::core::PluginBase {
+class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
  public:
+  static std::string dataDir; ///< Directory where simulation data is stored
+
   struct Properties {
     cs::utils::Property<bool> mEnabled = true;
   };

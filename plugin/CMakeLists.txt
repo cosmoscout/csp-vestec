@@ -6,12 +6,26 @@
 
 # ----------------------------------------------------------------- build plugin
 
-# Find dependencies
+if (DEFINED ENV{VTK_CMAKE_CONFIG_DIR})
+  SET(VTK_DIR "$ENV{VTK_CMAKE_CONFIG_DIR}")
+else()
+  SET(VTK_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake/vtk-8.1)
+endif()
+
+if (DEFINED ENV{TTKVTK_DIR})
+  SET(TTKVTK_DIR "$ENV{TTKVTK_DIR}")
+else()
+  SET(TTKVTK_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake/ttk)
+endif()
+
+# Find third party dependencies
 set(Boost_REALPATH ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS OFF)
 
 find_package(Boost REQUIRED COMPONENTS filesystem program_options)
+find_package(TTKVTK REQUIRED)
+
 
 # The cosmoscout vr vestec plugin project
 file(GLOB SOURCE_FILES *.cpp)
@@ -47,8 +61,9 @@ target_link_libraries(csp-vestec
     PUBLIC
         cs-core
         cs-gui
-		    cs-scene
+		cs-scene
         Boost::program_options
+        ttk::vtk::ttkAll
 )
 
 # Define include direcories

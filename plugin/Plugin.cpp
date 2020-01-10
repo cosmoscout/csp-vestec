@@ -30,6 +30,9 @@ EXPORT_FN void destroy(cs::core::PluginBase *pluginBase)
   delete pluginBase;
 }
 
+//Init data dir
+std::string cs::vestec::Plugin::dataDir = "";
+
 namespace cs::vestec
 {
 
@@ -38,7 +41,6 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
     o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
   });
 }
-
 
 Plugin::Plugin()
     : mProperties(std::make_shared<Properties>())
@@ -93,8 +95,8 @@ void Plugin::init()
 
 	m_pNodeEditor->InitNodeEditor();
 
-	//Parse data dir and fill gui items
-	//mPluginSettings.mVestecDataDir
+	//Set the data dir which is used by other classes
+	Plugin::dataDir = mPluginSettings.mVestecDataDir;
 
 	std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################"<< std::endl;
 }
