@@ -5,32 +5,34 @@
  *  Author: flat_ma
  */
 
-#include "../Plugin.hpp"
-#include "../NodeEditor/NodeEditor.hpp"
 #include "CinemaDBNode.hpp"
+#include "../NodeEditor/NodeEditor.hpp"
+#include "../Plugin.hpp"
 
-#include <vtkTable.h>
-#include <ttkCinemaReader.h>
-#include <ttkCinemaQuery.h>
 #include <ttkCinemaProductReader.h>
-#include <vtkStringArray.h>
+#include <ttkCinemaQuery.h>
+#include <ttkCinemaReader.h>
 #include <vtkIntArray.h>
+#include <vtkStringArray.h>
+#include <vtkTable.h>
 
-#include <set>
 #include <json.hpp>
+#include <set>
 // for convenience
 using json = nlohmann::json;
 
-CinemaDBNode::CinemaDBNode(cs::gui::GuiItem *pItem, int id) : VNE::Node(pItem,id) 
-{
-
+CinemaDBNode::CinemaDBNode(cs::gui::GuiItem* pItem, int id)
+    : VNE::Node(pItem, id) {
 }
 
-CinemaDBNode::~CinemaDBNode() {}
+CinemaDBNode::~CinemaDBNode() {
+}
 
-std::string CinemaDBNode::GetName() { return "CinemaDBNode"; }
+std::string CinemaDBNode::GetName() {
+  return "CinemaDBNode";
+}
 
-void CinemaDBNode::Init(VNE::NodeEditor *pEditor) {
+void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
   std::string code = R"(
 		//Namespace
 		var CinemaDBNode = {};
@@ -117,73 +119,70 @@ void CinemaDBNode::Init(VNE::NodeEditor *pEditor) {
         }
     });
     )"; // END OF JAVASCRIPT CODE
-  	pEditor->GetGuiItem()->executeJavascript(code);
+  pEditor->GetGuiItem()->executeJavascript(code);
 
-    //Example callback for communication from JavaScript to C++
-    pEditor->GetGuiItem()->registerCallback<double, std::string>(
-        "readCaseNames", ([pEditor](double id, std::string params) {
-            pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id);
-    })); 
+  // Example callback for communication from JavaScript to C++
+  pEditor->GetGuiItem()->registerCallback<double, std::string>(
+      "readCaseNames", ([pEditor](double id, std::string params) {
+        pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id);
+      }));
 
-     pEditor->GetGuiItem()->registerCallback<double, std::string>(
-        "getTimeSteps", ([pEditor](double id, std::string params) {
-            pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
-    })); 
+  pEditor->GetGuiItem()->registerCallback<double, std::string>(
+      "getTimeSteps", ([pEditor](double id, std::string params) {
+        pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
+      }));
 }
 
-void CinemaDBNode::ReadCaseNames(int id)
-{
-    std::cout << "Reading use case names " << std::endl;
-    std::cout << "Node id:  " << id << std::endl;
-    //Example call from C++ to JavaScript
-    json args;
+void CinemaDBNode::ReadCaseNames(int id) {
+  std::cout << "Reading use case names " << std::endl;
+  std::cout << "Node id:  " << id << std::endl;
+  // Example call from C++ to JavaScript
+  json args;
 
-    std::cout << "Reading cinema database from: " << cs::vestec::Plugin::dataDir << std::endl;
-    ttk::globalDebugLevel_ = 3;
-    auto reader = vtkSmartPointer<ttkCinemaReader>::New();
-    reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
-    reader->Update();
+  std::cout << "Reading cinema database from: " << cs::vestec::Plugin::dataDir << std::endl;
+  ttk::globalDebugLevel_ = 3;
+  auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
+  reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
+  reader->Update();
 
-    auto table = vtkTable::SafeDownCast(reader->GetOutput());
+  auto table = vtkTable::SafeDownCast(reader->GetOutput());
 
-    std::set<std::string> caseNames;
-    auto caseNamesColumn =vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
+  std::set<std::string> caseNames;
+  auto caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
 
-    for(int x=0; x < table->GetNumberOfRows(); ++x)
-       caseNames.insert(caseNamesColumn->GetValue(x));
-    for(auto entry: caseNames)
-        args.push_back(entry);
-    
-    m_pItem->callJavascript("CinemaDBNode.fillCaseNames", id, args.dump());
+  for (int x = 0; x < table->GetNumberOfRows(); ++x)
+    caseNames.insert(caseNamesColumn->GetValue(x));
+  for (auto entry : caseNames)
+    args.push_back(entry);
+
+  m_pItem->callJavascript("CinemaDBNode.fillCaseNames", id, args.dump());
 }
 
- void CinemaDBNode::GetTimeSteps(int id)
- {
-    std::cout << "Reading time values " << std::endl;
-    std::cout << "Node id:  " << id << std::endl;
-    //Example call from C++ to JavaScript
-    json args;
-    
+void CinemaDBNode::GetTimeSteps(int id) {
+  std::cout << "Reading time values " << std::endl;
+  std::cout << "Node id:  " << id << std::endl;
+  // Example call from C++ to JavaScript
+  json args;
 
-    std::cout << "Reading cinema database from: " << cs::vestec::Plugin::dataDir << std::endl;
-    ttk::globalDebugLevel_ = 3;
-    auto reader = vtkSmartPointer<ttkCinemaReader>::New();
-    reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
-    reader->Update();
+  std::cout << "Reading cinema database from: " << cs::vestec::Plugin::dataDir << std::endl;
+  ttk::globalDebugLevel_ = 3;
+  auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
+  reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
+  reader->Update();
 
-    auto table = vtkTable::SafeDownCast(reader->GetOutput());
-    table->Print(std::cout);
-    std::set<int> caseNames;
-    table->GetColumnByName("TimeValue")->Print(std::cout);
-    auto timeColumn =vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
+  auto table = vtkTable::SafeDownCast(reader->GetOutput());
+  table->Print(std::cout);
+  std::set<int> caseNames;
+  table->GetColumnByName("TimeValue")->Print(std::cout);
+  auto timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
 
-    args.push_back(timeColumn->GetValue(0));//min
-    args.push_back(timeColumn->GetValue(table->GetNumberOfRows()-1));//max
+  args.push_back(timeColumn->GetValue(0));                            // min
+  args.push_back(timeColumn->GetValue(table->GetNumberOfRows() - 1)); // max
 
-    for(int x=0; x < table->GetNumberOfRows(); ++x)
-       caseNames.insert(timeColumn->GetValue(x));
-    for(auto entry: caseNames)
-        args.push_back(entry);
+  for (int x = 0; x < table->GetNumberOfRows(); ++x)
+    caseNames.insert(timeColumn->GetValue(x));
+  for (auto entry : caseNames)
+    args.push_back(entry);
 
-    m_pItem->callJavascript("CinemaDBNode.createSlider", id, args.dump());
- }
+  m_pItem->callJavascript("CinemaDBNode.createSlider", id, args.dump());
+}

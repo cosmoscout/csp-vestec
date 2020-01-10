@@ -15,30 +15,30 @@ class NodeEditor;
 }
 
 class CinemaDBNode : public VNE::Node {
-public:
-	  CinemaDBNode(cs::gui::GuiItem *pItem, int id);
-	  virtual ~CinemaDBNode();
+ public:
+  CinemaDBNode(cs::gui::GuiItem* pItem, int id);
+  virtual ~CinemaDBNode();
 
-	  /**
-	   * These static functions are required and needs to be implemented
-	   */
-	  static void Init(VNE::NodeEditor *pEditor);
+  /**
+   * These static functions are required and needs to be implemented
+   */
+  static void Init(VNE::NodeEditor* pEditor);
 
-	  /**
-	   * Returns the unique identifier for the node as string
-	   */
-	  static std::string GetName();
-	  
-private:
-	  /**
-	   * Read the use case names from the Cinema data base and fill the combobox
-	   */
-	  void ReadCaseNames(int id);
+  /**
+   * Returns the unique identifier for the node as string
+   */
+  static std::string GetName();
 
-	  /**
-	   * Read the time steps from the Cinema data base and initialize the silder
-	   */
-	  void GetTimeSteps(int id);
+ private:
+  /**
+   * Read the use case names from the Cinema data base and fill the combobox
+   */
+  void ReadCaseNames(int id);
+
+  /**
+   * Read the time steps from the Cinema data base and initialize the silder
+   */
+  void GetTimeSteps(int id);
 };
 
 #endif /* CINEMADB_SOURCE_NODE_HPP_ */

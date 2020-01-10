@@ -19,46 +19,47 @@
 template <typename T>
 class Singleton {
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // ----------------------------------------------------------- public interface
-public:
-
-    // Gets the instance. Singletons are classes, which are only instanciated
-    // once. This method will create this instance if necessary and return a
-    // reference to it.
-    static T& Get() {
-        if (m_pIinstance == nullptr) {
-            m_pIinstance = new T();
-        }
-
-        return *m_pIinstance;
+  ///////////////////////////////////////////////////////////////////////////////
+  // ----------------------------------------------------------- public interface
+ public:
+  // Gets the instance. Singletons are classes, which are only instanciated
+  // once. This method will create this instance if necessary and return a
+  // reference to it.
+  static T& Get() {
+    if (m_pIinstance == nullptr) {
+      m_pIinstance = new T();
     }
 
-    // Deletes the instance of this Singleton. The instance of this singleton will
-    // be deleted by this method.
-    static void DestroyInstance() {
-        if (m_pIinstance != nullptr) {
-            delete m_pIinstance;
-            m_pIinstance = nullptr;
-        }
+    return *m_pIinstance;
+  }
+
+  // Deletes the instance of this Singleton. The instance of this singleton will
+  // be deleted by this method.
+  static void DestroyInstance() {
+    if (m_pIinstance != nullptr) {
+      delete m_pIinstance;
+      m_pIinstance = nullptr;
     }
+  }
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // -------------------------------------------------------- protected interface
-protected:
+  ///////////////////////////////////////////////////////////////////////////////
+  // -------------------------------------------------------- protected interface
+ protected:
+  // Constructor. Has to be private in derived classe.
+  Singleton() {
+  }
 
-    // Constructor. Has to be private in derived classe.
-    Singleton() {}
+  ///////////////////////////////////////////////////////////////////////////////
+  // ---------------------------------------------------------- private interface
+ private:
+  Singleton(Singleton const& copy) {
+  }
 
-    ///////////////////////////////////////////////////////////////////////////////
-    // ---------------------------------------------------------- private interface
-private:
-    Singleton(Singleton const& copy) {}
-
-    static T* m_pIinstance;
+  static T* m_pIinstance;
 };
 
 // the actual instance of this template
-template <typename T> T* Singleton<T>::m_pIinstance = nullptr;
+template <typename T>
+T* Singleton<T>::m_pIinstance = nullptr;
 
 #endif // SINGLETON_HPP_HEADER_GUARD

@@ -7,11 +7,11 @@
 #ifndef CSP_VESTEC_PLUGIN_HPP
 #define CSP_VESTEC_PLUGIN_HPP
 
-#include "Singleton.hpp"
 #include "../../../src/cs-core/PluginBase.hpp"
-#include "../../../src/cs-utils/Property.hpp"
-#include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-gui/GuiItem.hpp"
+#include "../../../src/cs-scene/CelestialAnchorNode.hpp"
+#include "../../../src/cs-utils/Property.hpp"
+#include "Singleton.hpp"
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 
 #include "NodeEditor/NodeEditor.hpp"
@@ -31,7 +31,7 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
   };
 
   struct Settings {
-    std::string      mVestecDataDir;  ///< Directory where selected simulation data is stored
+    std::string mVestecDataDir; ///< Directory where selected simulation data is stored
   };
 
   Plugin();
@@ -62,9 +62,9 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
   std::shared_ptr<Properties>                     mProperties;
 
   // The node editor is used to create a vestec html side
-  cs::gui::GuiItem*		m_pVESTEC_UI = nullptr;
+  cs::gui::GuiItem* m_pVESTEC_UI = nullptr;
 
-  //Node editor for VESTEC
+  // Node editor for VESTEC
   VNE::NodeEditor* m_pNodeEditor;
 };
 

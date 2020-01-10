@@ -9,7 +9,7 @@
 #include <sstream>
 namespace VNE {
 
-NodeEditor::NodeEditor(cs::gui::GuiItem *pWebView) {
+NodeEditor::NodeEditor(cs::gui::GuiItem* pWebView) {
   m_pWebView = pWebView;
 }
 
@@ -17,18 +17,18 @@ NodeEditor::~NodeEditor() {
   // TODO Auto-generated destructor stub
 }
 
-cs::gui::GuiItem *NodeEditor::GetGuiItem() {
-	return m_pWebView;
+cs::gui::GuiItem* NodeEditor::GetGuiItem() {
+  return m_pWebView;
 }
 
 int NodeEditor::GetNumberOfNodes() {
-	return m_mapNodes.size();
+  return m_mapNodes.size();
 }
 
 int NodeEditor::GetMaxNodeID() {
   int maxID = 0;
 
-  for (auto const& it: m_mapNodes) {
+  for (auto const& it : m_mapNodes) {
     if (it.first > maxID)
       maxID = it.first;
   }
@@ -36,12 +36,11 @@ int NodeEditor::GetMaxNodeID() {
   return maxID;
 }
 
-void NodeEditor::RegisterNodeType(
-    std::string name, std::string category,
-    std::function<Node *(cs::gui::GuiItem *,int id )> fFactory,
-    std::function<void(NodeEditor *)> fInit) {
+void NodeEditor::RegisterNodeType(std::string name, std::string category,
+    std::function<Node*(cs::gui::GuiItem*, int id)> fFactory,
+    std::function<void(NodeEditor*)>                fInit) {
   m_mapCreatorFunctions[name] = fFactory;
-  m_mapInitFunctions[name] = fInit;
+  m_mapInitFunctions[name]    = fInit;
   m_mapCategories[category].push_back(name);
 }
 
@@ -52,14 +51,13 @@ void NodeEditor::RegisterSocketType(std::string name) {
 void NodeEditor::AddNewNode(int id, std::string name) {
   auto it = m_mapCreatorFunctions.find(name);
   if (it != m_mapCreatorFunctions.end()) {
-    std::cout << "\t [NodeEditor::AddNewNode] New " << name
-              << "node added to editor! ID = " << id << std::endl;
-    Node *pNode = m_mapCreatorFunctions[name](m_pWebView,id);
+    std::cout << "\t [NodeEditor::AddNewNode] New " << name << "node added to editor! ID = " << id
+              << std::endl;
+    Node* pNode    = m_mapCreatorFunctions[name](m_pWebView, id);
     m_mapNodes[id] = pNode;
-  }else{
-	  std::cout << "\t[NodeEditor::AddNewNode] No creator function found for "<<  name << std::endl;
+  } else {
+    std::cout << "\t[NodeEditor::AddNewNode] No creator function found for " << name << std::endl;
   }
-
 }
 
 void NodeEditor::DeleteNode(int id) {
@@ -67,8 +65,7 @@ void NodeEditor::DeleteNode(int id) {
   if (it != m_mapNodes.end()) {
     delete it->second;
     m_mapNodes.erase(it);
-    std::cout << "\t[NodeEditor::DeleteNode] Delete node with id " << id
-              << std::endl;
+    std::cout << "\t[NodeEditor::DeleteNode] Delete node with id " << id << std::endl;
   }
 }
 
@@ -77,13 +74,13 @@ void NodeEditor::AddConnection(int from, int to, int fromPort, int toPort) {
   auto it2 = m_mapNodes.find(to);
 
   if (it1 != m_mapNodes.end() && it2 != m_mapNodes.end()) {
-    Node *node1 = it1->second;
-    Node *node2 = it2->second;
+    Node* node1 = it1->second;
+    Node* node2 = it2->second;
 
     node1->AddOutportNode(to, node2, fromPort, toPort);
     node2->AddInportNode(from, node1, fromPort, toPort);
-    std::cout << "\t[NodeEditor::AddConnection] Add connection from node "
-              << from << " to node " << to << std::endl;
+    std::cout << "\t[NodeEditor::AddConnection] Add connection from node " << from << " to node "
+              << to << std::endl;
   } else {
     std::cout << "\t[NodeEditor::AddConnection] Error in node editor! Nodes "
                  "for connection are not found"
@@ -96,22 +93,21 @@ void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
   auto it2 = m_mapNodes.find(to);
 
   if (it1 != m_mapNodes.end() && it2 != m_mapNodes.end()) {
-    Node *node1 = it1->second;
-    Node *node2 = it2->second;
+    Node* node1 = it1->second;
+    Node* node2 = it2->second;
 
     node2->RemoveInputNode(from, fromPort, toPort);
     node1->RemoveOutputNode(to, fromPort, toPort);
-    std::cout
-        << "\t[NodeEditor::DeleteConnection] Delete connection from node "
-        << from << " to node " << to << std::endl;
+    std::cout << "\t[NodeEditor::DeleteConnection] Delete connection from node " << from
+              << " to node " << to << std::endl;
   } else if (it1 != m_mapNodes.end()) {
-    Node *node = it1->second;
+    Node* node = it1->second;
     node->RemoveOutputNode(to, fromPort, toPort);
     std::cout << "\t[NodeEditor::DeleteConnection] Only removed output "
                  "ports of node "
               << from << std::endl;
   } else if (it2 != m_mapNodes.end()) {
-    Node *node = it2->second;
+    Node* node = it2->second;
     node->RemoveInputNode(from, fromPort, toPort);
     std::cout << "\t[NodeEditor::DeleteConnection] Only removed input ports "
                  "of node "
@@ -119,27 +115,25 @@ void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
   }
 }
 
-
 void NodeEditor::InitNodeEditor() {
   m_pWebView->executeJavascript("var nodeEditor = {};");
   m_pWebView->executeJavascript("nodeEditor.sockets = {};");
   m_pWebView->executeJavascript("nodeEditor.nodes = {};");
 
   // Loop over sockets and create/insert javascript code
-  for (auto const &name : m_vecSockets) {
-    m_pWebView->executeJavascript("nodeEditor.sockets." + name +
-                                  " = new D3NE.Socket('data', '" + name +
-                                  "', 'hint');");
+  for (auto const& name : m_vecSockets) {
+    m_pWebView->executeJavascript(
+        "nodeEditor.sockets." + name + " = new D3NE.Socket('data', '" + name + "', 'hint');");
   }
 
   // Loop over registered node types and make them in javascript available
-  for (auto const &nodeInitFunction : m_mapInitFunctions) {
+  for (auto const& nodeInitFunction : m_mapInitFunctions) {
     nodeInitFunction.second(this);
   }
 
   // Initialize the node editor
   std::string strJavascriptIniCode = "nodeEditor.components = [";
-  for (auto const &name : m_mapInitFunctions) {
+  for (auto const& name : m_mapInitFunctions) {
     strJavascriptIniCode += "nodeEditor.nodes." + name.first + ",";
   }
   strJavascriptIniCode.back() = ']';
@@ -147,9 +141,9 @@ void NodeEditor::InitNodeEditor() {
 
   // Create string for the menu
   strJavascriptIniCode += "nodeEditor.menu = new D3NE.ContextMenu({";
-  for (auto const &category : m_mapCategories) {
+  for (auto const& category : m_mapCategories) {
     strJavascriptIniCode += "'" + category.first + "':{";
-    for (auto const &node : category.second) {
+    for (auto const& node : category.second) {
       strJavascriptIniCode += "'" + node + "': nodeEditor.nodes." + node + ",";
     }
     strJavascriptIniCode.back() = '}';
@@ -219,15 +213,14 @@ void NodeEditor::InitNodeEditor() {
   m_pWebView->waitForFinishedLoading();
   // Register the required callbacks
   m_pWebView->registerCallback<double, std::string>(
-      "AddNewNode", ([this](double const &filterID, std::string name) {
+      "AddNewNode", ([this](double const& filterID, std::string name) {
         this->AddNewNode((int)filterID, name);
       }));
 
   m_pWebView->registerCallback<double>(
-      "DeleteNode",
-      ([this](double const &filterID) { this->DeleteNode((int)filterID); }));
+      "DeleteNode", ([this](double const& filterID) { this->DeleteNode((int)filterID); }));
 
- m_pWebView->registerCallback<double, double, double, double>(
+  m_pWebView->registerCallback<double, double, double, double>(
       "AddConnection", ([this](double const& outputNode, double const& inputNode,
                             double const& outputPort, double const& inputPort) {
         this->AddConnection((int)outputNode, (int)inputNode, (int)outputPort, (int)inputPort);
@@ -239,4 +232,4 @@ void NodeEditor::InitNodeEditor() {
         this->DeleteConnection((int)outputNode, (int)inputNode, (int)outputPort, (int)inputPort);
       }));
 }
-}
+} // namespace VNE
