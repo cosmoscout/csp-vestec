@@ -20,6 +20,7 @@
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
+#include "VestecNodes/RenderNode2D.hpp"
 
 EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;
@@ -95,6 +96,12 @@ void Plugin::init() {
         return new WildFireSourceNode(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(RenderNode2D::GetName(), "Renderer",
+    [this](cs::gui::GuiItem* webView, int id) {
+      return new RenderNode2D(mPluginSettings, webView, id);
+    },
+    [](VNE::NodeEditor* editor) { RenderNode2D::Init(editor); });
 
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();

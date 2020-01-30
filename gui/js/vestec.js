@@ -1,8 +1,8 @@
 // entry point ------------------------------------------------
 $(document).ready(function () {
 	console.log("Init VESTEC plugin in javascript done");
-	//$('#vestec-system').attr('src', 'http://vestec.epcc.ed.ac.uk/');
-	$('#vestec-system').attr('src', 'https://www.nvidia.com/');
+	$('#vestec-system').attr('src', 'http://vestec.epcc.ed.ac.uk/');
+	//$('#vestec-system').attr('src', 'https://www.nvidia.com/');
 	var isMiniFlowEdit = false;
 	var w_flowEdit = 0;
 	var h_flowEdit = 0;
