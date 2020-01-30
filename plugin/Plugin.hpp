@@ -31,7 +31,8 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
   };
 
   struct Settings {
-    std::string mVestecDataDir; ///< Directory where selected simulation data is stored
+    std::string mVestecDataDir; ///< Directory where cinemaDB is stored
+    std::string mFireDir;       ///< Directory where the fire simulation output is stored
   };
 
   Plugin();

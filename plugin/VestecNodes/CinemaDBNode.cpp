@@ -161,7 +161,7 @@ void CinemaDBNode::ReadCaseNames(int id) {
 void CinemaDBNode::GetTimeSteps(int id) {
   std::cout << "Reading time values " << std::endl;
   std::cout << "Node id:  " << id << std::endl;
-  // Example call from C++ to JavaScript
+  // Example call from C++ to JavaScriptargs.push_back(timeColumn->GetValue(0));                    
   json args;
 
   std::cout << "Reading cinema database from: " << cs::vestec::Plugin::dataDir << std::endl;

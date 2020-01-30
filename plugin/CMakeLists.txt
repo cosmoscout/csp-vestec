@@ -42,6 +42,10 @@ file(GLOB VESTEC_SOURCE_FILES VestecNodes/*.cpp)
 file(GLOB VESTEC_HEADER_FILES VestecNodes/*.hpp)
 source_group(vestecnodes FILES ${VESTEC_SOURCE_FILES} ${VESTEC_HEADER_FILES})
 
+# VESTEC js files for the floweditor
+file(GLOB VESTEC_JS_FILES VestecNodes/*.js)
+source_group(vestecJS FILES ${VESTEC_JS_FILES})
+
 
 # The cosmoscout vr plugin library loaded at runtime by cosmoscout vr
 add_library(csp-vestec SHARED
@@ -61,6 +65,7 @@ target_link_libraries(csp-vestec
     PUBLIC
         cs-core
         cs-gui
+        cs-utils
 		cs-scene
         Boost::program_options
         ttk::vtk::ttkAll
@@ -73,8 +78,10 @@ target_include_directories(csp-vestec
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/..
 )
 
-# --------------------------------------------------------------- install plugin
+# --------------------------------------------------------------- install plugin 
 install(
     TARGETS csp-vestec
     DESTINATION "share/plugins"
 )
+# --------------------------------------------------------------- install js files
+install(FILES ${VESTEC_JS_FILES} DESTINATION "bin/js")
