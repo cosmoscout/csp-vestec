@@ -3,34 +3,34 @@ var WildFireSourceNode = {};
 
 //Fill the combobox with the different simulation modes
 WildFireSourceNode.fillSimulationModes = function (id, simModes) {
-    console.log("Adding simulation modes" + simModes);
     var json = JSON.parse(simModes);
     var liModes = "";
 
     for (var i = 0; i < json.length; i++) {
         var obj = json[i];
         var fileName = obj.split("/").pop();
-        liModes += "<option value='"+obj+"'>" + fileName + "</option>";
+        liModes += "<option value='" + obj + "'>" + fileName + "</option>";
     }
 
     $("body").find("#simulation_mode_" + id).html(liModes);
     $("body").find("#simulation_mode_" + id).selectpicker('refresh');
+    $("body").find("#simulation_mode_" + id).trigger('change');
 }
 
 //Fill the combobox with the different simulation outputs per mode
 WildFireSourceNode.fillSimulationOutputs = function (id, simOutputs) {
-    console.log("Adding simulation outputs" + simOutputs);
     var json = JSON.parse(simOutputs);
     var liOutputs = "";
 
     for (var i = 0; i < json.length; i++) {
         var obj = json[i];
         var modeName = obj.split("/").pop();
-        liOutputs += "<option value='"+obj+"'>" + modeName + "</option>";
+        liOutputs += "<option value='" + obj + "'>" + modeName + "</option>";
     }
 
     $("body").find("#simulation_output_" + id).html(liOutputs);
     $("body").find("#simulation_output_" + id).selectpicker('refresh');
+    $("body").find("#simulation_output_" + id).trigger('change');
 }
 
 //Now define the node itself
@@ -47,20 +47,26 @@ nodeEditor.nodes.WildFireSourceNode = new D3NE.Component('WildFireSourceNode', {
         var numControl = new D3NE.Control(htmlText,
             (el, control) => {
                 //Initialize comboboxes
-                $("body").find("#simulation_mode_" + node.id).selectpicker();
-                $("body").find("#simulation_output_" + node.id).selectpicker();
+                $(el).find("#simulation_mode_" + node.id).selectpicker();
+                $(el).find("#simulation_output_" + node.id).selectpicker();
 
-                //Fill the comboboxes with values (read from C++)
+                //Read the files for the given simulation mode and fill combobox when mode is changed
+                $(el).find("#simulation_mode_" + node.id).on("change", function () {
+                    window.call_native("readSimulationFileNames", node.id, $(this).val());
+                });
+
+                //Fill the comboboxes with simulation mode values (read from C++)
                 window.call_native("readSimulationModes", node.id, "");
-                window.call_native("readSimulationFileNames", node.id, "");
 
+                //Update the output when combobox changes
+                $(el).find("#simulation_output_" + node.id).on("change", function () { upd(); });
+
+                //forward data to output
                 function upd() {
-                    //console.log("Combo value "+$( el ).val());
-                    //control.putData("data", JSON.stringify(strJSON["simulations"][i][$( el ).val()]));
+                    var fileName = $(el).find("#simulation_output_" + node.id).val();
+                    console.log("Process file: " + fileName);
+                    control.putData("data", fileName);
                 }
-
-                //Forward the first simulation
-                upd();
             }
         );
 

@@ -35,11 +35,10 @@ std::string cs::vestec::Plugin::dataDir = "";
 namespace cs::vestec {
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-vestec",
-      [&] { 
-        o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
-        o.mFireDir = cs::core::parseProperty<std::string>("vestec-2D-fire", j);
-      });
+  cs::core::parseSection("csp-vestec", [&] {
+    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
+    o.mFireDir       = cs::core::parseProperty<std::string>("vestec-2D-fire", j);
+  });
 }
 
 Plugin::Plugin()
@@ -92,9 +91,10 @@ void Plugin::init() {
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(WildFireSourceNode::GetName(), "Sources",
-      [this](cs::gui::GuiItem* webView, int id) { return new WildFireSourceNode(mPluginSettings, webView, id); },
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new WildFireSourceNode(mPluginSettings, webView, id);
+      },
       [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
-
 
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();

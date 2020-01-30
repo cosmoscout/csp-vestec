@@ -9,9 +9,10 @@
 // for convenience
 using json = nlohmann::json;
 
-WildFireSourceNode::WildFireSourceNode(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
+WildFireSourceNode::WildFireSourceNode(
+    cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
     : VNE::Node(pItem, id) {
-      mPluginConfig = config; 
+  mPluginConfig = config;
 }
 
 WildFireSourceNode::~WildFireSourceNode() {
@@ -22,7 +23,7 @@ std::string WildFireSourceNode::GetName() {
 }
 
 void WildFireSourceNode::Init(VNE::NodeEditor* pEditor) {
-  //Load JavaScipt content from file
+  // Load JavaScipt content from file
   std::string code = cs::utils::filesystem::loadToString("js/WildFireSourceNode.js");
 
   pEditor->GetGuiItem()->executeJavascript(code);
@@ -35,18 +36,18 @@ void WildFireSourceNode::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "readSimulationFileNames", ([pEditor](double id, std::string params) {
-        pEditor->GetNode<WildFireSourceNode>(id)->ReadSimulationFileNames(id);
+        pEditor->GetNode<WildFireSourceNode>(id)->ReadSimulationFileNames(id, params);
       }));
 }
 
 void WildFireSourceNode::ReadSimulationModes(int id) {
-  std::set<std::string> lFiles(cs::utils::filesystem::listFiles(mPluginConfig.mFireDir));
-  json args(lFiles);
+  std::set<std::string> lDirs(cs::utils::filesystem::listDirs(mPluginConfig.mFireDir));
+  json                  args(lDirs);
   m_pItem->callJavascript("WildFireSourceNode.fillSimulationModes", id, args.dump());
 }
 
-void WildFireSourceNode::ReadSimulationFileNames(int id) { 
-  //std::set<std::string> lDirs(cs::utils::filesystem::listDirs(mPluginConfig.mFireDir));
-  //json args(lFiles);
-  //m_pItem->callJavascript("WildFireSourceNode.fillSimulationOutputs", id, args.dump());
+void WildFireSourceNode::ReadSimulationFileNames(int id, std::string simMode) {
+  std::set<std::string> lFiles(cs::utils::filesystem::listFiles(simMode));
+  json                  args(lFiles);
+  m_pItem->callJavascript("WildFireSourceNode.fillSimulationOutputs", id, args.dump());
 }

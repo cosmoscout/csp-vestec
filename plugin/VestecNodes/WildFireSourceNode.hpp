@@ -2,8 +2,8 @@
 #ifndef WILDFIRE_SOURCE_NODE_HPP_
 #define WILDFIRE_SOURCE_NODE_HPP_
 
-#include "../Plugin.hpp"
 #include "../NodeEditor/Node.hpp"
+#include "../Plugin.hpp"
 
 namespace VNE {
 class NodeEditor;
@@ -33,10 +33,10 @@ class WildFireSourceNode : public VNE::Node {
   /**
    * Read available tiff files from the simulation output and add to combobox
    */
-  void ReadSimulationFileNames(int id);
+  void ReadSimulationFileNames(int id, std::string simMode);
 
-  private:
-    cs::vestec::Plugin::Settings mPluginConfig; 
+ private:
+  cs::vestec::Plugin::Settings mPluginConfig;
 };
 
 #endif /* WILDFIRE_SOURCE_NODE_HPP_ */
