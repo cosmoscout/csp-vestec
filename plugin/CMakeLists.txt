@@ -42,6 +42,11 @@ file(GLOB VESTEC_SOURCE_FILES VestecNodes/*.cpp)
 file(GLOB VESTEC_HEADER_FILES VestecNodes/*.hpp)
 source_group(vestecnodes FILES ${VESTEC_SOURCE_FILES} ${VESTEC_HEADER_FILES})
 
+# VESTEC rendering in cosmoscout
+file(GLOB VESTEC_RENDERING_SOURCE_FILES Rendering/*.cpp)
+file(GLOB VESTEC_RENDERING_HEADER_FILES Rendering/*.hpp)
+source_group(rendering FILES ${VESTEC_RENDERING_SOURCE_FILES} ${VESTEC_RENDERING_HEADER_FILES})
+
 # VESTEC js files for the floweditor
 file(GLOB VESTEC_JS_FILES VestecNodes/*.js)
 source_group(vestecJS FILES ${VESTEC_JS_FILES})
@@ -52,6 +57,7 @@ add_library(csp-vestec SHARED
   ${SOURCE_FILES} ${HEADER_FILES} 
   ${NODEEDITOR_SOURCE_FILES} ${NODEEDITOR_HEADER_FILES}
   ${VESTEC_SOURCE_FILES} ${VESTEC_HEADER_FILES}
+  ${VESTEC_RENDERING_SOURCE_FILES} ${VESTEC_RENDERING_HEADER_FILES}
 )
 
 # Enable OpenMP

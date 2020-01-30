@@ -99,7 +99,7 @@ void Plugin::init() {
 
   m_pNodeEditor->RegisterNodeType(RenderNode2D::GetName(), "Renderer",
     [this](cs::gui::GuiItem* webView, int id) {
-      return new RenderNode2D(mPluginSettings, webView, id);
+      return new RenderNode2D(mPluginSettings, webView, id, mSolarSystem.get(), mVestecTransform.get(), mGraphicsEngine.get());
     },
     [](VNE::NodeEditor* editor) { RenderNode2D::Init(editor); });
 
