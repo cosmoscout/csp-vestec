@@ -34,6 +34,12 @@ class RenderNode2D : public VNE::Node {
    */
   static std::string GetName();
 
+  /**
+   * Reads the simulation results from the file into a GL texture
+   * which is used to draw an overlay over a planet
+   */
+  void ReadSimulationResult(std::string filename);
+
  private:
   cs::vestec::Plugin::Settings mPluginConfig;
   cs::scene::CelestialAnchorNode* m_pAnchor = nullptr;

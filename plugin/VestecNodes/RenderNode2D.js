@@ -28,6 +28,7 @@ nodeEditor.nodes.RenderNode2D = new D3NE.Component('RenderNode2D', {
                 
                 control.setValue = val => {
                     console.log("Input changed:" + val);
+                    window.call_native("readSimulationResults", node.id, val.toString());
                 };   
             }
         );
