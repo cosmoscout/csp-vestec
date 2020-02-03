@@ -27,15 +27,52 @@
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
 using json = nlohmann::json;
 
-TextureOverlayRenderer::TextureOverlayRenderer()
-{
+TextureOverlayRenderer::TextureOverlayRenderer() {
+  std::cout << "Compile shader for TextureOverlayRenderer " << std::endl;
+  m_pSurfaceShader = nullptr;
+
+  m_pSurfaceShader = new VistaGLSLShader();
+  m_pSurfaceShader->InitVertexShaderFromString(SURFACE_VERT);
+  m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
+  m_pSurfaceShader->InitGeometryShaderFromString(SURFACE_GEOM);
+
+  if (m_pSurfaceShader->Link()) {
+    //auto loc  = m_pSurfaceShader->GetUniformLocation("uHeightScale");
+  }
+  std::cout << "Compile shader for TextureOverlayRenderer done " << std::endl;
 }
 
 TextureOverlayRenderer::~TextureOverlayRenderer() {
 }
 
+void TextureOverlayRenderer::AddOverlayTexture(TextureOverlayRenderer::GreyScaleTexture texture) {
+  vecTextures.clear();
+
+  std::cout << "[TextureOverlayRenderer::AddOverlayTexture] Uploading texture " << std::endl;
+
+  // Create and upload GL Texture
+  unsigned int glTextureID;
+  glGenTextures(1, &glTextureID);
+  glBindTexture(GL_TEXTURE_2D, glTextureID);
+  // set the texture wrapping/filtering options (on the currently bound texture object)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, texture.x, texture.y, 0, GL_RED,
+      GL_FLOAT, texture.buffer);
+
+  //Store texture id
+  texture.GL_ID = glTextureID;
+  std::cout << "[TextureOverlayRenderer::AddOverlayTexture] Uploading texture done " << std::endl;
+
+  vecTextures.push_back(texture);
+}
+
 bool TextureOverlayRenderer::Do() {
-  //std::cout << "[TextureOverlayRenderer::Do] Rendering in Do()" << std::endl;
+  if(vecTextures.size() == 0)
+    return false;
+  // std::cout << "[TextureOverlayRenderer::Do] Rendering in Do()" << std::endl;
   // save current lighting and meterial state of the OpenGL state machine
   glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
   glEnable(GL_BLEND);
@@ -50,7 +87,23 @@ bool TextureOverlayRenderer::Do() {
       ->GetProjectionProperties()
       ->GetClippingRange(nearClip, farClip);
 
-  //TODO Draw overlay
+  glDisable(GL_DEPTH_TEST);
+
+  // Bind shader before draw
+  m_pSurfaceShader->Bind();
+  //m_pSurfaceShader->SetUniform(m_uFarClipLoc, (float)farClip);  
+  
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, vecTextures[0].GL_ID);
+
+  //Dummy draw
+  glDrawArrays(GL_POINTS, 0, 1);
+
+  glBindTexture(GL_TEXTURE_2D, 0);  
+
+  //Release shader
+  m_pSurfaceShader->Release();
+  
 
   glPopAttrib();
   return true;

@@ -2,6 +2,7 @@
 #include "RenderNode2D.hpp"
 #include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
+#include "../Rendering/TextureOverlayRenderer.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaGraphicsManager.h>
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
@@ -15,7 +16,14 @@
 #include <stb_image.h>
 #include <tiffio.h>
 
+// GDAL c++ includes
+#include "cpl_conv.h" // for CPLMalloc()
+#include "gdal_priv.h"
+#include "gdalwarper.h"
+#include "ogr_spatialref.h"
+
 #include <set>
+#include <iomanip>
 // for convenience
 using json = nlohmann::json;
 
@@ -54,33 +62,86 @@ void RenderNode2D::Init(VNE::NodeEditor* pEditor) {
 
 void RenderNode2D::ReadSimulationResult(std::string filename) {
   // Read TIFF to texture
-  std::cout << "Need to read tiff " << filename << std::endl;
-  TIFFSetWarningHandler(nullptr);
-  auto tif = TIFFOpen(filename.data(), "r");
-  if (!tif) {
+  GDALDataset* poDatasetSrc = nullptr;
+
+  GDALAllRegister();
+  poDatasetSrc = (GDALDataset*)GDALOpen(filename.data(), GA_ReadOnly);
+  if (poDatasetSrc == NULL) {
     std::cout << "Failed to load " << filename << std::endl;
     return;
   }
 
-  uint32 imageWidth, imageHeight, imageLength;
-	uint32 tileWidth, tileLength;
-	uint32 x, y;
-	tdata_t buf;
+  //Get image size
+  double x     = poDatasetSrc->GetRasterXSize();
+  double y     = poDatasetSrc->GetRasterYSize();
+  double count = poDatasetSrc->GetRasterCount();
+  std::cout << "Image size: " << x << " : " << y << " : " << count << std::endl;
 
-	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &imageWidth);
-	TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &imageLength);
-	TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth);
-	TIFFGetField(tif, TIFFTAG_TILELENGTH, &tileLength);
-	buf = _TIFFmalloc(TIFFTileSize(tif));
-	for (y = 0; y < imageLength; y += tileLength)
-	    for (x = 0; x < imageWidth; x += tileWidth)
-		TIFFReadTile(tif, buf, x, y, 0, 0);
-	_TIFFfree(buf);
-	TIFFClose(tif);
-  
+  if (poDatasetSrc->GetProjectionRef() == NULL)
+  {
+    std::cout << "Error: No projection defined " << filename << std::endl;
+    return;
+  }
+    
+  //Get the bounding box (lat, lng) and scalar range
+  std::array<double, 4> bounds;
+  std::array<double, 2> dataRange;
 
-  std::cout << "\t Image width: " << imageWidth << std::endl;
-  std::cout << "\t Image height: " << imageLength << std::endl;
-  std::cout << "\t Tile width: " << tileWidth << std::endl;
-  std::cout << "\t Tile height: " << tileLength << std::endl;
+  int  bGotMin, bGotMax; //like bool if it was successful
+  auto poBand = poDatasetSrc->GetRasterBand(1);
+  dataRange[0] = poBand->GetMinimum(&bGotMin);
+  dataRange[1] = poBand->GetMaximum(&bGotMax);
+  if (!(bGotMin && bGotMax))
+    GDALComputeRasterMinMax((GDALRasterBandH) poBand, TRUE, dataRange.data());
+
+  /////////////////////// Reprojection /////////////////////
+  // Setup output coordinate system that is WGS84 (latitude/longitude).
+  char*       pszDstWKT = nullptr;
+
+  // Setup dst coordinate system
+  OGRSpatialReference oSRS;
+  oSRS.SetWellKnownGeogCS("WGS84");
+  oSRS.exportToWkt(&pszDstWKT);
+
+  // Create the transformation object handle
+  auto hTransformArg =
+      GDALCreateGenImgProjTransformer(poDatasetSrc, poDatasetSrc->GetProjectionRef(), NULL, pszDstWKT, FALSE, 0, 1);
+
+  //Create output coordinate system
+  double adfDstGeoTransform[6];
+  int    nPixels = 0, nLines = 0;
+  CPLErr eErr;
+  eErr = GDALSuggestedWarpOutput(poDatasetSrc, GDALGenImgProjTransform, hTransformArg, adfDstGeoTransform, &nPixels, &nLines);
+  CPLAssert( eErr == CE_None );
+
+  GDALDestroyGenImgProjTransformer( hTransformArg );
+  //std::cout << "Projection Dst: " << pszDstWKT << std::endl;
+  //std::cout << "Origin = " << std::setprecision(10) << adfDstGeoTransform[0] << " " << adfDstGeoTransform[3] << std::endl;
+  //std::cout << "Pixel Size = " << std::setprecision(10) << adfDstGeoTransform[1] << " " << adfDstGeoTransform[5] << std::endl;
+  //Calculate lower left and upper right bounds
+  bounds[0] = adfDstGeoTransform[0] + 0 * adfDstGeoTransform[1] + 0 * adfDstGeoTransform[2];
+  bounds[1] = adfDstGeoTransform[3] + 0 * adfDstGeoTransform[4] + 0 * adfDstGeoTransform[5];
+  bounds[2] = adfDstGeoTransform[0] + x * adfDstGeoTransform[1] + y * adfDstGeoTransform[2];
+  bounds[3] = adfDstGeoTransform[3] + x * adfDstGeoTransform[4] + y * adfDstGeoTransform[5];
+  std::cout << "Extents ll --> ur (lng, lat) " << std::setprecision(10) << bounds[0] << " " << bounds[1] << " " << bounds[2]
+            << " " << bounds[3] << std::endl;
+  /////////////////////// Reprojection End /////////////////
+
+  float* pafScanline;
+  int    nXSize     = poBand->GetXSize();
+  int    nYSize     = poBand->GetYSize();
+  int    bufferSize = sizeof(float) * nXSize * nYSize;
+
+  TextureOverlayRenderer::GreyScaleTexture texture;
+  texture.buffersize   = sizeof(float) * nXSize * nYSize;
+  texture.buffer       = (float*)CPLMalloc(bufferSize);
+  texture.x            = nXSize;
+  texture.y            = nYSize;
+  texture.dataRange    = dataRange;
+  texture.lnglatBounds = bounds;
+
+  poBand->RasterIO(
+      GF_Read, 0, 0, nXSize, nYSize, texture.buffer, nXSize, nYSize, GDT_Float32, 0, 0);
+
+  m_pRenderer->AddOverlayTexture(texture);
 }

@@ -81,7 +81,7 @@ target_link_libraries(csp-vestec
 		cs-scene
         Boost::program_options
         ttk::vtk::ttkAll
-		GDAL::GDAL
+		    GDAL::GDAL
 )
 
 # Define include direcories
