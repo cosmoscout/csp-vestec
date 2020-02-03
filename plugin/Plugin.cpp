@@ -35,7 +35,9 @@ namespace cs::vestec {
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::parseSection("csp-vestec",
-      [&] { o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j); });
+      [&] {
+      o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
+  });
 }
 
 Plugin::Plugin()
@@ -82,7 +84,8 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("CINEMA_DB");
 
   // Register our node types for the flow editor
-  m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(
+      CinemaDBNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
@@ -90,6 +93,7 @@ void Plugin::init() {
 
   // Set the data dir which is used by other classes
   Plugin::dataDir = mPluginSettings.mVestecDataDir;
+
 
   std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################" << std::endl;
 }

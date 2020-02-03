@@ -8,10 +8,13 @@
 #include "CinemaDBNode.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
+#include "../../../../src/cs-utils/filesystem.hpp"
 
 #include <ttkCinemaProductReader.h>
 #include <ttkCinemaQuery.h>
 #include <ttkCinemaReader.h>
+#include <vtkGeometryFilter.h>
+#include <vtkHttpDataSetWriter.h>
 #include <vtkIntArray.h>
 #include <vtkStringArray.h>
 #include <vtkTable.h>
@@ -106,7 +109,7 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
                     console.log("Combo value "+$( el ).val());
                     //control.putData("data", JSON.stringify(strJSON["simulations"][i][$( el ).val()]));
                 }
-                
+
 			    //Forward the first simulation
                 upd();
             }
@@ -115,11 +118,15 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
         return node.addControl(numControl).addOutput(out1);
         },
         worker(node, inputs, outputs){
+console.log('NODE DATA', node.data.data);
             outputs[0] = node.data.data;
         }
     });
     )"; // END OF JAVASCRIPT CODE
-  pEditor->GetGuiItem()->executeJavascript(code);
+  //pEditor->GetGuiItem()->executeJavascript(code);
+
+    const std::string node = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-cinemadb-node.js");
+    pEditor->GetGuiItem()->executeJavascript(node);
 
   // Example callback for communication from JavaScript to C++
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
@@ -131,6 +138,7 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
       "getTimeSteps", ([pEditor](double id, std::string params) {
         pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
       }));
+
 }
 
 void CinemaDBNode::ReadCaseNames(int id) {
@@ -147,13 +155,41 @@ void CinemaDBNode::ReadCaseNames(int id) {
 
   auto table = vtkTable::SafeDownCast(reader->GetOutput());
 
+  /////////////////
+  auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
+  cinemaQuery->SetInputConnection(reader->GetOutputPort());
+  cinemaQuery->SetQueryString(
+      "SELECT * FROM InputTable WHERE CaseName == 'TaylorGreen0' AND TimeStep == 200");
+  cinemaQuery->Update();
+
+  auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();
+  cinemaProduct->SetInputConnection(cinemaQuery->GetOutputPort());
+  cinemaProduct->SetFilepathColumnName(0, 0, 0, 0, "FILE");
+  cinemaProduct->Update();
+  cinemaProduct->GetOutput()->GetBlock(0)->Print(std::cout);
+
+  auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
+  polyFilter->SetInputData(cinemaProduct->GetOutput()->GetBlock(0));
+  polyFilter->Update();
+  polyFilter->GetOutput()->Print(std::cout);
+  /////////////////
+
   std::set<std::string> caseNames;
   auto caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
 
+  std::cout << "PRINT\n";
+  auto dumper = vtkHttpDataSetWriter::New();
+  dumper->SetFileName("bla.json");
+  dumper->SetInputConnection(polyFilter->GetOutputPort());
+  dumper->Write();
+  std::cout << "PRINTAFTER\n";
+
   for (int x = 0; x < table->GetNumberOfRows(); ++x)
     caseNames.insert(caseNamesColumn->GetValue(x));
-  for (auto entry : caseNames)
+  for (auto entry : caseNames) {
+    std::cout << entry << "\n";
     args.push_back(entry);
+  }
 
   m_pItem->callJavascript("CinemaDBNode.fillCaseNames", id, args.dump());
 }
@@ -173,7 +209,7 @@ void CinemaDBNode::GetTimeSteps(int id) {
   auto table = vtkTable::SafeDownCast(reader->GetOutput());
   table->Print(std::cout);
   std::set<int> caseNames;
-  table->GetColumnByName("TimeValue")->Print(std::cout);
+  // table->GetColumnByName("TimeValue")->Print(std::cout);
   auto timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
 
   args.push_back(timeColumn->GetValue(0));                            // min
