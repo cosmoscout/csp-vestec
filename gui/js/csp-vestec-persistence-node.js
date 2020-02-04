@@ -52,6 +52,8 @@ class PersistenceNode {
             return;
         }
 
+        const fileName = `${inputs[0][0].caseName}_${inputs[0][0].timeStep}`;
+
         canvas.classList.remove('hidden');
 
         if (node.data.loaded) {
@@ -59,8 +61,8 @@ class PersistenceNode {
 
             return;
         }
-return;
-        this._loadVtkData().then((data) => {
+
+        this._loadVtkData(fileName).then((data) => {
             node.data.bounds = data.bounds;
             node.data.points = data.points;
             node.data.pointChunks = data.pointChunks;
@@ -81,11 +83,11 @@ return;
         });
     }
 
-    _loadVtkData() {
+    _loadVtkData(fileName) {
         const reader = vtkHttpDataSetReader.newInstance({enableArray: true, fetchGzip: false});
 
         return new Promise((resolve, reject) => {
-            reader.setUrl('http://localhost:8080/bla.json').then((reader) => {
+            reader.setUrl(`../share/vestec/data/export/${fileName}`).then((reader) => {
                 reader.loadData().then(() => {
                     const rawData = reader.getOutputData().getPoints().getData();
 
