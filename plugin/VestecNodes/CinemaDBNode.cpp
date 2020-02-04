@@ -139,6 +139,44 @@ console.log('NODE DATA', node.data.data);
         pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
       }));
 
+  pEditor->GetGuiItem()->registerCallback<std::string, double, double>("convertFile", ([this](std::string caseName, double timeStep, double id){
+      this->ConvertFile(caseName, timeStep, id);
+  }));
+
+}
+
+void CinemaDBNode::ConvertFile(std::string caseName, double timeStep, double id) {
+    auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
+    reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
+    reader->Update();
+
+    auto table = vtkTable::SafeDownCast(reader->GetOutput());
+
+    /////////////////
+    auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
+    cinemaQuery->SetInputConnection(reader->GetOutputPort());
+    cinemaQuery->SetQueryString(
+            "SELECT * FROM InputTable WHERE CaseName == '" + caseName + "' AND TimeStep == " + timeStep);
+    cinemaQuery->Update();
+
+    auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();
+    cinemaProduct->SetInputConnection(cinemaQuery->GetOutputPort());
+    cinemaProduct->SetFilepathColumnName(0, 0, 0, 0, "FILE");
+    cinemaProduct->Update();
+    cinemaProduct->GetOutput()->GetBlock(0)->Print(std::cout);
+
+    auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
+    polyFilter->SetInputData(cinemaProduct->GetOutput()->GetBlock(0));
+    polyFilter->Update();
+    polyFilter->GetOutput()->Print(std::cout);
+    /////////////////
+
+    std::cout << "PRINT\n";
+    auto dumper = vtkHttpDataSetWriter::New();
+    dumper->SetFileName(cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + timeStep);
+    dumper->SetInputConnection(polyFilter->GetOutputPort());
+    dumper->Write();
+    std::cout << "PRINTAFTER\n";
 }
 
 void CinemaDBNode::ReadCaseNames(int id) {
@@ -155,33 +193,9 @@ void CinemaDBNode::ReadCaseNames(int id) {
 
   auto table = vtkTable::SafeDownCast(reader->GetOutput());
 
-  /////////////////
-  auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
-  cinemaQuery->SetInputConnection(reader->GetOutputPort());
-  cinemaQuery->SetQueryString(
-      "SELECT * FROM InputTable WHERE CaseName == 'TaylorGreen0' AND TimeStep == 200");
-  cinemaQuery->Update();
-
-  auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();
-  cinemaProduct->SetInputConnection(cinemaQuery->GetOutputPort());
-  cinemaProduct->SetFilepathColumnName(0, 0, 0, 0, "FILE");
-  cinemaProduct->Update();
-  cinemaProduct->GetOutput()->GetBlock(0)->Print(std::cout);
-
-  auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
-  polyFilter->SetInputData(cinemaProduct->GetOutput()->GetBlock(0));
-  polyFilter->Update();
-  polyFilter->GetOutput()->Print(std::cout);
-  /////////////////
-
   std::set<std::string> caseNames;
   auto caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
 
-  std::cout << "PRINT\n";
-  auto dumper = vtkHttpDataSetWriter::New();
-  dumper->SetFileName("bla.json");
-  dumper->SetInputConnection(polyFilter->GetOutputPort());
-  dumper->Write();
   std::cout << "PRINTAFTER\n";
 
   for (int x = 0; x < table->GetNumberOfRows(); ++x)

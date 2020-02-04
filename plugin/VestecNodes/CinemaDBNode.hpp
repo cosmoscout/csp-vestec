@@ -39,6 +39,8 @@ class CinemaDBNode : public VNE::Node {
    * Read the time steps from the Cinema data base and initialize the silder
    */
   void GetTimeSteps(int id);
+
+  void ConvertFile(std::string caseName, double timeStep, int id);
 };
 
 #endif /* CINEMADB_SOURCE_NODE_HPP_ */
