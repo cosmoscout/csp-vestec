@@ -4,39 +4,45 @@ class CinemaDBNode {
     builder(node) {
         const output = new D3NE.Output("CINEMA_DB", nodeEditor.sockets.CINEMA_DB);
 
-        const caseNames = new D3NE.Control(`<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`, (element, control) => {
+        const nodeControls = new D3NE.Control(`<div id="cinema__controls_${node.id}">
+<select id="case_names_${node.id}" class="combobox"><option>none</option></select>
+<div id="time_slider_${node.id}" class="slider"></div>
+</div>`, (element, control) => {
+            window.call_native("getTimeSteps", node.id, "");
+            window.call_native("readCaseNames", node.id, '');
+
             const select = $(`#case_names_${node.id}`);
 
             select.selectpicker();
-            window.call_native("readCaseNames", node.id, '');
 
             control.putData('caseName', 'none');
 
-            element.addEventListener('change', (event) => {
+            document.getElementById(`case_names_${node.id}`).addEventListener('change', (event) => {
                 control.putData('caseName', (event.target).value);
             });
         });
 
-        const timeSlider = new D3NE.Control(`<div id="time_slider_${node.id}" class="slider"></div>`, (element, control) => {
-            window.call_native("getTimeSteps", node.id, "");
-        });
-
-        node.addControl(caseNames);
-        node.addControl(timeSlider);
+        node.addControl(nodeControls);
         node.addOutput(output);
 
         return node;
     }
 
     worker(node, _inputs, outputs) {
+        if (node.data.caseName === 'none') {
+            return;
+        }
+
+        const timeStep = document.getElementById(`time_slider_${node.id}`).noUiSlider.get();
+
+        window.call_native('convertFile', node.data.caseName, timeStep, node.id);
+
         outputs[0] = [
             {
                 caseName: node.data.caseName,
-                timeStep: document.getElementById(`time_slider_${node.id}`).noUiSlider.get(),
+                timeStep: timeStep,
             }
         ];
-
-        console.log(outputs[0]);
     }
 
     getComponent() {
