@@ -83,6 +83,7 @@ void Plugin::init() {
 
   // TODO:Create the Node editor
   m_pNodeEditor->RegisterSocketType("CINEMA_DB");
+  m_pNodeEditor->RegisterSocketType("POINT_ARRAY");
 
   // Register our node types for the flow editor
   m_pNodeEditor->RegisterNodeType(

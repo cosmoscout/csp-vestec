@@ -1,4 +1,4 @@
-/* global D3NE, nodeEditor, vtk */
+/* global D3NE, nodeEditor, vtk, Selection */
 
 /**
  * Node drawing a persistence diagram for a given vtk file
@@ -64,6 +64,50 @@ class PersistenceNode {
             control.putData('context', context);
             control.putData('loaded', null);
 
+            element.addEventListener('mousedown', (e)=>{
+                e.stopPropagation();
+
+                let select = document.getElementById(`select_${node.id}`);
+                if (select !== null) {
+                    element.parentNode.removeChild(select);
+                }
+
+                element.parentNode.style.position = 'relative';
+                select = document.createElement('div');
+                select.id = `select_${node.id}`;
+                select.style.position = 'absolute';
+                select.style.backgroundColor = 'rgba(221,221,225,0.8)';
+                select.style.border = '1px solid #ddf';
+                select.style.transformOrigin = 'top left';
+                select.style.width = '0px';
+                select.style.height = '0px';
+                select.style.pointerEvents = 'none';
+                select.style.mixBlendMode = 'difference';
+
+                const rect = element.getBoundingClientRect();
+                const x = e.clientX + 20 - rect.left;
+                const y = e.clientY + 20 - rect.top;
+
+                element.parentNode.prepend(select);
+                select.style.left = `${x}px`;
+                select.style.top = `${y}px`;
+            });
+
+            element.addEventListener('mousemove', (e)=>{
+                e.preventDefault();
+                //console.log(e);
+                let select = document.getElementById(`select_${node.id}`);
+                if (select !== null && e.buttons === 1) {
+                    const rect = select.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    select.style.width = `${x}px`;
+                    select.style.height = `${y}px`;
+                }
+
+            });
+
             // A rather hacky approach to reflow the canvas on node move
             const observer = new MutationObserver(function (mutations) {
                 mutations.forEach(() => {
@@ -81,6 +125,10 @@ class PersistenceNode {
         const input = new D3NE.Input('CinemaDB', nodeEditor.sockets.CINEMA_DB);
 
         node.addInput(input);
+
+        const output = new D3NE.Output('Points', nodeEditor.sockets.POINT_ARRAY);
+
+        node.addOutput(output);
 
         return node;
     }
