@@ -139,24 +139,24 @@ console.log('NODE DATA', node.data.data);
         pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<std::string, double, double>("convertFile", ([this](std::string caseName, double timeStep, double id){
-      this->ConvertFile(caseName, timeStep, id);
+  pEditor->GetGuiItem()->registerCallback<std::string, std::string>("convertFile", ([](const std::string& caseName, std::string timeStep){
+      CinemaDBNode::ConvertFile(caseName, timeStep);
   }));
 
 }
 
-void CinemaDBNode::ConvertFile(std::string caseName, double timeStep, double id) {
+void CinemaDBNode::ConvertFile(const std::string &caseName, const std::string &timeStep) {
+    std::cout << "Convert Called for " << caseName << " with ts " << (timeStep) << std::endl;
+
     auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
     reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
     reader->Update();
-
-    auto table = vtkTable::SafeDownCast(reader->GetOutput());
 
     /////////////////
     auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
     cinemaQuery->SetInputConnection(reader->GetOutputPort());
     cinemaQuery->SetQueryString(
-            "SELECT * FROM InputTable WHERE CaseName == '" + caseName + "' AND TimeStep == " + timeStep);
+            "SELECT * FROM InputTable WHERE CaseName == '" + caseName + "' AND TimeStep == " + (timeStep));
     cinemaQuery->Update();
 
     auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();
@@ -171,9 +171,9 @@ void CinemaDBNode::ConvertFile(std::string caseName, double timeStep, double id)
     polyFilter->GetOutput()->Print(std::cout);
     /////////////////
 
-    std::cout << "PRINT\n";
+    std::cout << "PRINT " << (cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)) << "\n";
     auto dumper = vtkHttpDataSetWriter::New();
-    dumper->SetFileName(cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + timeStep);
+    dumper->SetFileName((cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)).c_str());
     dumper->SetInputConnection(polyFilter->GetOutputPort());
     dumper->Write();
     std::cout << "PRINTAFTER\n";
@@ -195,8 +195,6 @@ void CinemaDBNode::ReadCaseNames(int id) {
 
   std::set<std::string> caseNames;
   auto caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
-
-  std::cout << "PRINTAFTER\n";
 
   for (int x = 0; x < table->GetNumberOfRows(); ++x)
     caseNames.insert(caseNamesColumn->GetValue(x));

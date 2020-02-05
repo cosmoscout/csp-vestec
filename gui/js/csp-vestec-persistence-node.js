@@ -1,26 +1,70 @@
-/* global D3NE, nodeEditor, vtkHttpDataSetReader */
+/* global D3NE, nodeEditor, vtk */
 
+/**
+ * Node drawing a persistence diagram for a given vtk file
+ * VTK File containing an array of points
+ */
 class PersistenceNode {
+    /**
+     * Chunk bucket size
+     * @type {number}
+     * @private
+     */
     _chunks = 100;
-    waitTime = 150;
 
-    width = 500;
-    height = 500;
-    margin = 5;
+    /**
+     * Wait time in ms before drawing next chunk
+     * @private
+     * @type {number}
+     */
+    _waitTime = 150;
 
+    /**
+     * Canvas width in px
+     * @type {number}
+     * @private
+     */
+    _width = 500;
+
+    /**
+     * Canvas height in px
+     * @type {number}
+     * @private
+     */
+    _height = 500;
+
+    /**
+     * Margin in px of canvas
+     * @type {number}
+     * @private
+     */
+    _margin = 0;
+
+    /**
+     * Component builder
+     * Creates the canvas control element
+     * Adds CINEMA_DB Input
+     * Adds FILTER Output
+     * @param node
+     * @returns {*}
+     */
     builder(node) {
         const control = new D3NE.Control(`<canvas id="persistence_canvas_${node.id}" class="hidden"></canvas>`, (element, control) => {
-            element.width = this.width + 2 * this.margin;
-            element.height = this.height + 2 * this.margin;
+            element.width = this._width + 2 * this._margin;
+            element.height = this._height + 2 * this._margin;
             element.classList.add('hidden');
 
+            element.style.border = '1px solid rgba(221,221,255,0.5)';
+            element.style.marginTop = '8px';
+
             const context = element.getContext('2d');
-            context.strokeStyle = '#000';
+            context.strokeStyle = 'rgb(221, 221, 255)';
 
             control.putData('canvas', element);
             control.putData('context', context);
-            control.putData('loaded', false);
+            control.putData('loaded', null);
 
+            // A rather hacky approach to reflow the canvas on node move
             const observer = new MutationObserver(function (mutations) {
                 mutations.forEach(() => {
                     element.style.display = 'none';
@@ -41,14 +85,24 @@ class PersistenceNode {
         return node;
     }
 
+    /**
+     * Worker function
+     * Loads the vtk file from input and draws the canvas
+     * @param node {{id: number, data:{canvas:HTMLCanvasElement, context:CanvasRenderingContext2D}}}
+     * @param inputs {any[][]}
+     * @param _outputs {any[][]}
+     */
     worker(node, inputs, _outputs) {
-        console.log('Worker Called', inputs);
-
         const canvas = node.data.canvas;
 
         if (inputs[0].length === 0) {
-            console.log('Input Empty');
+            console.debug(`[Persistence Node #${node.id}] Input Empty`);
             canvas.classList.add('hidden');
+            return;
+        }
+
+        if (inputs[0][0] === null) {
+            console.warn(`[Persistence Node #${node.id}] Case name or time step undefined.`);
             return;
         }
 
@@ -56,26 +110,39 @@ class PersistenceNode {
 
         canvas.classList.remove('hidden');
 
-        if (node.data.loaded) {
-            console.log('already loaded');
+        if (node.data.loaded === fileName) {
+            console.debug(`[Persistence Node #${node.id}] Canvas for file ${fileName} already active.`);
 
             return;
         }
+
+        node.data.context.clearRect(0, 0, this._width, this._height);
 
         this._loadVtkData(fileName).then((data) => {
             node.data.bounds = data.bounds;
             node.data.points = data.points;
             node.data.pointChunks = data.pointChunks;
 
+            this._drawLine(data.pointChunks, node.data.context, data.bounds);
+
+            const promises = [];
+
             node.data.pointChunks.forEach((pointArray, i) => {
-                this._drawPoints(pointArray, node.data.context, node.data.bounds).then(() => {
-                    console.log(`Canvas: ${i}`);
-                    node.data.loaded = true;
-                });
+                console.debug(`[Persistence Node #${node.id}] Drawing point chunk ${i + 1} / ${node.data.pointChunks.length}`);
+                promises.push(this._drawPoints(pointArray, node.data.context, node.data.bounds));
+            });
+
+            Promise.all(promises).then(() => {
+                console.debug(`[Persistence Node #${node.id}] All points drawn.`);
+                node.data.loaded = fileName;
             });
         });
     }
 
+    /**
+     * Component accessor
+     * @returns {D3NE.Component}
+     */
     getComponent() {
         return new D3NE.Component('PersistenceNode', {
             builder: this.builder.bind(this),
@@ -83,11 +150,18 @@ class PersistenceNode {
         });
     }
 
+    /**
+     * Loads the provided vtk file
+     * Chunks points
+     * @param fileName
+     * @returns {Promise<{points:{x1:number, y1:number, z1:number, x2:number, y2:number, z2:number}[], pointChunks:{x1:number, y1:number, z1:number, x2:number, y2:number, z2:number}[][], bounds:number[]}>}}
+     * @private
+     */
     _loadVtkData(fileName) {
-        const reader = vtkHttpDataSetReader.newInstance({enableArray: true, fetchGzip: false});
+        const reader = vtk.IO.Core.vtkHttpDataSetReader.newInstance({enableArray: true, fetchGzip: false});
 
         return new Promise((resolve, reject) => {
-            reader.setUrl(`../share/vestec/data/export/${fileName}`).then((reader) => {
+            reader.setUrl(`/share/vestec/data/export/${fileName}`).then((reader) => {
                 reader.loadData().then(() => {
                     const rawData = reader.getOutputData().getPoints().getData();
 
@@ -108,14 +182,13 @@ class PersistenceNode {
                         });
                     }
 
-                    console.log('VKT loaded');
-
+                    console.info(`VKT data for file ${fileName} loaded.`);
 
                     resolve({
                         points,
                         pointChunks: this._chunkPoints(points),
                         bounds: reader.getOutputData().getBounds()
-                });
+                    });
                 }).catch(() => {
                     reject();
                 });
@@ -126,6 +199,13 @@ class PersistenceNode {
 
     }
 
+    /**
+     * Chunks vtk points into buckets of size _chunks
+     * @see {_chunks}
+     * @param points
+     * @returns {{x1:number, y1:number, z1:number, x2:number, y2:number, z2:number}[][]}
+     * @private
+     */
     _chunkPoints(points) {
         return points.reduce((resultArray, item, index) => {
             const chunkIndex = Math.floor(index / this._chunks);
@@ -140,8 +220,16 @@ class PersistenceNode {
         }, []);
     }
 
-    _waitFor = () => new Promise(r => setTimeout(r, this.waitTime));
+    _waitFor = () => new Promise(r => setTimeout(r, this._waitTime));
 
+    /**
+     * Asynchronously draws points on the context
+     * @param points {{x1:number, y1:number, z1:number, x2:number, y2:number, z2:number}[]}
+     * @param context {CanvasRenderingContext2D}
+     * @param bounds {number[]}
+     * @returns {Promise<void>}
+     * @private
+     */
     async _drawPoints(points, context, bounds) {
         await this._waitFor();
 
@@ -155,12 +243,6 @@ class PersistenceNode {
                 y: this.yPos(point.y2, bounds)
             };
 
-            /*            this.context.beginPath();
-                        this.context.ellipse(p1.x, p1.y, 2, 2, 0, 0, 2*Math.PI);
-                        this.context.stroke();
-                        this.context.beginPath();
-                        this.context.ellipse(p2.x, p2.y, 2, 2, 0, 0, 2*Math.PI);
-                        this.context.stroke();*/
             context.beginPath();
             context.moveTo(p1.x, p1.y);
             context.lineTo(p2.x, p2.y);
@@ -168,42 +250,115 @@ class PersistenceNode {
         });
     }
 
+    /**
+     * Draws the persistence line from min to max
+     * @param points {{x1:number, y1:number, z1:number, x2:number, y2:number, z2:number}[][]}
+     * @param context {CanvasRenderingContext2D}
+     * @param bounds {number[]}
+     * @returns void
+     * @private
+     */
+    _drawLine(points, context, bounds) {
+        const first = points[0][0];
+        let last = points[points.length - 1];
+        last = last[last.length - 1];
+
+        context.beginPath();
+        context.moveTo(
+            this.xPos(first.x1, bounds),
+            this.yPos(first.y1, bounds)
+        );
+        context.lineTo(
+            this.xPos(last.x1, bounds),
+            this.yPos(last.y1, bounds)
+        );
+        context.stroke();
+    }
+
+    /**
+     * Axis x-range start
+     * @returns {number}
+     */
     get rangeXMin() {
-        return this.margin;
+        return this._margin;
     }
 
+    /**
+     * Axis x-range end
+     * @returns {number}
+     */
     get rangeXMax() {
-        return this.width - this.margin;
+        return this._width - this._margin;
     }
 
+    /**
+     * Axis y-range start
+     * @returns {number}
+     */
     get rangeYMin() {
-        return this.height - this.margin;
+        return this._height - this._margin;
     }
 
+    /**
+     * Axis y-range end
+     * @returns {number}
+     */
     get rangeYMax() {
-        return this.margin;
+        return this._margin;
     }
 
+    /**
+     * Bounds x-min
+     * @param bounds {number[]}
+     * @returns {number}
+     */
     static xMin(bounds) {
         return bounds[0];
     }
 
+    /**
+     * Bounds x-max
+     * @param bounds {number[]}
+     * @returns {number}
+     */
     static xMax(bounds) {
         return bounds[1];
     }
 
+    /**
+     * Bounds y-min
+     * @param bounds {number[]}
+     * @returns {number}
+     */
     static yMin(bounds) {
         return bounds[2];
     }
 
+    /**
+     * Bounds y-max
+     * @param bounds {number[]}
+     * @returns {number}
+     */
     static yMax(bounds) {
         return bounds[3];
     }
 
+    /**
+     * Maps a point x-position from 0-1 to canvas width
+     * @param x {number} Point form 0 - 1
+     * @param bounds {number[]}
+     * @returns {number} Mapped point
+     */
     xPos(x, bounds) {
         return (x - PersistenceNode.xMin(bounds)) / (PersistenceNode.xMax(bounds) - PersistenceNode.xMin(bounds)) * (this.rangeXMax - this.rangeXMin) + this.rangeXMin;
     }
 
+    /**
+     * Maps a point y-position from 0-1 to canvas height
+     * @param y {number} Point form 0 - 1
+     * @param bounds {number[]}
+     * @returns {number} Mapped point
+     */
     yPos(y, bounds) {
         // Y = (X-A)/(B-A) * (D-C) + C
         // ( (X-A)/(A-B) * (C-D) ) * -1 + D  - Inverse
@@ -213,7 +368,7 @@ class PersistenceNode {
     }
 }
 
-(()=>{
+(() => {
     const persistenceNode = new PersistenceNode();
 
     nodeEditor.nodes.PersistenceNode = persistenceNode.getComponent();

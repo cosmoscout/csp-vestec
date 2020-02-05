@@ -19,6 +19,7 @@
 
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
+#include "VestecNodes/PersistenceNode.hpp"
 
 EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;
@@ -88,6 +89,11 @@ void Plugin::init() {
       CinemaDBNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
+
+    m_pNodeEditor->RegisterNodeType(
+            PersistenceNode::GetName(), "Output",
+            [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
+            [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
 
   m_pNodeEditor->InitNodeEditor();
 

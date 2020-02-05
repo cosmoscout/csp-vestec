@@ -13,6 +13,9 @@ namespace VNE {
 
 class PersistenceNode : public VNE::Node {
 public:
+    PersistenceNode(cs::gui::GuiItem* pItem, int id);
+    virtual ~PersistenceNode();
+
     /**
      * These static functions are required and needs to be implemented
      */

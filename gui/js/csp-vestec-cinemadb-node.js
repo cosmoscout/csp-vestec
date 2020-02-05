@@ -1,24 +1,39 @@
 /* global nodeEditor, $, noUiSlider */
 
 class CinemaDBNode {
+    /**
+     * Builder function
+     * Creates the case name dropdown
+     * Creates the timestep slider
+     * Puts input content under node.data.caseName and node.data.timeStep
+     * Adds output with data {caseName: string, timeStep: string}
+     * @param node
+     * @returns {*}
+     */
     builder(node) {
         const output = new D3NE.Output("CINEMA_DB", nodeEditor.sockets.CINEMA_DB);
 
-        const nodeControls = new D3NE.Control(`<div id="cinema__controls_${node.id}">
+        const nodeControls = new D3NE.Control(`<div id="cinema_controls_${node.id}">
 <select id="case_names_${node.id}" class="combobox"><option>none</option></select>
 <div id="time_slider_${node.id}" class="slider"></div>
 </div>`, (element, control) => {
-            window.call_native("getTimeSteps", node.id, "");
-            window.call_native("readCaseNames", node.id, '');
+            window.call_native('getTimeSteps', node.id, '');
+            window.call_native('readCaseNames', node.id, '');
 
             const select = $(`#case_names_${node.id}`);
 
             select.selectpicker();
 
             control.putData('caseName', 'none');
+            control.putData('timeStep', null);
+            control.putData('converted', null);
 
-            document.getElementById(`case_names_${node.id}`).addEventListener('change', (event) => {
-                control.putData('caseName', (event.target).value);
+            element.childNodes.forEach(child => {
+                if (child.id === `case_names_${node.id}`) {
+                    child.addEventListener('change', (event) => {
+                        control.putData('caseName', event.target.value);
+                    });
+                }
             });
         });
 
@@ -28,23 +43,40 @@ class CinemaDBNode {
         return node;
     }
 
+    /**
+     * Worker function
+     * Calls window.convertFile for current case name + time step combination -> CS writes JS vtk file
+     *
+     * @param node
+     * @param _inputs
+     * @param outputs
+     */
     worker(node, _inputs, outputs) {
-        if (node.data.caseName === 'none') {
+        if (node.data.caseName === 'none' || node.data.timeStep === null) {
             return;
         }
 
-        const timeStep = document.getElementById(`time_slider_${node.id}`).noUiSlider.get();
+        const fileName = `${node.data.caseName}_${node.data.timeStep}`;
 
-        window.call_native('convertFile', node.data.caseName, timeStep, node.id);
+        if (node.data.converted !== fileName) {
+            console.debug(`[CinemaDB Node #${node.id}] Converting ${fileName}.`);
 
-        outputs[0] = [
-            {
-                caseName: node.data.caseName,
-                timeStep: timeStep,
-            }
-        ];
+            window.call_native('convertFile', node.data.caseName, node.data.timeStep);
+            node.data.converted = fileName;
+        } else {
+            console.debug(`[CinemaDB Node #${node.id}] File ${fileName} already converted.`);
+        }
+
+        outputs[0] = {
+            caseName: node.data.caseName,
+            timeStep: node.data.timeStep,
+        };
     }
 
+    /**
+     * Component accessor
+     * @returns {D3NE.Component}
+     */
     getComponent() {
         return new D3NE.Component('CinemaDBNode', {
             builder: this.builder.bind(this),
@@ -52,6 +84,11 @@ class CinemaDBNode {
         });
     }
 
+    /**
+     * Creates a noUiSlider for given time step args
+     * @param id {string|number} Node id
+     * @param args {string} JSON args
+     */
     static createSlider(id, args) {
         const json = JSON.parse(args);
 
@@ -73,11 +110,11 @@ class CinemaDBNode {
         //Initialize slider
         const slider = document.getElementById(`time_slider_${id}`);
         if (slider === null) {
-            console.error(`Slider with id #time_slider_${id} not found.`);
+            console.error(`[CinemaDB Node #${id}] Slider with id #time_slider_${id} not found.`);
             return;
         }
 
-        if (typeof slider.noUiSlider !== "undefined") {
+        if (typeof slider.noUiSlider !== 'undefined') {
             slider.noUiSlider.destroy();
         }
 
@@ -87,10 +124,24 @@ class CinemaDBNode {
             animate: false,
             range: rangers,
         });
+
+        slider.noUiSlider.on('update', (values) => {
+            const node = nodeEditor.editor.nodes.find(node => node.id === id);
+
+            if (typeof node !== 'undefined') {
+                node.data.timeStep = Number(values[0]).toFixed(0)
+            } else {
+                console.error(`Node with id ${id} not found.`)
+            }
+        });
     }
 
+    /**
+     * Adds content to the case name dropdown
+     * @param id {string|number} Node id
+     * @param caseNames {string} JSON Array of case names
+     */
     static fillCaseNames(id, caseNames) {
-        console.log(caseNames);
         const json = JSON.parse(caseNames);
         let liSimulations = "";
 
@@ -98,14 +149,23 @@ class CinemaDBNode {
             liSimulations += `<option>${json[i]}</option>`;
         }
 
-        $("body").find("#case_names_" + id).html(liSimulations);
-        $("body").find("#case_names_" + id).selectpicker('refresh');
+        const select = $(`#case_names_${id}`);
+
+        select.html(liSimulations);
+        select.selectpicker('refresh');
+
+        const node = nodeEditor.editor.nodes.find(node => node.id === id);
+
+        if (typeof node !== 'undefined') {
+            node.data.caseName = select.val();
+        } else {
+            console.error(`Node with id ${id} not found.`)
+        }
     }
 }
 
-(()=>{
+(() => {
     const cinemaDBNode = new CinemaDBNode();
 
     nodeEditor.nodes.CinemaDBNode = cinemaDBNode.getComponent();
-
 })();
