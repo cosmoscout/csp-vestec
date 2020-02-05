@@ -32,16 +32,21 @@ RenderNode2D::RenderNode2D(cs::vestec::Plugin::Settings const& config, cs::gui::
     cs::core::GraphicsEngine* pEngine)
     : VNE::Node(pItem, id)
     , m_pAnchor(pAnchor) {
-
+  //Store config data for later usage
   mPluginConfig = config;
 
+  //Add a TextureOverlayRenderer to the VISTA scene graph
   auto pSG    = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-  m_pRenderer = new TextureOverlayRenderer();
+  m_pRenderer = new TextureOverlayRenderer(pSolarSystem);
   m_pParent   = pSG->NewOpenGLNode(m_pAnchor, m_pRenderer);
-  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pAnchor, static_cast<int>(650));
+
+  //Render after planets which are rendered at 100
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pAnchor, static_cast<int>(150));
 }
 
-RenderNode2D::~RenderNode2D() {
+RenderNode2D::~RenderNode2D() 
+{
+  delete m_pRenderer;
 }
 
 std::string RenderNode2D::GetName() {
@@ -49,21 +54,34 @@ std::string RenderNode2D::GetName() {
 }
 
 void RenderNode2D::Init(VNE::NodeEditor* pEditor) {
-  // Load JavaScipt content from file
+  // Load JavaScipt content from file which defines the node 
+  // in the node editor 
   std::string code = cs::utils::filesystem::loadToString("js/RenderNode2D.js");
   pEditor->GetGuiItem()->executeJavascript(code);
 
-  // Example callback for communication from JavaScript to C++
+  //Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "readSimulationResults", ([pEditor](double id, std::string params) {
         pEditor->GetNode<RenderNode2D>(id)->ReadSimulationResult(params);
       }));
+
+  //Callback to adjust the opacity of the rendering
+  pEditor->GetGuiItem()->registerCallback<double, double>(
+      "setOpacity", ([pEditor](double id, double val) {
+        pEditor->GetNode<RenderNode2D>(id)->SetOpacity(val);
+      }));
+}
+
+void RenderNode2D::SetOpacity(double val)
+{
+  m_pRenderer->SetOpacity(val);
 }
 
 void RenderNode2D::ReadSimulationResult(std::string filename) {
   // Read TIFF to texture
   GDALDataset* poDatasetSrc = nullptr;
 
+  //Open the file. Needs to be supported by GDAL
   GDALAllRegister();
   poDatasetSrc = (GDALDataset*)GDALOpen(filename.data(), GA_ReadOnly);
   if (poDatasetSrc == NULL) {
@@ -84,16 +102,20 @@ void RenderNode2D::ReadSimulationResult(std::string filename) {
   }
     
   //Get the bounding box (lat, lng) and scalar range
-  std::array<double, 4> bounds;
-  std::array<double, 2> dataRange;
+  std::array<float, 4> bounds;
+  std::array<float, 2> dataRange;
+  std::array<double, 2> d_dataRange;
 
   int  bGotMin, bGotMax; //like bool if it was successful
   auto poBand = poDatasetSrc->GetRasterBand(1);
-  dataRange[0] = poBand->GetMinimum(&bGotMin);
-  dataRange[1] = poBand->GetMaximum(&bGotMax);
+  d_dataRange[0] = poBand->GetMinimum(&bGotMin);
+  d_dataRange[1] = poBand->GetMaximum(&bGotMax);
   if (!(bGotMin && bGotMax))
-    GDALComputeRasterMinMax((GDALRasterBandH) poBand, TRUE, dataRange.data());
+    GDALComputeRasterMinMax((GDALRasterBandH) poBand, TRUE, d_dataRange.data());
 
+  dataRange[0] = d_dataRange[0];
+  dataRange[1] = d_dataRange[1];
+  std::cout << "Data Range: " << dataRange[0] << " -> " << dataRange[1] << std::endl;
   /////////////////////// Reprojection /////////////////////
   // Setup output coordinate system that is WGS84 (latitude/longitude).
   char*       pszDstWKT = nullptr;
@@ -115,15 +137,13 @@ void RenderNode2D::ReadSimulationResult(std::string filename) {
   CPLAssert( eErr == CE_None );
 
   GDALDestroyGenImgProjTransformer( hTransformArg );
-  //std::cout << "Projection Dst: " << pszDstWKT << std::endl;
-  //std::cout << "Origin = " << std::setprecision(10) << adfDstGeoTransform[0] << " " << adfDstGeoTransform[3] << std::endl;
-  //std::cout << "Pixel Size = " << std::setprecision(10) << adfDstGeoTransform[1] << " " << adfDstGeoTransform[5] << std::endl;
-  //Calculate lower left and upper right bounds
+ 
+  //Calculate extents of the image
   bounds[0] = adfDstGeoTransform[0] + 0 * adfDstGeoTransform[1] + 0 * adfDstGeoTransform[2];
   bounds[1] = adfDstGeoTransform[3] + 0 * adfDstGeoTransform[4] + 0 * adfDstGeoTransform[5];
   bounds[2] = adfDstGeoTransform[0] + x * adfDstGeoTransform[1] + y * adfDstGeoTransform[2];
   bounds[3] = adfDstGeoTransform[3] + x * adfDstGeoTransform[4] + y * adfDstGeoTransform[5];
-  std::cout << "Extents ll --> ur (lng, lat) " << std::setprecision(10) << bounds[0] << " " << bounds[1] << " " << bounds[2]
+  std::cout << "Extents (lng, lat) " << std::setprecision(10) << bounds[0] << " " << bounds[1] << " " << bounds[2]
             << " " << bounds[3] << std::endl;
   /////////////////////// Reprojection End /////////////////
 
@@ -140,8 +160,10 @@ void RenderNode2D::ReadSimulationResult(std::string filename) {
   texture.dataRange    = dataRange;
   texture.lnglatBounds = bounds;
 
+  //Read the real buffer from the image
   poBand->RasterIO(
       GF_Read, 0, 0, nXSize, nYSize, texture.buffer, nXSize, nYSize, GDT_Float32, 0, 0);
 
-  m_pRenderer->AddOverlayTexture(texture);
+  //Add the new texture for rendering
+  m_pRenderer->SetOverlayTexture(texture);
 }

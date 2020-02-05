@@ -25,6 +25,8 @@ nodeEditor.nodes.RenderNode2D = new D3NE.Component('RenderNode2D', {
 					animate: false,
 					range: {'min': 0, 'max': 1}
                 });
+
+                slider.noUiSlider.on('slide', function (values, handle) { window.call_native("setOpacity", node.id, parseFloat(values[handle]))});
                 
                 control.setValue = val => {
                     console.log("Input changed:" + val);

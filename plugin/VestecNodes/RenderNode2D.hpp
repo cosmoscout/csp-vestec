@@ -40,11 +40,16 @@ class RenderNode2D : public VNE::Node {
    */
   void ReadSimulationResult(std::string filename);
 
+  /**
+   * Set the opacity of the overlay
+   */
+  void SetOpacity(double val);
+
  private:
-  cs::vestec::Plugin::Settings mPluginConfig;
-  cs::scene::CelestialAnchorNode* m_pAnchor = nullptr;
-  VistaOpenGLNode*                m_pParent = nullptr;
-  TextureOverlayRenderer*         m_pRenderer = nullptr;
+  cs::vestec::Plugin::Settings      mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
+  cs::scene::CelestialAnchorNode*   m_pAnchor = nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
+  VistaOpenGLNode*                  m_pParent = nullptr; //! The VISTA OpenGL node in the scene graph
+  TextureOverlayRenderer*           m_pRenderer = nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
 };
 
 #endif /* RENDERNODE2D_SOURCE_NODE_HPP_ */

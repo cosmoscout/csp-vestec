@@ -64,8 +64,8 @@ nodeEditor.nodes.WildFireSourceNode = new D3NE.Component('WildFireSourceNode', {
                 //forward data to output
                 function upd() {
                     var fileName = $(el).find("#simulation_output_" + node.id).val();
-                    console.log("Process file: " + fileName);
                     control.putData("data", fileName);
+                    if (nodeEditor.engine) nodeEditor.engine.process(nodeEditor.editor.toJSON()); 
                 }
             }
         );
