@@ -11,7 +11,7 @@
   }
   
   .ui-resizable-helper { border: 2px dotted rgb(57, 57, 58); }
-  .ui-resizable-se {background-color: rgb(169, 169, 182); opacity: 0.1;}
+  .ui-resizable-se {background-color: rgb(169, 169, 182); opacity: 0.2;}
   .resizeable
   {
 	top: 50px;

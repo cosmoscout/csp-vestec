@@ -19,9 +19,14 @@
 
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
+<<<<<<< HEAD
 #include "VestecNodes/PersistenceNode.hpp"
+=======
+#include "VestecNodes/RenderNode2D.hpp"
+#include "VestecNodes/WildFireSourceNode.hpp"
+>>>>>>> f8b13306ee518029093778f3c45b8bb512a65fb8
 
-EXPORT_FN cs::core::PluginBase* create() {
+    EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;
 }
 
@@ -35,9 +40,9 @@ std::string cs::vestec::Plugin::dataDir = "";
 namespace cs::vestec {
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-vestec",
-      [&] {
-      o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
+  cs::core::parseSection("csp-vestec", [&] {
+    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
+    o.mFireDir       = cs::core::parseProperty<std::string>("vestec-2D-fire", j);
   });
 }
 
@@ -84,6 +89,7 @@ void Plugin::init() {
   // TODO:Create the Node editor
   m_pNodeEditor->RegisterSocketType("CINEMA_DB");
   m_pNodeEditor->RegisterSocketType("POINT_ARRAY");
+  m_pNodeEditor->RegisterSocketType("TEXTURE");
 
   // Register our node types for the flow editor
   m_pNodeEditor->RegisterNodeType(
@@ -91,16 +97,31 @@ void Plugin::init() {
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
-    m_pNodeEditor->RegisterNodeType(
-            PersistenceNode::GetName(), "Output",
-            [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
-            [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
+  m_pNodeEditor->RegisterNodeType(
+      PersistenceNode::GetName(), "Output",
+      [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
+      [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
 
+  m_pNodeEditor->RegisterNodeType(
+      WildFireSourceNode::GetName(), "Sources",
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new WildFireSourceNode(mPluginSettings, webView, id);
+      },
+      [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(
+      RenderNode2D::GetName(), "Renderer",
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new RenderNode2D(mPluginSettings, webView, id, mSolarSystem.get(),
+            mVestecTransform.get(), mGraphicsEngine.get());
+      },
+      [](VNE::NodeEditor* editor) { RenderNode2D::Init(editor); });
+
+  // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
 
   // Set the data dir which is used by other classes
   Plugin::dataDir = mPluginSettings.mVestecDataDir;
-
 
   std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################" << std::endl;
 }

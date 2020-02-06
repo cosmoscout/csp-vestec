@@ -1,0 +1,1 @@
+This folder is at the beginning just for testing our developments. The real data will be received from the object store later on
