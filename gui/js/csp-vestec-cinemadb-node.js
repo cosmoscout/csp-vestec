@@ -13,31 +13,30 @@ class CinemaDBNode {
     builder(node) {
         const output = new D3NE.Output("CINEMA_DB", nodeEditor.sockets.CINEMA_DB);
 
-        const nodeControls = new D3NE.Control(`<div id="cinema_controls_${node.id}">
-<select id="case_names_${node.id}" class="combobox"><option>none</option></select>
-<div id="time_slider_${node.id}" class="slider"></div>
-</div>`, (element, control) => {
-            window.call_native('getTimeSteps', node.id, '');
+        const caseNames = new D3NE.Control(`<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`, (element, control) => {
             window.call_native('readCaseNames', node.id, '');
-
             const select = $(`#case_names_${node.id}`);
 
             select.selectpicker();
 
             control.putData('caseName', 'none');
-            control.putData('timeStep', null);
             control.putData('converted', null);
 
-            element.childNodes.forEach(child => {
-                if (child.id === `case_names_${node.id}`) {
-                    child.addEventListener('change', (event) => {
-                        control.putData('caseName', event.target.value);
-                    });
+            element.addEventListener('change', (event) => {
+                control.putData('caseName', event.target.value);
+
+                if (typeof nodeEditor.engine !== 'undefined') {
+                    nodeEditor.engine.process(nodeEditor.editor.toJSON());
                 }
             });
         });
 
-        node.addControl(nodeControls);
+        const timeSteps = new D3NE.Control(`<div id="time_slider_${node.id}" class="slider"></div>`, (element, control) => {
+            window.call_native('getTimeSteps', node.id, '');
+        });
+
+        node.addControl(caseNames);
+        node.addControl(timeSteps);
         node.addOutput(output);
 
         return node;
@@ -132,6 +131,13 @@ class CinemaDBNode {
                 node.data.timeStep = Number(values[0]).toFixed(0)
             } else {
                 console.error(`Node with id ${id} not found.`)
+            }
+
+        });
+
+        slider.noUiSlider.on('set', (values) => {
+            if (typeof nodeEditor.engine !== 'undefined') {
+                nodeEditor.engine.process(nodeEditor.editor.toJSON());
             }
         });
     }
