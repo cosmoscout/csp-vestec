@@ -3,22 +3,23 @@
 //
 
 #include "PersistenceNode.hpp"
+#include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
-#include "../../../../src/cs-utils/filesystem.hpp"
 
 PersistenceNode::PersistenceNode(cs::gui::GuiItem* pItem, int id)
-        : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id) {
 }
 
 PersistenceNode::~PersistenceNode() {
 }
 
 std::string PersistenceNode::GetName() {
-    return "PersistenceNode";
+  return "PersistenceNode";
 }
 
-void PersistenceNode::Init(VNE::NodeEditor *pEditor) {
-    const std::string node = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-persistence-node.js");
-    pEditor->GetGuiItem()->executeJavascript(node);
+void PersistenceNode::Init(VNE::NodeEditor* pEditor) {
+  const std::string node = cs::utils::filesystem::loadToString(
+      "../share/resources/gui/js/csp-vestec-persistence-node.js");
+  pEditor->GetGuiItem()->executeJavascript(node);
 }

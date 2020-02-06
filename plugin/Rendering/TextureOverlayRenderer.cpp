@@ -52,7 +52,7 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
   for (auto const& viewport : GetVistaSystem()->GetDisplayManager()->GetViewports()) {
     GBufferData bufferData;
 
-    //Texture for previous renderer depth buffer
+    // Texture for previous renderer depth buffer
     bufferData.mDepthBuffer = new VistaTexture(GL_TEXTURE_RECTANGLE);
     bufferData.mDepthBuffer->Bind();
     bufferData.mDepthBuffer->SetWrapS(GL_CLAMP);
@@ -61,7 +61,7 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
     bufferData.mDepthBuffer->SetMagFilter(GL_NEAREST);
     bufferData.mDepthBuffer->Unbind();
 
-    //Color texture to overlay 
+    // Color texture to overlay
     bufferData.mColorBuffer = new VistaTexture(GL_TEXTURE_2D);
     bufferData.mColorBuffer->Bind();
     bufferData.mColorBuffer->SetWrapS(GL_CLAMP);
@@ -82,14 +82,12 @@ TextureOverlayRenderer::~TextureOverlayRenderer() {
   }
 }
 
-void TextureOverlayRenderer::SetOpacity(double val)
-{
+void TextureOverlayRenderer::SetOpacity(double val) {
   mOpacity = val;
 }
 
-void TextureOverlayRenderer::SetOverlayTexture(GreyScaleTexture texture) 
-{
-  mTexture = texture;
+void TextureOverlayRenderer::SetOverlayTexture(GreyScaleTexture texture) {
+  mTexture       = texture;
   mUpdateTexture = true;
 }
 
@@ -130,14 +128,14 @@ bool TextureOverlayRenderer::Do() {
   glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0], iViewport[1],
       iViewport[2], iViewport[3], 0);
 
-  if(mUpdateTexture)
-  {
-      data.mColorBuffer->Bind();
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, mTexture.x, mTexture.y, 0, GL_RED, GL_FLOAT, mTexture.buffer);
-      delete mTexture.buffer;
-      mUpdateTexture = false;
+  if (mUpdateTexture) {
+    data.mColorBuffer->Bind();
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_R32F, mTexture.x, mTexture.y, 0, GL_RED, GL_FLOAT, mTexture.buffer);
+    delete mTexture.buffer;
+    mUpdateTexture = false;
   }
-  
+
   // get matrices and related values -----------------------------------------
   std::string closestPlanet     = mSolarSystem->pActiveBody.get()->getCenterName();
   auto        activeBody        = mSolarSystem->pActiveBody.get();
@@ -163,8 +161,7 @@ bool TextureOverlayRenderer::Do() {
 
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uDepthBuffer"), 0);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSimBuffer"), 1);
-  
- 
+
   // Why is there no set uniform for matrices??? //TODO: There is one
   GLint loc = m_pSurfaceShader->GetUniformLocation("uMatInvMV");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMV.GetData());
@@ -180,7 +177,7 @@ bool TextureOverlayRenderer::Do() {
       m_pSurfaceShader->GetUniformLocation("uBounds"), 4, 1, mTexture.lnglatBounds.data());
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uRange"), 2, 1, mTexture.dataRange.data());
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float) mOpacity);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
   // Dummy draw
   glDrawArrays(GL_POINTS, 0, 1);
 

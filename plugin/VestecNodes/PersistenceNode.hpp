@@ -8,23 +8,23 @@
 #include "../NodeEditor/Node.hpp"
 
 namespace VNE {
-    class NodeEditor;
+class NodeEditor;
 }
 
 class PersistenceNode : public VNE::Node {
-public:
-    PersistenceNode(cs::gui::GuiItem* pItem, int id);
-    virtual ~PersistenceNode();
+ public:
+  PersistenceNode(cs::gui::GuiItem* pItem, int id);
+  virtual ~PersistenceNode();
 
-    /**
-     * These static functions are required and needs to be implemented
-     */
-    static void Init(VNE::NodeEditor* pEditor);
+  /**
+   * These static functions are required and needs to be implemented
+   */
+  static void Init(VNE::NodeEditor* pEditor);
 
-    /**
-     * Returns the unique identifier for the node as string
-     */
-    static std::string GetName();
+  /**
+   * Returns the unique identifier for the node as string
+   */
+  static std::string GetName();
 };
 
-#endif //COSMOSCOUT_VR_PERSISTENCENODE_HPP
+#endif // COSMOSCOUT_VR_PERSISTENCENODE_HPP

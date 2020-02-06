@@ -2,9 +2,9 @@
 #ifndef RENDERNODE2D_SOURCE_NODE_HPP_
 #define RENDERNODE2D_SOURCE_NODE_HPP_
 
-#include "../Rendering/TextureOverlayRenderer.hpp"
 #include "../NodeEditor/Node.hpp"
 #include "../Plugin.hpp"
+#include "../Rendering/TextureOverlayRenderer.hpp"
 
 #include "../../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../../src/cs-core/SolarSystem.hpp"
@@ -16,12 +16,9 @@ class NodeEditor;
 
 class RenderNode2D : public VNE::Node {
  public:
-  RenderNode2D(cs::vestec::Plugin::Settings const& config,
-               cs::gui::GuiItem* pItem,
-               int id,
-               cs::core::SolarSystem* pSolarSystem,
-               cs::scene::CelestialAnchorNode* pAnchor,
-               cs::core::GraphicsEngine* pEngine);
+  RenderNode2D(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
+      cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
+      cs::core::GraphicsEngine* pEngine);
   virtual ~RenderNode2D();
 
   /**
@@ -46,10 +43,13 @@ class RenderNode2D : public VNE::Node {
   void SetOpacity(double val);
 
  private:
-  cs::vestec::Plugin::Settings      mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
-  cs::scene::CelestialAnchorNode*   m_pAnchor = nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
-  VistaOpenGLNode*                  m_pParent = nullptr; //! The VISTA OpenGL node in the scene graph
-  TextureOverlayRenderer*           m_pRenderer = nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
+  cs::vestec::Plugin::Settings
+                                  mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
+  cs::scene::CelestialAnchorNode* m_pAnchor =
+      nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
+  VistaOpenGLNode*        m_pParent = nullptr; //! The VISTA OpenGL node in the scene graph
+  TextureOverlayRenderer* m_pRenderer =
+      nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
 };
 
 #endif /* RENDERNODE2D_SOURCE_NODE_HPP_ */
