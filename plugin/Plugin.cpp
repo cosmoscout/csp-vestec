@@ -19,12 +19,10 @@
 
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
-<<<<<<< HEAD
 #include "VestecNodes/PersistenceNode.hpp"
-=======
 #include "VestecNodes/RenderNode2D.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
->>>>>>> f8b13306ee518029093778f3c45b8bb512a65fb8
+
 
     EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;

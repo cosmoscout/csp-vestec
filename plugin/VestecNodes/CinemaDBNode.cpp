@@ -11,12 +11,12 @@
 #include "../Plugin.hpp"
 
 #include "../../../../src/cs-utils/filesystem.hpp"
+#include "../vtkHttpDataSetWriter.h"
 
 #include <ttkCinemaProductReader.h>
 #include <ttkCinemaQuery.h>
 #include <ttkCinemaReader.h>
 #include <vtkGeometryFilter.h>
-#include <vtkHttpDataSetWriter.h>
 #include <vtkIntArray.h>
 #include <vtkStringArray.h>
 #include <vtkTable.h>
