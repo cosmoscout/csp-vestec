@@ -19,6 +19,10 @@ std::string PersistenceNode::GetName() {
 }
 
 void PersistenceNode::Init(VNE::NodeEditor* pEditor) {
+    const std::string renderer = cs::utils::filesystem::loadToString(
+            "../share/resources/gui/js/persistence-renderer.js");
+    pEditor->GetGuiItem()->executeJavascript(renderer);
+
   const std::string node = cs::utils::filesystem::loadToString(
       "../share/resources/gui/js/csp-vestec-persistence-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);

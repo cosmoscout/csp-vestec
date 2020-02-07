@@ -23,8 +23,7 @@
 #include "VestecNodes/RenderNode2D.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
 
-
-    EXPORT_FN cs::core::PluginBase* create() {
+EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;
 }
 
@@ -96,7 +95,7 @@ void Plugin::init() {
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(
-      PersistenceNode::GetName(), "Output",
+      PersistenceNode::GetName(), "Renderer",
       [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
       [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
 
