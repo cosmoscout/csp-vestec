@@ -83,13 +83,13 @@ class PersistenceNode {
         const fileName = `${inputs[0][0].caseName}_${inputs[0][0].timeStep}`;
 
         if (node.data.activeFile === fileName) {
+            console.log(renderer.filteredPoints().length);
             return;
         }
 
-        renderer.loadVtkData(`/share/vestec/data/export/${fileName}`).then((data) => {
-            renderer.render(data.pointChunks).then(() => {
-                node.data.activeFile = fileName;
-            });
+        renderer.load(`/share/vestec/data/export/${fileName}`).then(() => {
+            node.data.activeFile = fileName;
+            renderer.render();
         });
     }
 

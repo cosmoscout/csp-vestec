@@ -20,7 +20,7 @@ std::string PersistenceNode::GetName() {
 
 void PersistenceNode::Init(VNE::NodeEditor* pEditor) {
     const std::string renderer = cs::utils::filesystem::loadToString(
-            "../share/resources/gui/js/persistence-renderer.js");
+            "../share/resources/gui/third-party/js/PersistenceRenderer.js");
     pEditor->GetGuiItem()->executeJavascript(renderer);
 
   const std::string node = cs::utils::filesystem::loadToString(
