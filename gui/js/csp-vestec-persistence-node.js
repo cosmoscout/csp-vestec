@@ -16,30 +16,30 @@ class PersistenceNode {
      */
     _builder(node) {
         const control = new D3NE.Control('<div></div>', (element, control) => {
+            const color = 'rgb(221, 221, 255)';
+
             const renderer = new PersistenceRenderer(element, node.id, {
-                strokeStyle: 'rgb(221, 221, 255)'
+                strokeStyle: color,
+                axesTextColor: color,
+                axesColor: color,
+                axesTickColor: color,
+                padding: {
+                    left: 40,
+                    top: 20,
+                    right: 20,
+                    bottom: 40,
+                },
+                waitTime: 1,
+                enablePersistenceFilter: true,
+                enableSelectionFilter: true,
+                selectionStopPropagation: true
             });
 
-            element.addEventListener('slidercreated', () => {
-                console.log('slidercreated');
-            });
-            element.addEventListener('persistenceboundsupdating', (e) => {
-                console.log('persistenceboundsupdating', e);
-            });
-            element.addEventListener('persistenceboundsset', (e) => {
-                console.log('persistenceboundsset', e);
-            });
-            element.addEventListener('pointscleared', (e) => {
-                console.log('pointscleared');
-            });
-            element.addEventListener('pointsdrawn', (e) => {
-                console.log('pointsdrawn');
-            });
-            element.addEventListener('filteredpointsdrawn', (e) => {
-                console.log('filteredpointsdrawn');
-            });
+            const canvas = renderer.renderer.getCanvas();
+            canvas.classList.add('hidden');
 
             control.putData('renderer', renderer);
+            control.putData('canvas', canvas);
         });
 
         node.addControl(control);
@@ -80,16 +80,19 @@ class PersistenceNode {
             return;
         }
 
+        node.data.canvas.classList.remove('hidden');
+
         const fileName = `${inputs[0][0].caseName}_${inputs[0][0].timeStep}`;
 
         if (node.data.activeFile === fileName) {
+            console.log(renderer.filteredPoints());
             console.log(renderer.filteredPoints().length);
             return;
         }
 
-        renderer.load(`/share/vestec/data/export/${fileName}`).then(() => {
+        renderer.load(`/share/vestec/data/persistence/export/${fileName}`).then(() => {
             node.data.activeFile = fileName;
-            renderer.render();
+            renderer.update();
         });
     }
 
