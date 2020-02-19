@@ -173,8 +173,13 @@ bool TextureOverlayRenderer::Do() {
   glUniformMatrix4fv(loc, 1, GL_FALSE, matMV.GetData());
 
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float)farClip);
-  m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uBounds"), 4, 1, mTexture.lnglatBounds.data());
+  
+  //m_pSurfaceShader->SetUniform(
+  //    m_pSurfaceShader->GetUniformLocation("uBounds"), 4, 1, mTexture.lnglatBounds.data());
+  //Double precision bounds
+  loc = m_pSurfaceShader->GetUniformLocation("uBounds");
+  glUniform4dv(loc, 1, mTexture.lnglatBounds.data());
+
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uRange"), 2, 1, mTexture.dataRange.data());
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);

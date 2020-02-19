@@ -27,6 +27,9 @@
 // for convenience
 using json = nlohmann::json;
 
+//Define PI
+#define M_PI           3.14159265358979323846  /* pi */
+
 RenderNode2D::RenderNode2D(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem,
     int id, cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
     cs::core::GraphicsEngine* pEngine)
@@ -97,7 +100,7 @@ void RenderNode2D::ReadSimulationResult(std::string filename) {
   }
 
   // Get the bounding box (lat, lng) and scalar range
-  std::array<float, 4>  bounds;
+  std::array<double, 4>  bounds;
   std::array<float, 2>  dataRange;
   std::array<double, 2> d_dataRange;
 
@@ -135,10 +138,10 @@ void RenderNode2D::ReadSimulationResult(std::string filename) {
   GDALDestroyGenImgProjTransformer(hTransformArg);
 
   // Calculate extents of the image
-  bounds[0] = adfDstGeoTransform[0] + 0 * adfDstGeoTransform[1] + 0 * adfDstGeoTransform[2];
-  bounds[1] = adfDstGeoTransform[3] + 0 * adfDstGeoTransform[4] + 0 * adfDstGeoTransform[5];
-  bounds[2] = adfDstGeoTransform[0] + x * adfDstGeoTransform[1] + y * adfDstGeoTransform[2];
-  bounds[3] = adfDstGeoTransform[3] + x * adfDstGeoTransform[4] + y * adfDstGeoTransform[5];
+  bounds[0] = (adfDstGeoTransform[0] + 0 * adfDstGeoTransform[1] + 0 * adfDstGeoTransform[2]) * M_PI / 180;
+  bounds[1] = (adfDstGeoTransform[3] + 0 * adfDstGeoTransform[4] + 0 * adfDstGeoTransform[5]) * M_PI / 180;
+  bounds[2] = (adfDstGeoTransform[0] + x * adfDstGeoTransform[1] + y * adfDstGeoTransform[2]) * M_PI / 180;
+  bounds[3] = (adfDstGeoTransform[3] + x * adfDstGeoTransform[4] + y * adfDstGeoTransform[5]) * M_PI / 180;
   std::cout << "Extents (lng, lat) " << std::setprecision(10) << bounds[0] << " " << bounds[1]
             << " " << bounds[2] << " " << bounds[3] << std::endl;
   /////////////////////// Reprojection End /////////////////
