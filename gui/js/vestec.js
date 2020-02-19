@@ -1,7 +1,7 @@
 // entry point ------------------------------------------------
 $(document).ready(function () {
 	console.log("Init VESTEC plugin in javascript done");
-	$('#vestec-system').attr('src', 'http://vestec.epcc.ed.ac.uk/');
+	//$('#vestec-system').attr('src', 'http://vestec.epcc.ed.ac.uk/');
 	//$('#vestec-system').attr('src', 'https://www.nvidia.com/');
 	var isMiniFlowEdit = false;
 	var w_flowEdit = 0;
@@ -31,3 +31,22 @@ $(document).ready(function () {
 		}
 	});
 });
+
+
+function simpleGraph()
+{
+	var source          	= nodeEditor.nodes.CinemaDBNode.builder(nodeEditor.nodes.CinemaDBNode.newNode());
+	var persistence        	= nodeEditor.nodes.PersistenceNode.builder(nodeEditor.nodes.PersistenceNode.newNode());
+	var criticalPoints      	= nodeEditor.nodes.CriticalPointsNode.builder(nodeEditor.nodes.CriticalPointsNode.newNode());
+	
+	source.position            = [0,  100];
+	persistence.position       = [200, 100];
+	criticalPoints.position    = [600,  300];
+	
+	nodeEditor.editor.addNode(source);
+	nodeEditor.editor.addNode(persistence);
+	nodeEditor.editor.addNode(criticalPoints);
+
+	nodeEditor.editor.connect(source.outputs[0], persistence.inputs[0]);
+	nodeEditor.editor.connect(persistence.outputs[0], criticalPoints.inputs[0]);
+}
