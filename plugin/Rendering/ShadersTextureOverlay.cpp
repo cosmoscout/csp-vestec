@@ -42,7 +42,7 @@ const std::string TextureOverlayRenderer::SURFACE_VERT = R"(
 )";
 
 const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
-    #version 330 core
+    #version 430
     out vec4 FragColor;
 
     uniform sampler2DRect uDepthBuffer;
@@ -55,7 +55,7 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
 
     uniform float         uFarClip;
     uniform float         uOpacity = 1;
-    uniform vec4          uBounds;
+    uniform dvec4         uBounds;
     uniform vec2          uRange;
 
     in vec2 texcoord;
@@ -81,8 +81,59 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
         return length(uMatInvMV[3].xyz - (uMatInvMV * vec4(posVS, 1.0)).xyz);
     }
 
+    // ===========================================================================
+    double atan2(double y, double x)
+    {
+    const double atan_tbl[] = {
+    -3.333333333333333333333333333303396520128e-1LF,
+     1.999999117496509842004185053319506031014e-1LF,
+    -1.428514132711481940637283859690014415584e-1LF,
+     1.110012236849539584126568416131750076191e-1LF,
+    -8.993611617787817334566922323958104463948e-2LF,
+     7.212338962134411520637759523226823838487e-2LF,
+    -5.205055255952184339031830383744136009889e-2LF,
+     2.938542391751121307313459297120064977888e-2LF,
+    -1.079891788348568421355096111489189625479e-2LF,
+     1.858552116405489677124095112269935093498e-3LF
+    };
+
+    /* argument reduction: 
+       arctan (-x) = -arctan(x); 
+       arctan (1/x) = 1/2 * pi - arctan (x), when x > 0
+    */
+
+    double ax = abs(x);
+    double ay = abs(y);
+    double t0 = max(ax, ay);
+    double t1 = min(ax, ay);
+    
+    double a = 1 / t0;
+    a *= t1;
+
+    double s = a * a;
+    double p = atan_tbl[9];
+
+    p = fma( fma( fma( fma( fma( fma( fma( fma( fma( fma(p, s,
+        atan_tbl[8]), s,
+        atan_tbl[7]), s, 
+        atan_tbl[6]), s,
+        atan_tbl[5]), s,
+        atan_tbl[4]), s,
+        atan_tbl[3]), s,
+        atan_tbl[2]), s,
+        atan_tbl[1]), s,
+        atan_tbl[0]), s*a, a);
+
+    double r = ay > ax ? (1.57079632679489661923LF - p) : p;
+
+    r = x < 0 ?  3.14159265358979323846LF - r : r;
+    r = y < 0 ? -r : r;
+
+    return r;
+    }
+
      // ===========================================================================
-    vec3 GetPosition()
+    dvec3 GetPosition()
     {
         vec2  vTexcoords = texcoord*textureSize(uDepthBuffer);
         float fDepth     = texture(uDepthBuffer, vTexcoords).r;
@@ -90,19 +141,20 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
         float linearDepth = fDepth * uFarClip;
         vec4  posFar = uMatInvP * vec4(2.0 * texcoord - 1, 1.0 , 1.0);
         vec3  posVS = normalize(posFar.xyz) * linearDepth;
-        vec4  posWorld = uMatInvMV * vec4(posVS, 1.0);
+        dvec4  posWorld = uMatInvMV * vec4(posVS, 1.0);
 
         return posWorld.xyz;
     }
 
     // ===========================================================================
-    vec2 GetLngLat(vec3 vPosition)
+    dvec2 GetLngLat(dvec3 vPosition)
     {
-        vec2 result = vec2(-2);
+        dvec2 result = dvec2(-2);
 
         if (vPosition.z != 0.0)
         {
-            result.x = atan(vPosition.x / vPosition.z);
+            //result.x = atan2(vPosition.z, vPosition.x);
+            result.x = atan(float(vPosition.x / vPosition.z));
 
             if (vPosition.z < 0 && vPosition.x < 0)
                 result.x -= PI;
@@ -117,34 +169,34 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
             result.x = PI * 0.5;
 
         // geocentric latitude of the input point
-        result.y = asin(vPosition.y / length(vPosition));
+        result.y = float(asin(float(vPosition.y / length(vPosition))));
 
         return result;
     }
 
     void main()
-    {       
+    {     
         float fDepth     = GetDepth();
         if (fDepth == 1000000.0) 
         {
             discard;
         }else{
-            vec3 worldPos = GetPosition();
-            vec2 lnglat   = GetLngLat(worldPos);
+            dvec3 worldPos  = GetPosition();
+            dvec2 lnglat   = GetLngLat(worldPos);
 
             FragColor = vec4(worldPos, 1.0);
 
-            float min_long = radians(uBounds.x);
-            float min_lat = radians(uBounds.w);
-            float max_long = radians(uBounds.z);
-            float max_lat = radians(uBounds.y);
+            double min_long  = uBounds.x;
+            double min_lat   = uBounds.w;
+            double max_long  = uBounds.z;
+            double max_lat   = uBounds.y;
 
             if(lnglat.x > min_long && lnglat.x < max_long &&
                lnglat.y > min_lat && lnglat.y < max_lat)
             {
-                float norm_u = (lnglat.x - min_long) / (max_long - min_long);
-                float norm_v = (lnglat.y - min_lat) / (max_lat - min_lat);
-                vec2 newCoords = vec2(norm_u,norm_v);
+                double norm_u = (lnglat.x - min_long) / (max_long - min_long);
+                double norm_v = (lnglat.y - min_lat) / (max_lat - min_lat);
+                vec2 newCoords = vec2(float(norm_u), float(1.0 - norm_v));
 
                 float value         = texture(uSimBuffer, newCoords).r;
                 

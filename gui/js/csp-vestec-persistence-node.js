@@ -85,8 +85,11 @@ class PersistenceNode {
         const fileName = `${inputs[0][0].caseName}_${inputs[0][0].timeStep}`;
 
         if (node.data.activeFile === fileName) {
-            console.log(renderer.filteredPoints());
-            console.log(renderer.filteredPoints().length);
+            //console.log(renderer.filteredPoints());
+            //console.log(renderer.filteredPoints().length);
+            outputs[0] = renderer.filteredPoints();
+            if (nodeEditor.engine) nodeEditor.engine.process(nodeEditor.editor.toJSON());
+            else console.log("Update not possible NodeEditor is null");
             return;
         }
 

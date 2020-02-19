@@ -22,6 +22,7 @@
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/RenderNode2D.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
+#include "VestecNodes/CriticalPointsNode.hpp"
 
 EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;
@@ -89,36 +90,41 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("TEXTURE");
 
   // Register our node types for the flow editor
-  m_pNodeEditor->RegisterNodeType(
-      CinemaDBNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      PersistenceNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
       [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
       [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      WildFireSourceNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(WildFireSourceNode::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) {
         return new WildFireSourceNode(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      RenderNode2D::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(RenderNode2D::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
         return new RenderNode2D(mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
       },
       [](VNE::NodeEditor* editor) { RenderNode2D::Init(editor); });
 
+  m_pNodeEditor->RegisterNodeType(CriticalPointsNode::GetName(), "Renderer",
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new CriticalPointsNode(mPluginSettings, webView, id, mSolarSystem.get(),
+            mVestecTransform.get(), mGraphicsEngine.get());
+      },
+      [](VNE::NodeEditor* editor) { CriticalPointsNode::Init(editor); });
+
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
 
   // Set the data dir which is used by other classes
   Plugin::dataDir = mPluginSettings.mVestecDataDir;
+
+  m_pVESTEC_UI->callJavascript("simpleGraph");
 
   std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################" << std::endl;
 }
