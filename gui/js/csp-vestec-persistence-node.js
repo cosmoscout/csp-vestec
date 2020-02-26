@@ -15,7 +15,7 @@ class PersistenceNode {
      * @private
      */
     _builder(node) {
-        const control = new D3NE.Control('<div></div>', (element, control) => {
+        const renderer = new D3NE.Control(`<div id="render_control_${node.id}"></div>`, (element, control) => {
             const color = 'rgb(221, 221, 255)';
 
             const renderer = new PersistenceRenderer(element, node.id, {
@@ -47,7 +47,42 @@ class PersistenceNode {
             control.putData('canvas', canvas);
         });
 
-        node.addControl(control);
+        node.addControl(renderer);
+
+        const minimizeButton = new D3NE.Control('<button data-minimized="false" class="hidden"><i class="material-icons minimize">picture_in_picture</i></button>', (element, control) => {
+            Object.assign(element.style, {
+                border: 0,
+                background: 'none',
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                zIndex: 1,
+            });
+
+            Object.assign(element.parentNode.style, {
+                padding: 0,
+            });
+
+            const canvas = control.getData('canvas');
+
+            element.parentNode.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                if (element.dataset.minimized === 'true') {
+                    console.log(element.dataset.minimized, 'ismini');
+                    canvas.classList.remove('hidden');
+                    element.dataset.minimized = 'false';
+                } else {
+                    console.log(element.dataset.minimized, 'isnot');
+                    canvas.classList.add('hidden');
+                    element.dataset.minimized = 'true';
+                }
+            });
+
+            control.putData('button', element);
+        });
+
+        node.addControl(minimizeButton);
 
         node.data.activeFile = null;
 
@@ -77,6 +112,8 @@ class PersistenceNode {
         if (inputs[0].length === 0) {
             console.debug(`[Persistence Node #${node.id}] Input Empty`);
 
+            node.data.canvas.classList.add('hidden');
+
             return;
         }
 
@@ -85,13 +122,15 @@ class PersistenceNode {
             return;
         }
 
-        node.data.canvas.classList.remove('hidden');
+        if (node.data.button.dataset.minimized !== 'true') {
+            node.data.canvas.classList.remove('hidden');
+        }
+
+        node.data.button.classList.remove('hidden');
 
         const fileName = `${inputs[0][0].caseName}_${inputs[0][0].timeStep}`;
 
         if (node.data.activeFile === fileName) {
-            //console.log(renderer.filteredPoints());
-            //console.log(renderer.filteredPoints().length);
             outputs[0] = renderer.filteredPoints();
             if (nodeEditor.engine) nodeEditor.engine.process(nodeEditor.editor.toJSON());
             else console.log("Update not possible NodeEditor is null");
