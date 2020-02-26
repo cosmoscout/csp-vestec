@@ -86,6 +86,16 @@ void TextureOverlayRenderer::SetOpacity(double val) {
   mOpacity = val;
 }
 
+void TextureOverlayRenderer::SetTime(double val)
+{
+  mTime = val;
+}
+
+void TextureOverlayRenderer::SetUseTime(bool use)
+{
+  mUseTime = use;
+}
+
 void TextureOverlayRenderer::SetOverlayTexture(GreyScaleTexture texture) {
   mTexture       = texture;
   mUpdateTexture = true;
@@ -183,6 +193,9 @@ bool TextureOverlayRenderer::Do() {
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uRange"), 2, 1, mTexture.dataRange.data());
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), (float)mTime);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), (bool) mUseTime);
+
   // Dummy draw
   glDrawArrays(GL_POINTS, 0, 1);
 

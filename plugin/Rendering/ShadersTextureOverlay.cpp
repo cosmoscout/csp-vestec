@@ -55,6 +55,8 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
 
     uniform float         uFarClip;
     uniform float         uOpacity = 1;
+    uniform float         uTime    = 6;
+    uniform bool          uUseTime = false;
     uniform dvec4         uBounds;
     uniform vec2          uRange;
 
@@ -173,6 +175,16 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
 
         return result;
     }
+    // ===========================================================================
+    vec3 heat(float v) {
+        float value = 1.0-v;
+        return (0.5+0.5*smoothstep(0.0, 0.1, value))*vec3(smoothstep(0.5, 0.3, value), value < 0.3 ?
+         smoothstep(0.0, 0.3, value) :
+         smoothstep(1.0, 0.6, value),
+         smoothstep(0.4, 0.6, value)
+        );
+    }
+
 
     void main()
     {     
@@ -202,9 +214,12 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
                 
                 if(value < 0)
                     discard;
+
+                if(uUseTime && value > uTime)
+                    discard;
                 
                 float normSimValue  = value / uRange.y;
-                FragColor = vec4(normSimValue, 0.0, 0.0, uOpacity);
+                FragColor = vec4(heat(normSimValue), uOpacity);
             }
             else
                 discard;

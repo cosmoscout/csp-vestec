@@ -70,10 +70,27 @@ void RenderNode2D::Init(VNE::NodeEditor* pEditor) {
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>("setOpacity",
       ([pEditor](double id, double val) { pEditor->GetNode<RenderNode2D>(id)->SetOpacity(val); }));
+
+  // Callback to adjust the simulation time used to discard pixels
+  pEditor->GetGuiItem()->registerCallback<double, double>("setTime",
+      ([pEditor](double id, double val) { pEditor->GetNode<RenderNode2D>(id)->SetTime(val); }));
+
+  pEditor->GetGuiItem()->registerCallback<double, bool>("set_enable_time",
+      ([pEditor](double id, bool val) { pEditor->GetNode<RenderNode2D>(id)->SetUseTime(val); }));
 }
 
 void RenderNode2D::SetOpacity(double val) {
   m_pRenderer->SetOpacity(val);
+}
+
+void RenderNode2D::SetTime(double val)
+{
+  m_pRenderer->SetTime(val);
+}
+
+void RenderNode2D::SetUseTime(bool use)
+{
+  m_pRenderer->SetUseTime(use);
 }
 
 void RenderNode2D::ReadSimulationResult(std::string filename) {

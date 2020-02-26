@@ -42,6 +42,16 @@ class RenderNode2D : public VNE::Node {
    */
   void SetOpacity(double val);
 
+  /**
+   * Set the time value
+   */
+  void SetTime(double val);
+
+   /**
+   * Set if timing information should be used by the shader
+   */
+  void SetUseTime(bool use);
+
  private:
   cs::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings

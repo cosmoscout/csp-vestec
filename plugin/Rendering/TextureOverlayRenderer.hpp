@@ -51,6 +51,16 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   void SetOpacity(double val);
 
   /**
+   * Set the time value passed to shader to discard
+   */
+  void SetTime(double val);
+
+  /**
+   * Set if timing information should be used by the shader
+   */
+  void SetUseTime(bool use);
+
+  /**
    * Adding a texture used for overlay rendering
    */
   void SetOverlayTexture(GreyScaleTexture texture);
@@ -63,7 +73,9 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
 
  private:
   bool  mUpdateTexture = false; //! Flag if a texture upload is required
+  bool  mUseTime       = false; //!  Flag if sahder should use time information
   float mOpacity       = 1;     //! Opacity value used in shader to adjust the overlay
+  float mTime          = 6;     //! Time value in hours. Used by shader to discard pixels
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
