@@ -37,16 +37,16 @@ function simpleGraph()
 {
 	var source          	= nodeEditor.nodes.CinemaDBNode.builder(nodeEditor.nodes.CinemaDBNode.newNode());
 	var persistence        	= nodeEditor.nodes.PersistenceNode.builder(nodeEditor.nodes.PersistenceNode.newNode());
-	var criticalPoints      	= nodeEditor.nodes.CriticalPointsNode.builder(nodeEditor.nodes.CriticalPointsNode.newNode());
+	//var criticalPoints      	= nodeEditor.nodes.CriticalPointsNode.builder(nodeEditor.nodes.CriticalPointsNode.newNode());
 	
 	source.position            = [0,  100];
 	persistence.position       = [200, 100];
-	criticalPoints.position    = [600,  300];
+	//criticalPoints.position    = [600,  300];
 	
 	nodeEditor.editor.addNode(source);
 	nodeEditor.editor.addNode(persistence);
-	nodeEditor.editor.addNode(criticalPoints);
+	//nodeEditor.editor.addNode(criticalPoints);
 
 	nodeEditor.editor.connect(source.outputs[0], persistence.inputs[0]);
-	nodeEditor.editor.connect(persistence.outputs[0], criticalPoints.inputs[0]);
+	//nodeEditor.editor.connect(persistence.outputs[0], criticalPoints.inputs[0]);
 }

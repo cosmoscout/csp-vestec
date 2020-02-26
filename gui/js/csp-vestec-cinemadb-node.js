@@ -38,7 +38,6 @@ class CinemaDBNode {
         node.addControl(caseNames);
         node.addControl(timeSteps);
         node.addOutput(output);
-
         return node;
     }
 
@@ -51,7 +50,7 @@ class CinemaDBNode {
      * @param outputs
      */
     worker(node, _inputs, outputs) {
-        if (node.data.caseName === 'none' || node.data.timeStep === null) {
+        if (node.data.caseName === undefined || node.data.timeStep === undefined) {
             return;
         }
 
@@ -140,6 +139,9 @@ class CinemaDBNode {
                 nodeEditor.engine.process(nodeEditor.editor.toJSON());
             }
         });
+
+        //Just do once after initialization
+        nodeEditor.engine.process(nodeEditor.editor.toJSON());
     }
 
     /**

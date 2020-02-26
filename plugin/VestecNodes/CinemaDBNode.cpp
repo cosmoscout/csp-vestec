@@ -60,8 +60,6 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
 }
 
 void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& timeStep) {
-  std::cout << "Convert Called for " << caseName << " with ts " << (timeStep) << std::endl;
-
   auto reader = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
   reader->Update();
@@ -77,31 +75,24 @@ void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& t
   cinemaProduct->SetInputConnection(cinemaQuery->GetOutputPort());
   cinemaProduct->SetFilepathColumnName(0, 0, 0, 0, "FILE");
   cinemaProduct->Update();
-  cinemaProduct->GetOutput()->GetBlock(0)->Print(std::cout);
 
   auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
   polyFilter->SetInputData(cinemaProduct->GetOutput()->GetBlock(0));
   polyFilter->Update();
-  polyFilter->GetOutput()->Print(std::cout);
-  /////////////////
 
-  std::cout << "PRINT " << (cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep))
-            << "\n";
+  ///////////////// Dump to vtk js
   auto dumper = vtkHttpDataSetWriter::New();
   dumper->SetFileName(
       (cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)).c_str());
   dumper->SetInputConnection(polyFilter->GetOutputPort());
   dumper->Write();
-  std::cout << "PRINTAFTER\n";
+  std::cout << "VTK.js written to: " << cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep) << std::endl;
 }
 
 void CinemaDBNode::ReadCaseNames(int id) {
-  std::cout << "Reading use case names " << std::endl;
-  std::cout << "Node id:  " << id << std::endl;
-  // Example call from C++ to JavaScript
   json args;
 
-  std::cout << "Reading cinema database from: " << cs::vestec::Plugin::dataDir << std::endl;
+  std::cout << "Reading case names from cinema database: " << cs::vestec::Plugin::dataDir << std::endl;
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
@@ -123,21 +114,16 @@ void CinemaDBNode::ReadCaseNames(int id) {
 }
 
 void CinemaDBNode::GetTimeSteps(int id) {
-  std::cout << "Reading time values " << std::endl;
-  std::cout << "Node id:  " << id << std::endl;
-  // Example call from C++ to JavaScriptargs.push_back(timeColumn->GetValue(0));
   json args;
 
-  std::cout << "Reading cinema database from: " << cs::vestec::Plugin::dataDir << std::endl;
+  std::cout << "Reading time info from cinema database: " << cs::vestec::Plugin::dataDir << std::endl;
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
   reader->Update();
 
   auto table = vtkTable::SafeDownCast(reader->GetOutput());
-  table->Print(std::cout);
   std::set<int> caseNames;
-  // table->GetColumnByName("TimeValue")->Print(std::cout);
   auto timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
 
   args.push_back(timeColumn->GetValue(0));                            // min

@@ -35,6 +35,11 @@ class PersistenceNode {
                 selectionStopPropagation: true
             });
 
+            //Update graph processing on selection changes
+            renderer.container.addEventListener('pointsdrawn', (event /* CustomEvent */) => {
+                 nodeEditor.engine.process(nodeEditor.editor.toJSON());
+            });
+
             const canvas = renderer.renderer.getCanvas();
             canvas.classList.add('hidden');
 
