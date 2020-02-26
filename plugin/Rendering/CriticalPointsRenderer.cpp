@@ -134,7 +134,7 @@ bool CriticalPointsRenderer::Do() {
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float) farClip);
   
   // Draw points
-  std::cout << "Draw Points: " << m_vecPoints.size() << std::endl;
+  //std::cout << "Draw Points: " << m_vecPoints.size() << std::endl;
   glPointSize(5);
   glDrawArrays(GL_POINTS, 0, (GLsizei)m_vecPoints.size());
 
