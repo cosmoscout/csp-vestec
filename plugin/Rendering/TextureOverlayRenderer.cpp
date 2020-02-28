@@ -190,8 +190,7 @@ bool TextureOverlayRenderer::Do() {
   loc = m_pSurfaceShader->GetUniformLocation("uBounds");
   glUniform4dv(loc, 1, mTexture.lnglatBounds.data());
 
-  m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uRange"), 2, 1, mTexture.dataRange.data());
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRange"), (float)mTexture.dataRange[0], (float)mTexture.dataRange[1]);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), (float)mTime);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), (bool) mUseTime);

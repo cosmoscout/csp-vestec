@@ -53,6 +53,7 @@ class RenderNode2D : public VNE::Node {
   void SetUseTime(bool use);
 
  private:
+  std::string strLastConvertedImageName = "";
   cs::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =

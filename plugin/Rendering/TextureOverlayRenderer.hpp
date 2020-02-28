@@ -30,12 +30,12 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
    * e.g. sizes, data ranges, the buffer itself, and geo-referenced bounds
    */
   struct GreyScaleTexture {
-    int                  x;
-    int                  y;
-    std::array<double, 4> lnglatBounds;
-    std::array<float, 2>  dataRange;
-    int                  buffersize;
-    float*               buffer;
+    int                     x;
+    int                     y;
+    std::array<double, 4>   lnglatBounds;
+    std::array<double, 2>   dataRange;
+    int                     buffersize;
+    float*                  buffer;
   };
 
   /**
