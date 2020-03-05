@@ -48,6 +48,7 @@ RenderNode2D::RenderNode2D(cs::vestec::Plugin::Settings const& config, cs::gui::
 }
 
 RenderNode2D::~RenderNode2D() {
+  delete m_pParent;
   delete m_pRenderer;
 }
 

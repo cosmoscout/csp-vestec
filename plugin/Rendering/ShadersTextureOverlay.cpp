@@ -37,19 +37,18 @@ const std::string TextureOverlayRenderer::SURFACE_VERT = R"(
 
     void main()
     {
-
     }
 )";
 
 const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
-    #version 430
+    #version 450
     out vec4 FragColor;
 
     uniform sampler2DRect uDepthBuffer;
     uniform sampler2D     uSimBuffer;
 
     uniform mat4          uMatInvMVP;
-    uniform mat4          uMatInvMV;
+    uniform dmat4         uMatInvMV;
     uniform mat4          uMatInvP;
     uniform mat4          uMatMV;
 
@@ -59,6 +58,8 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
     uniform bool          uUseTime = false;
     uniform dvec4         uBounds;
     uniform vec2          uRange;
+
+    uniform vec3          uSunDirection;
 
     in vec2 texcoord;
 
@@ -80,58 +81,8 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
         vec4 posFarPlane = uMatInvP * vec4(2.0*texcoord-1, 1.0, 1.0);
         vec3 posVS = normalize(posFarPlane.xyz) * linearDepth;
 
-        return length(uMatInvMV[3].xyz - (uMatInvMV * vec4(posVS, 1.0)).xyz);
-    }
-
-    // ===========================================================================
-    double atan2(double y, double x)
-    {
-    const double atan_tbl[] = {
-    -3.333333333333333333333333333303396520128e-1LF,
-     1.999999117496509842004185053319506031014e-1LF,
-    -1.428514132711481940637283859690014415584e-1LF,
-     1.110012236849539584126568416131750076191e-1LF,
-    -8.993611617787817334566922323958104463948e-2LF,
-     7.212338962134411520637759523226823838487e-2LF,
-    -5.205055255952184339031830383744136009889e-2LF,
-     2.938542391751121307313459297120064977888e-2LF,
-    -1.079891788348568421355096111489189625479e-2LF,
-     1.858552116405489677124095112269935093498e-3LF
-    };
-
-    /* argument reduction: 
-       arctan (-x) = -arctan(x); 
-       arctan (1/x) = 1/2 * pi - arctan (x), when x > 0
-    */
-
-    double ax = abs(x);
-    double ay = abs(y);
-    double t0 = max(ax, ay);
-    double t1 = min(ax, ay);
-    
-    double a = 1 / t0;
-    a *= t1;
-
-    double s = a * a;
-    double p = atan_tbl[9];
-
-    p = fma( fma( fma( fma( fma( fma( fma( fma( fma( fma(p, s,
-        atan_tbl[8]), s,
-        atan_tbl[7]), s, 
-        atan_tbl[6]), s,
-        atan_tbl[5]), s,
-        atan_tbl[4]), s,
-        atan_tbl[3]), s,
-        atan_tbl[2]), s,
-        atan_tbl[1]), s,
-        atan_tbl[0]), s*a, a);
-
-    double r = ay > ax ? (1.57079632679489661923LF - p) : p;
-
-    r = x < 0 ?  3.14159265358979323846LF - r : r;
-    r = y < 0 ? -r : r;
-
-    return r;
+        float distance = length(float(uMatInvMV[3].xyz - (uMatInvMV * vec4(posVS, 1.0)).xyz));
+        return distance;
     }
 
      // ===========================================================================
@@ -140,10 +91,10 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
         vec2  vTexcoords = texcoord*textureSize(uDepthBuffer);
         float fDepth     = texture(uDepthBuffer, vTexcoords).r;
 
-        float linearDepth = fDepth * uFarClip;
-        vec4  posFar = uMatInvP * vec4(2.0 * texcoord - 1, 1.0 , 1.0);
-        vec3  posVS = normalize(posFar.xyz) * linearDepth;
-        dvec4  posWorld = uMatInvMV * vec4(posVS, 1.0);
+        float  linearDepth = fDepth * uFarClip;
+        dvec4  posFar = uMatInvP * dvec4(2.0 * texcoord - 1, 1.0 , 1.0);
+        dvec3  posVS = normalize(posFar.xyz) * linearDepth;
+        dvec4  posWorld = uMatInvMV * dvec4(posVS, 1.0);
 
         return posWorld.xyz;
     }
@@ -188,13 +139,13 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
 
     void main()
     {     
-        float fDepth     = GetDepth();
+        float fDepth = GetDepth();
         if (fDepth == 1000000.0) 
         {
             discard;
         }else{
             dvec3 worldPos  = GetPosition();
-            dvec2 lnglat   = GetLngLat(worldPos);
+            dvec2 lnglat    = GetLngLat(worldPos);
 
             FragColor = vec4(worldPos, 1.0);
 
@@ -218,8 +169,27 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
                 if(uUseTime && value > uTime)
                     discard;
                 
+                //Texture lookup and color mapping
                 float normSimValue  = value / uRange.y;
-                FragColor = vec4(heat(normSimValue), uOpacity);
+                vec4 color = vec4(heat(normSimValue), uOpacity);
+                
+                //Lighting using a normal calculated from partial derivative
+                vec3  fPos    = vec3(worldPos); //cast from double to float
+                vec3  dx      = dFdx( fPos );
+                vec3  dy      = dFdy( fPos );
+
+                vec3 N = normalize(cross(dx, dy));
+                //N *= sign(N.z);
+                float NdotL = dot(N, -uSunDirection); 
+
+                float ambientStrength = 0.2;
+                vec3 lightColor = vec3(1.0, 1.0, 1.0);
+                vec3 ambient = ambientStrength * lightColor;
+                vec3 diffuse = lightColor * NdotL;
+                //vec3 result = (ambient + diffuse) * color.rgb;
+                vec3 result = color.rgb;
+               
+                FragColor          = vec4(result, uOpacity);
             }
             else
                 discard;

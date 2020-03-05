@@ -24,6 +24,7 @@
 #include "../../../../src/cs-scene/CelestialBody.hpp"
 
 // Standard includes
+#include <GL/freeglut.h>
 #include <GL/gl.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -40,8 +41,8 @@ using json = nlohmann::json;
 TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
     : mSolarSystem(pSolarSystem) {
   std::cout << "Compile shader for TextureOverlayRenderer " << std::endl;
-  m_pSurfaceShader = nullptr;
 
+  m_pSurfaceShader = nullptr;
   m_pSurfaceShader = new VistaGLSLShader();
   m_pSurfaceShader->InitVertexShaderFromString(SURFACE_VERT);
   m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
@@ -147,20 +148,20 @@ bool TextureOverlayRenderer::Do() {
   }
 
   // get matrices and related values -----------------------------------------
+  GLfloat glMatP[16];
+  GLfloat glMatMV[16];
+  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
+  glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
+
   std::string closestPlanet     = mSolarSystem->pActiveBody.get()->getCenterName();
   auto        activeBody        = mSolarSystem->pActiveBody.get();
   glm::dmat4  matWorldTransform = activeBody->getWorldTransform();
 
   VistaTransformMatrix matM(glm::value_ptr(matWorldTransform), true);
-  GLfloat              glMatMV[16];
   VistaTransformMatrix matMV(matM);
   VistaTransformMatrix matInvMV(matMV.GetInverted());
-
-  GLfloat glMatP[16];
-  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
   VistaTransformMatrix matInvP(VistaTransformMatrix(glMatP, true).GetInverted());
   VistaTransformMatrix matInvMVP(matInvMV * matInvP);
-
   // get matrices and related values -----------------------------------------
 
   // Bind shader before draw
@@ -173,8 +174,10 @@ bool TextureOverlayRenderer::Do() {
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSimBuffer"), 1);
 
   // Why is there no set uniform for matrices??? //TODO: There is one
+  glm::dmat4  InverseWorldTransform =  glm::inverse(matWorldTransform);
   GLint loc = m_pSurfaceShader->GetUniformLocation("uMatInvMV");
-  glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMV.GetData());
+  //glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMV.GetData());
+  glUniformMatrix4dv(loc, 1, GL_FALSE, glm::value_ptr(InverseWorldTransform));
   loc = m_pSurfaceShader->GetUniformLocation("uMatInvMVP");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMVP.GetData());
   loc = m_pSurfaceShader->GetUniformLocation("uMatInvP");
@@ -194,6 +197,14 @@ bool TextureOverlayRenderer::Do() {
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), (float)mTime);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), (bool) mUseTime);
+
+  auto sunDirection = glm::normalize(glm::inverse(matWorldTransform) * (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"), sunDirection[0],
+        sunDirection[1], sunDirection[2]);
+  
+  int depthBits = 0;
+  glGetIntegerv(GL_DEPTH_BITS, &depthBits);
+  std::cout << "Depth buffer bits : " << depthBits << std::endl;
 
   // Dummy draw
   glDrawArrays(GL_POINTS, 0, 1);
