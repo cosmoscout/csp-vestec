@@ -24,7 +24,7 @@ std::string WildFireSourceNode::GetName() {
 
 void WildFireSourceNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file
-  std::string code = cs::utils::filesystem::loadToString("js/WildFireSourceNode.js");
+  std::string code = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-wildfire-source-node.js");
 
   pEditor->GetGuiItem()->executeJavascript(code);
 
