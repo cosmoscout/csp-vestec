@@ -20,7 +20,7 @@
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
-#include "VestecNodes/RenderNode2D.hpp"
+#include "VestecNodes/TextureRenderNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
 #include "VestecNodes/CriticalPointsNode.hpp"
 
@@ -104,12 +104,12 @@ void Plugin::init() {
       },
       [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(RenderNode2D::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(TextureRenderNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
-        return new RenderNode2D(mPluginSettings, webView, id, mSolarSystem.get(),
+        return new TextureRenderNode(mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
       },
-      [](VNE::NodeEditor* editor) { RenderNode2D::Init(editor); });
+      [](VNE::NodeEditor* editor) { TextureRenderNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(CriticalPointsNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
@@ -124,7 +124,7 @@ void Plugin::init() {
   // Set the data dir which is used by other classes
   Plugin::dataDir = mPluginSettings.mVestecDataDir;
 
-  m_pVESTEC_UI->callJavascript("simpleGraph");
+  //m_pVESTEC_UI->callJavascript("simpleGraph");
 
   std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################" << std::endl;
 }

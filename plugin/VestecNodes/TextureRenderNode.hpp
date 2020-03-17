@@ -1,6 +1,6 @@
 
-#ifndef RENDERNODE2D_SOURCE_NODE_HPP_
-#define RENDERNODE2D_SOURCE_NODE_HPP_
+#ifndef SIMPLE_TEXTURE_RENDER_NODE_HPP_
+#define SIMPLE_TEXTURE_RENDER_NODE_HPP_
 
 #include "../NodeEditor/Node.hpp"
 #include "../Plugin.hpp"
@@ -14,12 +14,16 @@ namespace VNE {
 class NodeEditor;
 }
 
-class RenderNode2D : public VNE::Node {
+class TextureRenderNode : public VNE::Node {
  public:
-  RenderNode2D(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
-      cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
+  TextureRenderNode(
+      cs::vestec::Plugin::Settings const& config,
+      cs::gui::GuiItem* pItem, 
+      int id,
+      cs::core::SolarSystem* pSolarSystem,
+      cs::scene::CelestialAnchorNode* pAnchor,
       cs::core::GraphicsEngine* pEngine);
-  virtual ~RenderNode2D();
+  virtual ~TextureRenderNode();
 
   /**
    * These static functions are required and needs to be implemented
@@ -63,4 +67,4 @@ class RenderNode2D : public VNE::Node {
       nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
 };
 
-#endif /* RENDERNODE2D_SOURCE_NODE_HPP_ */
+#endif /* SIMPLE_TEXTURE_RENDER_NODE_HPP_ */

@@ -1,5 +1,5 @@
 
-#include "RenderNode2D.hpp"
+#include "TextureRenderNode.hpp"
 #include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Rendering/TextureOverlayRenderer.hpp"
@@ -30,7 +30,7 @@ using json = nlohmann::json;
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
-RenderNode2D::RenderNode2D(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem,
+TextureRenderNode::TextureRenderNode(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem,
     int id, cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
     cs::core::GraphicsEngine* pEngine)
     : VNE::Node(pItem, id)
@@ -47,52 +47,53 @@ RenderNode2D::RenderNode2D(cs::vestec::Plugin::Settings const& config, cs::gui::
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pAnchor, static_cast<int>(150));
 }
 
-RenderNode2D::~RenderNode2D() {
+TextureRenderNode::~TextureRenderNode() {
   delete m_pParent;
   delete m_pRenderer;
 }
 
-std::string RenderNode2D::GetName() {
-  return "RenderNode2D";
+std::string TextureRenderNode::GetName() {
+  return "TextureRenderNode";
 }
 
-void RenderNode2D::Init(VNE::NodeEditor* pEditor) {
+void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file which defines the node
   // in the node editor
-  std::string code = cs::utils::filesystem::loadToString("js/RenderNode2D.js");
+  std::string code = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-texture-renderer.js");
   pEditor->GetGuiItem()->executeJavascript(code);
+
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "readSimulationResults", ([pEditor](double id, std::string params) {
-        pEditor->GetNode<RenderNode2D>(id)->ReadSimulationResult(params);
+        pEditor->GetNode<TextureRenderNode>(id)->ReadSimulationResult(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>("setOpacity",
-      ([pEditor](double id, double val) { pEditor->GetNode<RenderNode2D>(id)->SetOpacity(val); }));
+      ([pEditor](double id, double val) { pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val); }));
 
   // Callback to adjust the simulation time used to discard pixels
   pEditor->GetGuiItem()->registerCallback<double, double>("setTime",
-      ([pEditor](double id, double val) { pEditor->GetNode<RenderNode2D>(id)->SetTime(val); }));
+      ([pEditor](double id, double val) { pEditor->GetNode<TextureRenderNode>(id)->SetTime(val); }));
 
   pEditor->GetGuiItem()->registerCallback<double, bool>("set_enable_time",
-      ([pEditor](double id, bool val) { pEditor->GetNode<RenderNode2D>(id)->SetUseTime(val); }));
+      ([pEditor](double id, bool val) { pEditor->GetNode<TextureRenderNode>(id)->SetUseTime(val); }));
 }
 
-void RenderNode2D::SetOpacity(double val) {
+void TextureRenderNode::SetOpacity(double val) {
   m_pRenderer->SetOpacity(val);
 }
 
-void RenderNode2D::SetTime(double val) {
+void TextureRenderNode::SetTime(double val) {
   m_pRenderer->SetTime(val);
 }
 
-void RenderNode2D::SetUseTime(bool use) {
+void TextureRenderNode::SetUseTime(bool use) {
   m_pRenderer->SetUseTime(use);
 }
 
-void RenderNode2D::ReadSimulationResult(std::string filename) {
+void TextureRenderNode::ReadSimulationResult(std::string filename) {
   if(strLastConvertedImageName==filename)
     return;
   strLastConvertedImageName = filename;
