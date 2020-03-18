@@ -19,10 +19,11 @@
 
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
+#include "VestecNodes/CriticalPointsNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
-#include "VestecNodes/CriticalPointsNode.hpp"
+#include "VestecNodes/DiseasesSensorInput.hpp"
 
 EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;
@@ -41,6 +42,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::parseSection("csp-vestec", [&] {
     o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
     o.mFireDir       = cs::core::parseProperty<std::string>("vestec-2D-fire", j);
+    o.mDiseasesDir   = cs::core::parseProperty<std::string>("diseases-dir", j);
   });
 }
 
@@ -94,15 +96,21 @@ void Plugin::init() {
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
-      [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
-      [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
-
   m_pNodeEditor->RegisterNodeType(WildFireSourceNode::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) {
         return new WildFireSourceNode(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(DiseasesSensorInput::GetName(), "Sources",
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new DiseasesSensorInput(mPluginSettings, webView, id);
+      },
+      [](VNE::NodeEditor* editor) { DiseasesSensorInput::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
+      [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
+      [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(TextureRenderNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
@@ -124,7 +132,7 @@ void Plugin::init() {
   // Set the data dir which is used by other classes
   Plugin::dataDir = mPluginSettings.mVestecDataDir;
 
-  //m_pVESTEC_UI->callJavascript("simpleGraph");
+  // m_pVESTEC_UI->callJavascript("simpleGraph");
 
   std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################" << std::endl;
 }

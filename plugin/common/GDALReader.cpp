@@ -28,13 +28,13 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   poDatasetSrc = (GDALDataset*)GDALOpen(filename.data(), GA_ReadOnly);
 
   if (poDatasetSrc == NULL) {
-    std::cout << "[RenderNode2D::ReadSimulationResult] Error: Failed to load " << filename
+    std::cout << "[GDALReader::ReadGrayScaleTexture] Error: Failed to load " << filename
               << std::endl;
     return;
   }
 
   if (poDatasetSrc->GetProjectionRef() == NULL) {
-    std::cout << "[RenderNode2D::ReadSimulationResult] Error: No projection defined for "
+    std::cout << "[GDALReader::ReadGrayScaleTexture] Error: No projection defined for "
               << filename << std::endl;
     return;
   }
