@@ -48,7 +48,7 @@ std::string CriticalPointsNode::GetName() {
 void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file which defines the node
   // in the node editor
-  std::string code = cs::utils::filesystem::loadToString("js/CriticalPointsNode.js");
+  std::string code = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-cp-render-node.js");
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Callback which reads simulation data (path+x is given from JavaScript)
