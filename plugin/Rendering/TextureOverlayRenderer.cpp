@@ -97,7 +97,7 @@ void TextureOverlayRenderer::SetUseTime(bool use)
   mUseTime = use;
 }
 
-void TextureOverlayRenderer::SetOverlayTexture(GreyScaleTexture texture) {
+void TextureOverlayRenderer::SetOverlayTexture(GDALReader::GreyScaleTexture& texture) {
   mTexture       = texture;
   mUpdateTexture = true;
 }
@@ -204,7 +204,7 @@ bool TextureOverlayRenderer::Do() {
   
   int depthBits = 0;
   glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-  std::cout << "Depth buffer bits : " << depthBits << std::endl;
+  //std::cout << "Depth buffer bits : " << depthBits << std::endl;
 
   // Dummy draw
   glDrawArrays(GL_POINTS, 0, 1);

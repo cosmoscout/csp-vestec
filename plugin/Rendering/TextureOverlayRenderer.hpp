@@ -1,6 +1,7 @@
 #ifndef TEXTURE_OVERLAY_RENDERER
 #define TEXTURE_OVERLAY_RENDERER
 
+#include "../common/GDALReader.hpp"
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 #include <VistaMath/VistaBoundingBox.h>
 
@@ -25,19 +26,7 @@ class VistaTexture;
  */
 class TextureOverlayRenderer : public IVistaOpenGLDraw {
  public:
-  /**
-   * Struct to store all required information for a float texture
-   * e.g. sizes, data ranges, the buffer itself, and geo-referenced bounds
-   */
-  struct GreyScaleTexture {
-    int                     x;
-    int                     y;
-    std::array<double, 4>   lnglatBounds;
-    std::array<double, 2>   dataRange;
-    int                     buffersize;
-    float*                  buffer;
-  };
-
+  
   /**
    * Constructor requires the SolarSystem to get the current active planet
    * to get the model matrix
@@ -63,7 +52,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   /**
    * Adding a texture used for overlay rendering
    */
-  void SetOverlayTexture(GreyScaleTexture texture);
+  void SetOverlayTexture(GDALReader::GreyScaleTexture& texture);
 
   // ---------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
@@ -84,7 +73,9 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   static const std::string SURFACE_FRAG; //! Code for the fragment shader
 
   /**
-   * Struct which stores the depth buffer and color buffer on the GPU
+   * Struct which stores the depth buffer and color buffer from the previous rendering (order)
+   * on the GPU and pass it to the shaders for inverse transformations based on depth and screen coordinates.
+   * Used to calculate texture coordinates for the overlay
    */
   struct GBufferData {
     VistaTexture* mDepthBuffer = nullptr;
@@ -92,7 +83,8 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   };
 
   std::unordered_map<VistaViewport*, GBufferData> mGBufferData; //! Store one buffer per viewport
-  GreyScaleTexture mTexture; //! The textured passed from outside via SetOverlayTexture
+  
+  GDALReader::GreyScaleTexture mTexture; //! The textured passed from outside via SetOverlayTexture
 
   cs::core::SolarSystem*
       mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices
