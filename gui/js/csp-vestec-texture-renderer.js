@@ -94,10 +94,10 @@ class TextureRenderNode {
      */
     _worker(node, inputs, outputs) {
         /** @type {wildFireNode} */
-        if(inputs[0] != undefined && inputs[0] != this.lastFile)
+        if(inputs[0] != undefined && inputs[0].toString() != this.lastFile)
         {
             window.call_native("readSimulationResults", node.id, inputs[0].toString());
-            this.lastFile = inputs[0];
+            this.lastFile = inputs[0].toString();
         }         
     }
 
