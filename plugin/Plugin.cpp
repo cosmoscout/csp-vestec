@@ -20,6 +20,7 @@
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
 #include "VestecNodes/CriticalPointsNode.hpp"
+#include "VestecNodes/DisaesesSimulationNode.hpp"
 #include "VestecNodes/DiseasesSensorInput.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
@@ -92,7 +93,7 @@ void Plugin::init() {
   // TODO:Create the Node editor
   m_pNodeEditor->RegisterSocketType("CINEMA_DB");
   m_pNodeEditor->RegisterSocketType("POINT_ARRAY");
-  m_pNodeEditor->RegisterSocketType("TEXTURE");
+  m_pNodeEditor->RegisterSocketType("TEXTURES");
 
   // Register our node types for the flow editor
   m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
@@ -110,6 +111,12 @@ void Plugin::init() {
         return new DiseasesSensorInput(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { DiseasesSensorInput::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(DiseasesSimulation::GetName(), "Sources",
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new DiseasesSimulation(mPluginSettings, webView, id);
+      },
+      [](VNE::NodeEditor* editor) { DiseasesSimulation::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
       [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },

@@ -1,7 +1,7 @@
 /* global D3NE, nodeEditor, vtk, Selection */
 
 /**
- * Node for rendering texture input
+ * Node for rendering texture input. Only takes the first file!
  */
 class TextureRenderNode {
   constructor() {
@@ -77,7 +77,7 @@ class TextureRenderNode {
     node.addControl(time_control);
 
     // Define the input type
-    const input = new D3NE.Input('TEXTURE', nodeEditor.sockets.TEXTURE);
+    const input = new D3NE.Input('TEXTURE(S)', nodeEditor.sockets.TEXTURES);
     node.addInput(input);
     return node;
   }
@@ -93,9 +93,9 @@ class TextureRenderNode {
    */
   _worker(node, inputs, outputs) {
     /** @type {wildFireNode} */
-    if (inputs[0] != undefined && inputs[0].toString() != this.lastFile) {
-      window.call_native("readSimulationResults", node.id, inputs[0].toString());
-      this.lastFile = inputs[0].toString();
+    if (inputs[0] != undefined && inputs[0][0].toString() != this.lastFile) {
+      window.call_native("readSimulationResults", node.id, inputs[0][0].toString());
+      this.lastFile = inputs[0][0].toString();
     }
   }
 

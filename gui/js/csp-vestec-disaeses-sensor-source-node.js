@@ -36,7 +36,7 @@ class DiseasesSensorInput {
     node.addControl(simulation_file);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURE', nodeEditor.sockets.TEXTURE);
+    const output = new D3NE.Output('TEXTURE', nodeEditor.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
@@ -53,7 +53,9 @@ class DiseasesSensorInput {
   _worker(node, inputs, outputs) {
     /** @type {DiseasesSensorInput} */
     if (node.data.sensorFile != undefined) {
-      outputs[0] = node.data.sensorFile;
+      const files = [];
+      files.push(node.data.sensorFile);
+      outputs[0] = files;
     }
   }
 
