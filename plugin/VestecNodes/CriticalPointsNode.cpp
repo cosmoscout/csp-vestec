@@ -13,6 +13,7 @@
 
 #include <iomanip>
 #include <json.hpp>
+#include <limits>
 #include <set>
 // for convenience
 using json = nlohmann::json;
@@ -48,7 +49,8 @@ std::string CriticalPointsNode::GetName() {
 void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file which defines the node
   // in the node editor
-  std::string code = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-cp-render-node.js");
+  std::string code =
+      cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-cp-render-node.js");
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Callback which reads simulation data (path+x is given from JavaScript)
@@ -75,31 +77,50 @@ void CriticalPointsNode::SetPoints(std::string jsonObj) {
   // Point store
   std::vector<CriticalPointsRenderer::CriticalPoint> vecPoints;
 
+  float minPersistence = std::numeric_limits<float>::max();
+  float maxPersistence = std::numeric_limits<float>::min();
+
   // range-based for over persistence pairs
   for (auto& element : args) {
     CriticalPointsRenderer::CriticalPoint upper;
     CriticalPointsRenderer::CriticalPoint lower;
 
+    // Get the world coordinates for the critical point pair
     glm::dvec3 posU(element["coordinates"]["upper"]["x"], element["coordinates"]["upper"]["y"],
         element["coordinates"]["upper"]["z"]);
     glm::dvec3 posL(element["coordinates"]["lower"]["x"], element["coordinates"]["lower"]["y"],
         element["coordinates"]["lower"]["z"]);
-    //
-    glm::dvec3 lnglathU = cs::utils::convert::toLngLatHeight(posU, 1, 1);
-    glm::dvec3 lnglathL = cs::utils::convert::toLngLatHeight(posL, 1, 1);
-    //
+
+    // Deg to rad
+    glm::dvec3 lnglathU = (posU * M_PI) / glm::dvec3(180);
+    glm::dvec3 lnglathL = (posL * M_PI) / glm::dvec3(180);
+
+    // get the peristence value
     float persistence = -1;
-    // persistence = element["coordinates"]["persistence"];
-    //
+    persistence       = element["persistence"];
+
+    minPersistence = std::min(minPersistence, persistence);
+    maxPersistence = std::max(maxPersistence, persistence);
+
+    // Prepare the critical points
     upper.lnglatheight = lnglathU;
     upper.persistence  = persistence;
 
     lower.lnglatheight = lnglathL;
     lower.persistence  = persistence;
-    //
+
     vecPoints.push_back(upper);
     vecPoints.push_back(lower);
   }
+
+  // Pass min max peristence values to the end of the vector
+  CriticalPointsRenderer::CriticalPoint minP;
+  CriticalPointsRenderer::CriticalPoint maxP;
+  minP.persistence = minPersistence;
+  maxP.persistence = maxPersistence;
+  vecPoints.push_back(minP);
+  vecPoints.push_back(maxP);
+
   m_pRenderer->SetPoints(vecPoints);
   std::cout << "Got points from JavaScript" << std::endl;
 }

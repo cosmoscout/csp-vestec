@@ -61,10 +61,8 @@ class CinemaDBNode {
 
             window.call_native('convertFile', node.data.caseName, node.data.timeStep);
             node.data.converted = fileName;
-        } else {
-            console.debug(`[CinemaDB Node #${node.id}] File ${fileName} already converted.`);
-        }
-
+        } 
+        
         outputs[0] = {
             caseName: node.data.caseName,
             timeStep: node.data.timeStep,

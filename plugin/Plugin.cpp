@@ -20,10 +20,10 @@
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
 #include "VestecNodes/CriticalPointsNode.hpp"
+#include "VestecNodes/DiseasesSensorInput.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
-#include "VestecNodes/DiseasesSensorInput.hpp"
 
 EXPORT_FN cs::core::PluginBase* create() {
   return new cs::vestec::Plugin;
@@ -83,6 +83,9 @@ void Plugin::init() {
   // Initialize and append gui elements
   InitGUI();
 
+  // Set the data dir which is used by other classes
+  Plugin::dataDir = mPluginSettings.mVestecDataDir;
+
   // Initialize vestec flow editor
   m_pNodeEditor = new VNE::NodeEditor(m_pVESTEC_UI);
 
@@ -128,9 +131,6 @@ void Plugin::init() {
 
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
-
-  // Set the data dir which is used by other classes
-  Plugin::dataDir = mPluginSettings.mVestecDataDir;
 
   // m_pVESTEC_UI->callJavascript("simpleGraph");
 

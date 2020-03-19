@@ -26,7 +26,6 @@ class VistaTexture;
  */
 class TextureOverlayRenderer : public IVistaOpenGLDraw {
  public:
-  
   /**
    * Constructor requires the SolarSystem to get the current active planet
    * to get the model matrix
@@ -74,8 +73,8 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
 
   /**
    * Struct which stores the depth buffer and color buffer from the previous rendering (order)
-   * on the GPU and pass it to the shaders for inverse transformations based on depth and screen coordinates.
-   * Used to calculate texture coordinates for the overlay
+   * on the GPU and pass it to the shaders for inverse transformations based on depth and screen
+   * coordinates. Used to calculate texture coordinates for the overlay
    */
   struct GBufferData {
     VistaTexture* mDepthBuffer = nullptr;
@@ -83,7 +82,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   };
 
   std::unordered_map<VistaViewport*, GBufferData> mGBufferData; //! Store one buffer per viewport
-  
+
   GDALReader::GreyScaleTexture mTexture; //! The textured passed from outside via SetOverlayTexture
 
   cs::core::SolarSystem*

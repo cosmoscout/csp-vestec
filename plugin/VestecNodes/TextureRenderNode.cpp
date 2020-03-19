@@ -31,9 +31,9 @@ using json = nlohmann::json;
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
-TextureRenderNode::TextureRenderNode(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem,
-    int id, cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
-    cs::core::GraphicsEngine* pEngine)
+TextureRenderNode::TextureRenderNode(cs::vestec::Plugin::Settings const& config,
+    cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
+    cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
     : VNE::Node(pItem, id)
     , m_pAnchor(pAnchor) {
   // Store config data for later usage
@@ -60,9 +60,9 @@ std::string TextureRenderNode::GetName() {
 void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file which defines the node
   // in the node editor
-  std::string code = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-texture-renderer.js");
+  std::string code = cs::utils::filesystem::loadToString(
+      "../share/resources/gui/js/csp-vestec-texture-renderer.js");
   pEditor->GetGuiItem()->executeJavascript(code);
-
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
@@ -71,15 +71,21 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
       }));
 
   // Callback to adjust the opacity of the rendering
-  pEditor->GetGuiItem()->registerCallback<double, double>("setOpacity",
-      ([pEditor](double id, double val) { pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val); }));
+  pEditor->GetGuiItem()->registerCallback<double, double>(
+      "setOpacity", ([pEditor](double id, double val) {
+        pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
+      }));
 
   // Callback to adjust the simulation time used to discard pixels
-  pEditor->GetGuiItem()->registerCallback<double, double>("setTime",
-      ([pEditor](double id, double val) { pEditor->GetNode<TextureRenderNode>(id)->SetTime(val); }));
+  pEditor->GetGuiItem()->registerCallback<double, double>(
+      "setTime", ([pEditor](double id, double val) {
+        pEditor->GetNode<TextureRenderNode>(id)->SetTime(val);
+      }));
 
-  pEditor->GetGuiItem()->registerCallback<double, bool>("set_enable_time",
-      ([pEditor](double id, bool val) { pEditor->GetNode<TextureRenderNode>(id)->SetUseTime(val); }));
+  pEditor->GetGuiItem()->registerCallback<double, bool>(
+      "set_enable_time", ([pEditor](double id, bool val) {
+        pEditor->GetNode<TextureRenderNode>(id)->SetUseTime(val);
+      }));
 }
 
 void TextureRenderNode::SetOpacity(double val) {
@@ -95,7 +101,7 @@ void TextureRenderNode::SetUseTime(bool use) {
 }
 
 void TextureRenderNode::ReadSimulationResult(std::string filename) {
-  //Read the GDAL texture (grayscale only 1 float channel)
+  // Read the GDAL texture (grayscale only 1 float channel)
   GDALReader::GreyScaleTexture texture;
   GDALReader::ReadGrayScaleTexture(texture, filename);
 

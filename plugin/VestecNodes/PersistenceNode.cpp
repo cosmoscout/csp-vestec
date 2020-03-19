@@ -19,11 +19,15 @@ std::string PersistenceNode::GetName() {
 }
 
 void PersistenceNode::Init(VNE::NodeEditor* pEditor) {
-    const std::string renderer = cs::utils::filesystem::loadToString(
-            "../share/resources/gui/third-party/js/PersistenceRenderer.js");
-    pEditor->GetGuiItem()->executeJavascript(renderer);
+
+  const std::string renderer = cs::utils::filesystem::loadToString(
+      "../share/resources/gui/third-party/js/PersistenceRenderer.js");
+  pEditor->GetGuiItem()->executeJavascript(renderer);
 
   const std::string node = cs::utils::filesystem::loadToString(
       "../share/resources/gui/js/csp-vestec-persistence-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);
+
+  // Pass data dir for reading vtk js from the exporter
+  pEditor->GetGuiItem()->callJavascript("PersistenceNode.setPath", cs::vestec::Plugin::dataDir);
 }

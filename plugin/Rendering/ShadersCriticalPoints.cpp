@@ -12,8 +12,11 @@ const std::string CriticalPointsRenderer::SURFACE_VERT = R"(
 
     uniform mat4          uMatP;
     uniform mat4          uMatMV;
+    uniform float         uMinPersistence = 0;
+    uniform float         uMaxPersistence = 1;
 
     out vec4 vPos;
+    out float persistence;
 
     float VP_toGeocentricLat(float geodeticLat, vec2 radius)
     {
@@ -38,16 +41,20 @@ const std::string CriticalPointsRenderer::SURFACE_VERT = R"(
 
     void main()
     {
+         float value = (inPersistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
+         gl_PointSize =  2 + 15 * value;
          vec3 posV = VP_toCartesian(inPos.xy, vec2(6381000, 6381000));
          vPos = uMatMV * vec4(posV, 1.0);
          gl_Position = uMatP * vec4(vPos.xyz, 1);
+         persistence = inPersistence;
     }
 )";
 
 const std::string CriticalPointsRenderer::SURFACE_FRAG = R"(
     #version 430
 
-    in  vec4 vPos;
+    in  vec4  vPos;
+    in  float persistence;
     out vec4 FragColor;
 
     uniform mat4          uMatP;
@@ -55,12 +62,25 @@ const std::string CriticalPointsRenderer::SURFACE_FRAG = R"(
 
     uniform float         uFarClip;
     uniform float         uOpacity = 1;
+    uniform float         uMinPersistence = 0;
+    uniform float         uMaxPersistence = 1;
 
     const float PI = 3.14159265359;
+
+    vec3 heat(float v) {
+        float value = 1.0-v;
+        return (0.5+0.5*smoothstep(0.0, 0.1, value))*vec3(smoothstep(0.5, 0.3, value), value < 0.3 ?
+         smoothstep(0.0, 0.3, value) :
+         smoothstep(1.0, 0.6, value),
+         smoothstep(0.4, 0.6, value)
+        );
+    }
  
     void main()
     {     
-        FragColor = vec4(1, 0, 0, 1);
-         gl_FragDepth = length(vec3(vPos.xyz)) / uFarClip;
+        float value = (persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
+        FragColor = vec4(heat(value), 1);
+        
+        gl_FragDepth = length(vec3(vPos.xyz)) / uFarClip;
     }
 )";

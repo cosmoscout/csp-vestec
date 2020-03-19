@@ -5,6 +5,10 @@
  * It gets points stored in a JSON object as input
  */
 class CriticalPointsNode {
+    constructor()
+    {
+        this.lastInputString = "";
+    }
 
     _builder(node) {
         const control = new D3NE.Control('<div>CriticalPoints</div>', (element, control) => {
@@ -35,9 +39,12 @@ class CriticalPointsNode {
             console.debug(`[CriticalPointsNode #${node.id}] Input Empty`);
             return;
         }else{
-            console.log(`[CriticalPointsNode #${node.id}] Got `+inputs[0][0].length+` critical points`);
-             //Send points to C++ for rendering in OGL
-             window.call_native("setPoints", node.id, JSON.stringify(inputs[0][0]));
+            if(this.lastInputString != JSON.stringify(inputs[0][0]))
+            {
+                //Send points to C++ for rendering in OGL
+                window.call_native("setPoints", node.id, JSON.stringify(inputs[0][0]));
+                this.lastInputString = JSON.stringify(inputs[0][0]);
+            }
         }
 
     }

@@ -16,12 +16,8 @@ class NodeEditor;
 
 class TextureRenderNode : public VNE::Node {
  public:
-  TextureRenderNode(
-      cs::vestec::Plugin::Settings const& config,
-      cs::gui::GuiItem* pItem, 
-      int id,
-      cs::core::SolarSystem* pSolarSystem,
-      cs::scene::CelestialAnchorNode* pAnchor,
+  TextureRenderNode(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
+      cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
       cs::core::GraphicsEngine* pEngine);
   virtual ~TextureRenderNode();
 
@@ -51,7 +47,7 @@ class TextureRenderNode : public VNE::Node {
    */
   void SetTime(double val);
 
-   /**
+  /**
    * Set if timing information should be used by the shader
    */
   void SetUseTime(bool use);

@@ -8,8 +8,7 @@
 
 #include <iostream>
 
-void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename)
-{
+void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename) {
   // Initialize GDAL
   GDALAllRegister();
 
@@ -34,8 +33,8 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   }
 
   if (poDatasetSrc->GetProjectionRef() == NULL) {
-    std::cout << "[GDALReader::ReadGrayScaleTexture] Error: No projection defined for "
-              << filename << std::endl;
+    std::cout << "[GDALReader::ReadGrayScaleTexture] Error: No projection defined for " << filename
+              << std::endl;
     return;
   }
 

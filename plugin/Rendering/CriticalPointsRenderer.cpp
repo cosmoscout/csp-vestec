@@ -67,6 +67,13 @@ void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
   std::cout << "Copy data to VBO: "<< vecPoints.size() << std::endl;
   m_vecPoints.clear();
  
+  //Get persistence range
+  CriticalPoint max = vecPoints.back();
+  vecPoints.pop_back();
+  CriticalPoint min = vecPoints.back();
+  vecPoints.pop_back();
+  mMinPersistence = min.persistence;
+  mMaxPersistence = max.persistence;
 
   //Copy data to VBO
   m_VBO->Bind(GL_ARRAY_BUFFER);
@@ -104,6 +111,7 @@ bool CriticalPointsRenderer::Do() {
   //glDisable(GL_CULL_FACE);
   //glDisable(GL_DEPTH_TEST);
  // glEnable(GL_BLEND);
+  glEnable(GL_PROGRAM_POINT_SIZE);
 
   double nearClip, farClip;
   GetVistaSystem()
@@ -132,16 +140,18 @@ bool CriticalPointsRenderer::Do() {
   glUniformMatrix4fv(loc, 1, GL_FALSE, matModelView.GetData());
 
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float) farClip);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uMaxPersistence"), mMaxPersistence);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uMinPersistence"), mMinPersistence);
   
   // Draw points
   //std::cout << "Draw Points: " << m_vecPoints.size() << std::endl;
-  glPointSize(5);
   glDrawArrays(GL_POINTS, 0, (GLsizei)m_vecPoints.size());
 
   // Release shader
   m_pSurfaceShader->Release();
   m_VAO->Release();
 
+  glDisable(GL_PROGRAM_POINT_SIZE);
   glPopAttrib();
   return true;
 }

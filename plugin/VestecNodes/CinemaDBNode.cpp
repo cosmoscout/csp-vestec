@@ -23,6 +23,8 @@
 
 #include <json.hpp>
 #include <set>
+#include <limits>
+
 // for convenience
 using json = nlohmann::json;
 
@@ -76,6 +78,7 @@ void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& t
   cinemaProduct->SetFilepathColumnName(0, 0, 0, 0, "FILE");
   cinemaProduct->Update();
 
+  cinemaProduct->GetOutput()->GetBlock(0)->Print(std::cout);
   auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
   polyFilter->SetInputData(cinemaProduct->GetOutput()->GetBlock(0));
   polyFilter->Update();
@@ -106,7 +109,6 @@ void CinemaDBNode::ReadCaseNames(int id) {
   for (int x = 0; x < table->GetNumberOfRows(); ++x)
     caseNames.insert(caseNamesColumn->GetValue(x));
   for (auto entry : caseNames) {
-    std::cout << entry << "\n";
     args.push_back(entry);
   }
 
@@ -126,11 +128,18 @@ void CinemaDBNode::GetTimeSteps(int id) {
   std::set<int> caseNames;
   auto timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
 
-  args.push_back(timeColumn->GetValue(0));                            // min
-  args.push_back(timeColumn->GetValue(table->GetNumberOfRows() - 1)); // max
+  int min = std::numeric_limits<int>::max();
+  int max = std::numeric_limits<int>::min();
 
   for (int x = 0; x < table->GetNumberOfRows(); ++x)
+  {
     caseNames.insert(timeColumn->GetValue(x));
+    min = std::min(min, timeColumn->GetValue(x));
+    max = std::max(max, timeColumn->GetValue(x));
+  }
+  args.push_back(min); // min
+  args.push_back(max); // max
+
   for (auto entry : caseNames)
     args.push_back(entry);
 

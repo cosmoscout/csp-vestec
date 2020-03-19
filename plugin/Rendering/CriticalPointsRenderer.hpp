@@ -53,6 +53,8 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
 
  private:
   float mOpacity       = 1;     //! Opacity value used in shader to adjust the overlay
+  float mMinPersistence       = 0;     //! Persistance range min
+  float mMaxPersistence       = 1;     //! Persistance range max
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
