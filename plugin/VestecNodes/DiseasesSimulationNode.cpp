@@ -46,8 +46,6 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
 }
 
 void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, double t) {
-  std::cout << "List simulation ensemble files in " << mode << std::endl;
-  std::cout << "Timestep " << t << std::endl;
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(mode));
 
   std::set<std::string> listOfFiles;
@@ -63,7 +61,7 @@ void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, doubl
       }
     }
   }
-  std::cout << "Found number of files: " << listOfFiles.size() << std::endl;
+
   json args(listOfFiles);
   m_pItem->callJavascript("DiseasesSimulation.setFileListForTimeStep", id, args.dump());
 }

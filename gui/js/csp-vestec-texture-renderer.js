@@ -1,7 +1,8 @@
 /* global D3NE, nodeEditor, vtk, Selection */
 
 /**
- * Node for rendering texture input. Only takes the first file!
+ * Node for rendering texture input. Only takes the first file
+ * from the array as input
  */
 class TextureRenderNode {
   constructor() {

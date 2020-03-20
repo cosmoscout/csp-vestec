@@ -1,0 +1,81 @@
+#ifndef UNCERTAINTY_OVERLAY_RENDERER
+#define UNCERTAINTY_OVERLAY_RENDERER
+
+#include "../common/GDALReader.hpp"
+#include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
+#include <VistaMath/VistaBoundingBox.h>
+
+#include "../../../../src/cs-core/SolarSystem.hpp"
+
+#include <array>
+#include <functional>
+#include <map>
+#include <unordered_map>
+#include <vector>
+
+// FORWARD DEFINITIONS
+class VistaGLSLShader;
+class VistaViewport;
+class VistaTexture;
+
+/**
+ * TODO
+ */
+class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
+ public:
+  /**
+   * Constructor requires the SolarSystem to get the current active planet
+   * to get the model matrix
+   */
+  UncertaintyOverlayRenderer(cs::core::SolarSystem* pSolarSystem);
+  virtual ~UncertaintyOverlayRenderer();
+
+  /**
+   * Set the opacity of the overlay
+   */
+  void SetOpacity(double val);
+
+  /**
+   * Adding a texture used for overlay rendering
+   */
+  void SetOverlayTextures(std::vector<GDALReader::GreyScaleTexture>& vecTextures);
+
+  // ---------------------------------------
+  // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
+  // ---------------------------------------
+  virtual bool Do();
+  virtual bool GetBoundingBox(VistaBoundingBox& bb);
+
+ private:
+  void UploadTextures();
+
+ private:
+  bool  mUpdateTextures = false; //! Flag if a texture upload is required
+  float mOpacity        = 1;     //! Opacity value used in shader to adjust the overlay
+
+  VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
+
+  static const std::string SURFACE_GEOM; //! Code for the geometry shader
+  static const std::string SURFACE_VERT; //! Code for the vertex shader
+  static const std::string SURFACE_FRAG; //! Code for the fragment shader
+
+  /**
+   * Struct which stores the depth buffer and color buffer from the previous rendering (order)
+   * on the GPU and pass it to the shaders for inverse transformations based on depth and screen
+   * coordinates. Used to calculate texture coordinates for the overlay
+   */
+  struct GBufferData {
+    VistaTexture* mDepthBuffer = nullptr;
+    VistaTexture* mColorBuffer = nullptr;
+  };
+
+  std::unordered_map<VistaViewport*, GBufferData> mGBufferData; //! Store one buffer per viewport
+
+  std::vector<GDALReader::GreyScaleTexture>
+      mvecTextures; //! The textured passed from outside via SetOverlayTexture
+
+  cs::core::SolarSystem*
+      mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices
+};
+
+#endif // UNCERTAINTY_OVERLAY_RENDERER

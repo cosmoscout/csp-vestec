@@ -4,7 +4,7 @@
 
 #include "../NodeEditor/Node.hpp"
 #include "../Plugin.hpp"
-#include "../Rendering/TextureOverlayRenderer.hpp"
+#include "../Rendering/UncertaintyRenderer.hpp"
 
 #include "../../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../../src/cs-core/SolarSystem.hpp"
@@ -47,8 +47,8 @@ class UncertaintyRenderNode : public VNE::Node {
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
-  VistaOpenGLNode*        m_pParent = nullptr; //! The VISTA OpenGL node in the scene graph
-  TextureOverlayRenderer* m_pRenderer =
+  VistaOpenGLNode*            m_pParent = nullptr; //! The VISTA OpenGL node in the scene graph
+  UncertaintyOverlayRenderer* m_pRenderer =
       nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
 };
 

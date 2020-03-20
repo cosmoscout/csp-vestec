@@ -43,7 +43,7 @@ const std::string CriticalPointsRenderer::SURFACE_VERT = R"(
     {
          float value = (inPersistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
          gl_PointSize =  2 + 15 * value;
-         vec3 posV = VP_toCartesian(inPos.xy, vec2(6381000, 6381000));
+         vec3 posV = VP_toCartesian(inPos.xy, vec2(6378500, 6378500));
          vPos = uMatMV * vec4(posV, 1.0);
          gl_Position = uMatP * vec4(vPos.xyz, 1);
          persistence = inPersistence;

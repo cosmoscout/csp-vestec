@@ -37,7 +37,7 @@ UncertaintyRenderNode::UncertaintyRenderNode(cs::vestec::Plugin::Settings const&
 
   // Add a TextureOverlayRenderer to the VISTA scene graph
   auto pSG    = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-  m_pRenderer = new TextureOverlayRenderer(pSolarSystem);
+  m_pRenderer = new UncertaintyOverlayRenderer(pSolarSystem);
   m_pParent   = pSG->NewOpenGLNode(m_pAnchor, m_pRenderer);
 
   // Render after planets which are rendered at 100
@@ -78,8 +78,6 @@ void UncertaintyRenderNode::SetOpacity(double val) {
 }
 
 void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
-  std::cout << "SetTextureFiles " << jsonFilenames << std::endl;
-
   // Forward to OGL renderer
   json args = json::parse(jsonFilenames);
 
@@ -91,8 +89,9 @@ void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
     // Read the GDAL texture (grayscale only 1 float channel)
     GDALReader::GreyScaleTexture texture;
     GDALReader::ReadGrayScaleTexture(texture, filename);
+    vecTextures.push_back(texture);
     std::cout << "Adding texture " << filename << std::endl;
   }
   // Add the new texture for rendering
-  // m_pRenderer->SetOverlayTexture(texture);
+  m_pRenderer->SetOverlayTextures(vecTextures);
 }
