@@ -4,87 +4,100 @@
  * Node for reading and selecting the wildfire simulation data
  */
 class DiseasesSimulation {
-  constructor()
-  {
-    this.fileList = [];
-  }
-  /**
-   * Node Editor Component builder
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function}}
-   * @returns {*}
-   * @private
-   */
+   /**
+     * Builder function
+     * Creates the simulation mode dropdown
+     * Creates the info text for number of ensemble members
+     * Create a slider to browse the days a year
+     * Puts input content under node.data.fileNames
+     */
   _builder(node) {
     // Define HTML elements
-    const simMode = new D3NE.Control(
-        `<select id="sim_mode_${node.id}" class="combobox"><option>none</option></select>`,
-        (element, control) => {
-          const select = $(element);
-          select.selectpicker();
-          select.on("change", function() {
-            window.call_native("setNumberOfEnsembleMembers", parseInt(node.id), $(this).val());
-          });
-          window.call_native('readDiseasesSimulationModes', parseInt(node.id));
-        });
-    node.addControl(simMode);
-
     var htmlInfo = '\
     <div class="row">\
-        <div class="col-6 text">Ensemble members:</div>\
-        <div class="col-6">\
+        <div class="col-10 text">Ensemble members:</div>\
+        <div class="col-2">\
             <div class="text" id="ensemble_num_' +
                    node.id + '"></div>\
         </div>\
     </div>';
     // Info for the number of ensembles
     const ensemble_control = new D3NE.Control(htmlInfo, (element, control) => {
+      //Initialize data array to hold filenames
+      control.putData('fileList', []);
     });
     node.addControl(ensemble_control);
 
-    var htmlSlider = '\
+    var htmlControl = '\
+    <div>\
     <div class="row">\
-        <div class="col-6 text">Day:</div>\
-        <div class="col-6">\
+      <div class="col-3 text">Mode:</div>\
+      <select id="sim_mode_' + node.id + '" class="combobox col-9"><option>none</option></select>\
+    </div>\
+    <div class="row">\
+        <div class="col-3 text">Day:</div>\
+        <div class="col-9">\
             <div id="slider_day' +
                      node.id + '"></div>\
         </div>\
+        </div>\
     </div>';
 
-    // Slider to select the day of the simulation results
-    const day_control = new D3NE.Control(htmlSlider, (element, control) => {
-      // Initialize HTML elements
-      var sliderQuery = "#slider_day" + node.id;
-      const slider    = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, {start : 1, step: 1, animate : false, range : {'min' : 0, 'max' : 365}});
 
-      // Read the files for the given simulation mode and fill combobox when mode is changed
-      slider.noUiSlider.on('slide', function(values, handle) {
-          var timestep = values[handle];
-          var simPath  = $("body").find("#sim_mode_" + node.id).val();
-          window.call_native("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
-      });
-    });
-    node.addControl(day_control);
+    const simcontrol = new D3NE.Control(
+      htmlControl,
+        (element, control) => {
+          //Initialize the combo box with the simulation modes
+          const select = $(element).find("#sim_mode_" + node.id);
+          select.selectpicker();
 
+          // Initialize the slider
+          const slider    = element.querySelector("#slider_day" + node.id);
+          noUiSlider.create(slider, {start : 1, step: 1, animate : false, range : {'min' : 0, 'max' : 365}});
+
+          //When combo box changes update the files and number of ensemble info
+          select.on("change", function() {
+            console.log("Change combo box");
+            //Updat the number of enseble members 
+            window.call_native("setNumberOfEnsembleMembers", parseInt(node.id), $(this).val());
+            
+            //Get the files for the simulation mode and timestep
+            var timestep = $(element).find("#slider_day" + node.id).val();
+            var simPath  = $(element).find("#sim_mode_" + node.id).val();
+            window.call_native("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
+          });
+         
+          // Event handling when slider changes
+          slider.noUiSlider.on('change', function(values, handle) {
+            var timestep = values[handle];
+            var simPath  = $(element).find("#sim_mode_" + node.id).val();
+            window.call_native("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
+          });
+
+          //Call once for initialization
+          window.call_native('readDiseasesSimulationModes', parseInt(node.id));
+         // window.call_native("getFilesForTimeStep", parseInt(node.id), $(select).val(), parseFloat(slider.noUiSlider.get()));
+        });
+    node.addControl(simcontrol);
+
+    
     // Define the output type
     const output = new D3NE.Output('TEXTURE(s)', nodeEditor.sockets.TEXTURES);
-    node.addOutput(output);
+    node.addOutput(output); 
     return node;
   }
 
   /**
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
-   * @param node {{id: number, data: {canvas: HTMLCanvasElement, context:
-   * CanvasRenderingContext2D}}}
+   * @param node {{id: number, data: empty}}
    * @param inputs {any[][]}
    * @param outputs {any[][]}
    * @private
    */
   _worker(node, inputs, outputs) {
     /** @type {DiseasesSimulation} */
-    if(this.fileList.length > 0)
-      outputs[0] = this.fileList;
+      outputs[0] = node.data.fileList;
   }
 
   /**
@@ -139,12 +152,16 @@ class DiseasesSimulation {
    */
   static setFileListForTimeStep(id, fileList) 
   {
-    this.fileList = [];
-    const json        = JSON.parse(fileList);
-    for (let i = 0; i < json.length; i++) {
-      this.fileList.push(json[i]);
-      console.log("Adding file: "+ json[i]);
+    const node = nodeEditor.editor.nodes.find(node => node.id === id);
+    if (typeof node !== 'undefined') {
+      node.data.fileList = [];
+      const json        = JSON.parse(fileList);
+      for (let i = 0; i < json.length; i++) {
+        node.data.fileList.push(json[i]);
+      }
     }
+    //Files have changed trigger a processing step
+    nodeEditor.engine.process(nodeEditor.editor.toJSON());
   }
 }
 

@@ -20,10 +20,11 @@
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
 #include "VestecNodes/CriticalPointsNode.hpp"
-#include "VestecNodes/DisaesesSimulationNode.hpp"
 #include "VestecNodes/DiseasesSensorInput.hpp"
+#include "VestecNodes/DiseasesSimulationNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
+#include "VestecNodes/UncertaintyRenderNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
 
 EXPORT_FN cs::core::PluginBase* create() {
@@ -135,6 +136,13 @@ void Plugin::init() {
             mVestecTransform.get(), mGraphicsEngine.get());
       },
       [](VNE::NodeEditor* editor) { CriticalPointsNode::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(UncertaintyRenderNode::GetName(), "Renderer",
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new UncertaintyRenderNode(mPluginSettings, webView, id, mSolarSystem.get(),
+            mVestecTransform.get(), mGraphicsEngine.get());
+      },
+      [](VNE::NodeEditor* editor) { UncertaintyRenderNode::Init(editor); });
 
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
