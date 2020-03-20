@@ -26,9 +26,19 @@ class DiseasesSimulation : public VNE::Node {
 
  private:
   /**
-   * Read available textures and fill combo box
+   * Read available filename for a given timestep. In each ensemble member there should be one
    */
-  void ReadSimulationFileNames(int id);
+  void GetFileNamesForTimeStep(int id, std::string mode, double t);
+
+  /**
+   * Set the number of ensemble members to the FlowEditor node
+   */
+  void SetNumberOfEnsembleMembers(int id, std::string path);
+
+  /**
+   * Set the simulation modes
+   */
+  void SetSimulationModes(int id);
 
  private:
   cs::vestec::Plugin::Settings mPluginConfig;
