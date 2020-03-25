@@ -17,6 +17,7 @@
 class VistaGLSLShader;
 class VistaViewport;
 class VistaTexture;
+class VistaBufferObject;
 
 /**
  * TODO
@@ -46,6 +47,8 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
   virtual bool Do();
   virtual bool GetBoundingBox(VistaBoundingBox& bb);
 
+  void getGLError(std::string name);
+
  private:
   void UploadTextures();
 
@@ -54,11 +57,14 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
   float mOpacity        = 1;     //! Opacity value used in shader to adjust the overlay
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
+  VistaGLSLShader* m_pComputeShader = nullptr; //! Vista GLSL shader object used for rendering
 
   static const std::string SURFACE_GEOM; //! Code for the geometry shader
   static const std::string SURFACE_VERT; //! Code for the vertex shader
   static const std::string SURFACE_FRAG; //! Code for the fragment shader
+  static const std::string COMPUTE;      //! Code for the compute shader
 
+  VistaBufferObject* m_pBufferSSBO;
   /**
    * Struct which stores the depth buffer and color buffer from the previous rendering (order)
    * on the GPU and pass it to the shaders for inverse transformations based on depth and screen
