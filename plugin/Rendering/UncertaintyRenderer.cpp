@@ -80,8 +80,8 @@ UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pS
     bufferData.mColorBuffer->Bind();
     bufferData.mColorBuffer->SetWrapS(GL_CLAMP);
     bufferData.mColorBuffer->SetWrapT(GL_CLAMP);
-    bufferData.mColorBuffer->SetMinFilter(GL_LINEAR);
-    bufferData.mColorBuffer->SetMagFilter(GL_LINEAR);
+    bufferData.mColorBuffer->SetMinFilter(GL_NEAREST);
+    bufferData.mColorBuffer->SetMagFilter(GL_NEAREST);
     bufferData.mColorBuffer->Unbind();
 
     mGBufferData[viewport.second] = bufferData;
@@ -176,7 +176,7 @@ bool UncertaintyOverlayRenderer::Do() {
       // Provide access to SSBO to write result data
       m_pBufferSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
       m_pBufferSSBO->BufferData(
-          2 * group_size_x * group_size_y * sizeof(float), nullptr, GL_DYNAMIC_COPY);
+          8 * group_size_x * group_size_y * sizeof(float), nullptr, GL_DYNAMIC_COPY);
 
       m_pBufferSSBO->BindBufferBase(GL_SHADER_STORAGE_BUFFER, 1);
 
@@ -191,9 +191,22 @@ bool UncertaintyOverlayRenderer::Do() {
 
       result.push_back(ptr[0]);
       result.push_back(ptr[1]);
-      std::cout << "Max " << ptr[0] << std::endl;
-      std::cout << "Min " << ptr[1] << std::endl;
-      std::cout << "#######################" << std::endl;
+      result.push_back(ptr[2]);
+      result.push_back(ptr[3]);
+      result.push_back(ptr[4]);
+      result.push_back(ptr[5]);
+      result.push_back(ptr[6]);
+      result.push_back(ptr[7]);
+
+      // std::cout << "Min Scalar " << ptr[0] << std::endl;
+      // std::cout << "Max Scalar " << ptr[1] << std::endl;
+      // std::cout << "Avg Scalar " << ptr[2] << std::endl;
+      // std::cout << "Avg scalar min per Pixel " << ptr[3] << std::endl;
+      // std::cout << "Avg scalar max per Pixel " << ptr[4] << std::endl;
+      // std::cout << "Avg Diff " << ptr[5] << std::endl;
+      // std::cout << "Difference min per pixel " << ptr[6] << std::endl;
+      // std::cout << "Difference max per pixel " << ptr[7] << std::endl;
+      // std::cout << "#######################" << std::endl;
       data.mColorBuffer->Unbind(GL_TEXTURE0);
       m_pBufferSSBO->UnmapBuffer();
       m_pBufferSSBO->Release();
@@ -241,14 +254,17 @@ bool UncertaintyOverlayRenderer::Do() {
     glUniformMatrix4fv(loc, 1, GL_FALSE, matMV.GetData());
 
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float)farClip);
-
+    m_pSurfaceShader->SetUniform(
+        m_pSurfaceShader->GetUniformLocation("uAvgDiff"), (float)result[5]);
     m_pSurfaceShader->SetUniform(
         m_pSurfaceShader->GetUniformLocation("uNumTextures"), (int)mvecTextures.size());
     loc = m_pSurfaceShader->GetUniformLocation("uBounds");
     glUniform4dv(loc, 1, mvecTextures[0].lnglatBounds.data());
 
     m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uRange"), (float)result[0], (float)result[1]);
+        m_pSurfaceShader->GetUniformLocation("uRangeScalar"), (float)result[3], (float)result[4]);
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRangeDifferences"),
+        (float)result[6], (float)result[7]);
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
     auto sunDirection =
         glm::normalize(glm::inverse(matWorldTransform) *
