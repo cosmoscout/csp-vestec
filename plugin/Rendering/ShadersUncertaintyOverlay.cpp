@@ -219,6 +219,11 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
     uniform sampler2DRect       uDepthBuffer;
     uniform sampler2DArray      uSimBuffer;
 
+    //Input SSBO
+    layout(std430, binding=3) coherent buffer Pos{
+        float position[];
+    };
+
     uniform mat4          uMatInvMVP;
     uniform dmat4         uMatInvMV;
     uniform mat4          uMatInvP;
@@ -227,11 +232,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
     uniform float         uFarClip;
     uniform float         uOpacity = 1;
     uniform dvec4         uBounds;
-    uniform float         uAvgDiff;
-    uniform vec2          uRangeScalar;
-    uniform vec2          uRangeDifferences;
     uniform int           uNumTextures;
-
     uniform vec3          uSunDirection;
 
     in vec2 texcoord;
@@ -352,24 +353,24 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                     if(layer > 0)
                     {
                         float prevValue = texture(uSimBuffer, vec3(newCoords, layer - 1)).r;
-                        variance      += pow(abs(prevValue - texValue) - uAvgDiff, 2);
+                        variance      += pow(abs(prevValue - texValue) - position[5], 2);
                         absDifference += abs(prevValue - texValue);
                     }
                 }
                 average         /= uNumTextures;
-                variance = sqrt(variance / uNumTextures);
+                variance = sqrt(variance / (uNumTextures - 1));
 
                 if(average < 0)
                     discard;
 
                 //Normalize scalar and difference
-                float normSimValue      = (average  - uRangeScalar.x) / (uRangeScalar.y - uRangeScalar.x);
-                float normDiffValue     = (absDifference  - uRangeDifferences.x) / (uRangeDifferences.y - uRangeDifferences.x);
+                float normSimValue      = (average  - position[3]) / (position[4] - position[3]);
+                float normDiffValue     = (absDifference  - position[6]) / (position[7] - position[6]);
                 
                 vec4 scalar = vec4(heat(normSimValue), uOpacity);
                 vec4 uncertainty = vec4(heat(normDiffValue), uOpacity);
                 //vec4 uncertainty = vec4(heatUncertainty(variance), uOpacity);
-                vec4 color = scalar * uncertainty;
+                vec4 color = scalar;// * uncertainty;
 
                 //Lighting using a normal calculated from partial derivative
                 vec3  fPos    = vec3(worldPos); //cast from double to float
@@ -385,7 +386,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                 vec3 ambient = ambientStrength * lightColor;
                 vec3 diffuse = lightColor * NdotL;
                 //vec3 result = (ambient + diffuse) * color.rgb;
-                vec4 result = vec4(color.rgb, uOpacity);
+                vec4 result = vec4(color.rgb, 1 - variance);
                
                 FragColor          = result;
             }

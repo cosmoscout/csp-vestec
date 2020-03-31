@@ -4,6 +4,29 @@
  * Node for reading and selecting the wildfire simulation data
  */
 class DiseasesSimulation {
+  constructor()
+  {
+    this.animate = false;
+  }
+
+  static startAnimation(self, slider){
+      console.log("Starting animation");
+
+      var timestep = slider.noUiSlider.get();
+      if(parseInt(timestep) < 365)
+      {
+        slider.noUiSlider.set(parseInt(timestep) + 1);
+      }
+      else
+      {
+        slider.noUiSlider.set(0);
+      }
+      if(self.animate == true)
+      {
+        setTimeout(function() {DiseasesSimulation.startAnimation(self, slider)}, 66);
+      }
+  }
+
    /**
      * Builder function
      * Creates the simulation mode dropdown
@@ -12,6 +35,7 @@ class DiseasesSimulation {
      * Puts input content under node.data.fileNames
      */
   _builder(node) {
+
     // Define HTML elements
     var htmlInfo = '\
     <div class="row">\
@@ -30,17 +54,20 @@ class DiseasesSimulation {
 
     var htmlControl = '\
     <div>\
-    <div class="row">\
-      <div class="col-3 text">Mode:</div>\
-      <select id="sim_mode_' + node.id + '" class="combobox col-9"><option>none</option></select>\
-    </div>\
-    <div class="row">\
-        <div class="col-3 text">Day:</div>\
-        <div class="col-9">\
-            <div id="slider_day' +
-                     node.id + '"></div>\
-        </div>\
-        </div>\
+      <div class="row">\
+        <div class="col-3 text">Mode:</div>\
+        <select id="sim_mode_' + node.id + '" class="combobox col-9"><option>none</option></select>\
+      </div>\
+      <div class="row">\
+          <div class="col-3 text">Day:</div>\
+            <div class="col-9">\
+                <div id="slider_day' + node.id + '">\
+            </div>\
+          </div>\
+      </div>\
+      <div class="row">\
+        <button class="col-12" id="play_mode_' + node.id + '">Play</button>\
+      </div>\
     </div>';
 
 
@@ -66,24 +93,39 @@ class DiseasesSimulation {
             var simPath  = $(element).find("#sim_mode_" + node.id).val();
             window.call_native("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
           });
-         
+
           // Event handling when slider changes
-          slider.noUiSlider.on('change', function(values, handle) {
+          slider.noUiSlider.on('set', function(values, handle) {
             var timestep = values[handle];
             var simPath  = $(element).find("#sim_mode_" + node.id).val();
             window.call_native("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
           });
 
+          var self = this;
+          const playButton = $(element).find("#play_mode_" + node.id);
+          console.log("Button: " + playButton);
+          playButton.click(function() {
+            if(self.animate == false)
+            {
+              $(element).find("#play_mode_" + node.id).text("Pause");
+              self.animate = true;
+              const slider    = element.querySelector("#slider_day" + node.id);
+              DiseasesSimulation.startAnimation(self, slider);
+            }else{
+              $(element).find("#play_mode_" + node.id).text("Play");
+              self.animate = false;
+            }
+          });
+
           //Call once for initialization
           window.call_native('readDiseasesSimulationModes', parseInt(node.id));
-         // window.call_native("getFilesForTimeStep", parseInt(node.id), $(select).val(), parseFloat(slider.noUiSlider.get()));
         });
     node.addControl(simcontrol);
 
     
     // Define the output type
     const output = new D3NE.Output('TEXTURE(s)', nodeEditor.sockets.TEXTURES);
-    node.addOutput(output); 
+    node.addOutput(output);
     return node;
   }
 

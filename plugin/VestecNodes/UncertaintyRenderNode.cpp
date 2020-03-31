@@ -78,20 +78,23 @@ void UncertaintyRenderNode::SetOpacity(double val) {
 }
 
 void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
-  // Forward to OGL renderer
-  json args = json::parse(jsonFilenames);
+  // Create a thead to load the data and do not block main thread
+  std::thread threadLoad([=]() {
+    // Forward to OGL renderer
+    json args = json::parse(jsonFilenames);
 
-  // Create textures
-  std::vector<GDALReader::GreyScaleTexture> vecTextures;
+    // Create textures
+    std::vector<GDALReader::GreyScaleTexture> vecTextures;
 
-  // range-based for over persistence pairs
-  for (auto& filename : args) {
-    // Read the GDAL texture (grayscale only 1 float channel)
-    GDALReader::GreyScaleTexture texture;
-    GDALReader::ReadGrayScaleTexture(texture, filename);
-    vecTextures.push_back(texture);
-    std::cout << "Adding texture " << filename << std::endl;
-  }
-  // Add the new texture for rendering
-  m_pRenderer->SetOverlayTextures(vecTextures);
+    // range-based for over persistence pairs
+    for (auto& filename : args) {
+      // Read the GDAL texture (grayscale only 1 float channel)
+      GDALReader::GreyScaleTexture texture;
+      GDALReader::ReadGrayScaleTexture(texture, filename);
+      vecTextures.push_back(texture);
+    }
+    // Add the new texture for rendering
+    m_pRenderer->SetOverlayTextures(vecTextures);
+  });
+  threadLoad.detach();
 }

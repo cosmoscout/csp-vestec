@@ -56,11 +56,8 @@ UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pS
   m_pComputeShader->InitShaderFromString(GL_COMPUTE_SHADER, COMPUTE);
   m_pComputeShader->Link();
 
-  float vecInit[12] = {2};
-  m_pBufferSSBO     = new VistaBufferObject();
-  m_pBufferSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
-  m_pBufferSSBO->BufferData(12 * sizeof(float), &vecInit[0], GL_DYNAMIC_COPY);
-  m_pBufferSSBO->Release();
+  // Initialize SSBO
+  m_pBufferSSBO = new VistaBufferObject();
 
   // create textures ---------------------------------------------------------
   for (auto const& viewport : GetVistaSystem()->GetDisplayManager()->GetViewports()) {
@@ -102,9 +99,11 @@ void UncertaintyOverlayRenderer::SetOpacity(double val) {
 
 void UncertaintyOverlayRenderer::SetOverlayTextures(
     std::vector<GDALReader::GreyScaleTexture>& vecTextures) {
+  mLockTextureAccess.lock();
   mvecTextures.clear();
-  mvecTextures    = vecTextures;
+  mvecTextures    = std::move(vecTextures);
   mUpdateTextures = true;
+  mLockTextureAccess.unlock();
 }
 
 bool UncertaintyOverlayRenderer::Do() {
@@ -154,18 +153,20 @@ bool UncertaintyOverlayRenderer::Do() {
     //################################## Compute Shader ###################################
     std::vector<float> result;
     {
-
       cs::utils::FrameTimings::ScopedTimer timer("UncertaintyOverlayRenderer::Compute");
       m_pComputeShader->Bind();
-      // Provide access to simulations results (textures)
+
+      // Provide access to simulations results (2D TEXTURE ARRAY)
       data.mColorBuffer->Bind(GL_TEXTURE0);
       m_pComputeShader->SetUniform(m_pComputeShader->GetUniformLocation("uSimBuffer"), 0);
 
-      // Provide texture sizes for correect lookups
+      // Provide texture sizes for correct lookups
       m_pComputeShader->SetUniform(
           m_pComputeShader->GetUniformLocation("uSizeTexX"), (int)mvecTextures[0].x);
+
       m_pComputeShader->SetUniform(
           m_pComputeShader->GetUniformLocation("uSizeTexY"), (int)mvecTextures[0].y);
+
       m_pComputeShader->SetUniform(
           m_pComputeShader->GetUniformLocation("uSizeTexZ"), (int)mvecTextures.size());
 
@@ -174,29 +175,29 @@ bool UncertaintyOverlayRenderer::Do() {
       int group_size_y = (mvecTextures[0].y / 16) + 1;
 
       // Provide access to SSBO to write result data
-      m_pBufferSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
-      m_pBufferSSBO->BufferData(
-          8 * group_size_x * group_size_y * sizeof(float), nullptr, GL_DYNAMIC_COPY);
-
       m_pBufferSSBO->BindBufferBase(GL_SHADER_STORAGE_BUFFER, 1);
 
       // Execute shader
       glDispatchComputeGroupSizeARB(group_size_x, group_size_y, 1, group_size_x, group_size_y, 1);
+
+      // Barrier to wait for SSBO results
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+      // Release SSBO
       glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
 
       // Copy ssbo back to host memory
-      m_pBufferSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
-      float* ptr = (float*)m_pBufferSSBO->MapBuffer(GL_READ_ONLY);
+      // m_pBufferSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
+      // float* ptr = (float*)m_pBufferSSBO->MapBuffer(GL_READ_ONLY);
 
-      result.push_back(ptr[0]);
-      result.push_back(ptr[1]);
-      result.push_back(ptr[2]);
-      result.push_back(ptr[3]);
-      result.push_back(ptr[4]);
-      result.push_back(ptr[5]);
-      result.push_back(ptr[6]);
-      result.push_back(ptr[7]);
+      // result.push_back(ptr[0]);
+      // result.push_back(ptr[1]);
+      // result.push_back(ptr[2]);
+      // result.push_back(ptr[3]);
+      // result.push_back(ptr[4]);
+      // result.push_back(ptr[5]);
+      // result.push_back(ptr[6]);
+      // result.push_back(ptr[7]);
 
       // std::cout << "Min Scalar " << ptr[0] << std::endl;
       // std::cout << "Max Scalar " << ptr[1] << std::endl;
@@ -207,9 +208,10 @@ bool UncertaintyOverlayRenderer::Do() {
       // std::cout << "Difference min per pixel " << ptr[6] << std::endl;
       // std::cout << "Difference max per pixel " << ptr[7] << std::endl;
       // std::cout << "#######################" << std::endl;
+      // m_pBufferSSBO->UnmapBuffer();
+      // m_pBufferSSBO->Release();
+
       data.mColorBuffer->Unbind(GL_TEXTURE0);
-      m_pBufferSSBO->UnmapBuffer();
-      m_pBufferSSBO->Release();
       m_pComputeShader->Release();
     }
     //################################## Compute Shader done ###################################
@@ -254,17 +256,11 @@ bool UncertaintyOverlayRenderer::Do() {
     glUniformMatrix4fv(loc, 1, GL_FALSE, matMV.GetData());
 
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float)farClip);
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uAvgDiff"), (float)result[5]);
+
     m_pSurfaceShader->SetUniform(
         m_pSurfaceShader->GetUniformLocation("uNumTextures"), (int)mvecTextures.size());
     loc = m_pSurfaceShader->GetUniformLocation("uBounds");
     glUniform4dv(loc, 1, mvecTextures[0].lnglatBounds.data());
-
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uRangeScalar"), (float)result[3], (float)result[4]);
-    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRangeDifferences"),
-        (float)result[6], (float)result[7]);
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
     auto sunDirection =
         glm::normalize(glm::inverse(matWorldTransform) *
@@ -272,12 +268,15 @@ bool UncertaintyOverlayRenderer::Do() {
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
         sunDirection[0], sunDirection[1], sunDirection[2]);
 
-    int depthBits = 0;
-    glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-    // std::cout << "Depth buffer bits : " << depthBits << std::endl;
+    // Provide SSBO with min, max average values on location 3
+    m_pBufferSSBO->BindBufferBase(GL_SHADER_STORAGE_BUFFER, 3);
 
     // Dummy draw
     glDrawArrays(GL_POINTS, 0, 1);
+
+    // Release SSBO
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+    m_pBufferSSBO->Release();
 
     data.mDepthBuffer->Unbind(GL_TEXTURE0);
     data.mColorBuffer->Unbind(GL_TEXTURE1);
@@ -305,18 +304,33 @@ void UncertaintyOverlayRenderer::UploadTextures() {
   // Get the first texture
   GDALReader::GreyScaleTexture texture0 = mvecTextures[0];
 
+  // Allocate memory for the SSBO
+  int group_size_x = (mvecTextures[0].x / 16) + 1;
+  int group_size_y = (mvecTextures[0].y / 16) + 1;
+
+  m_pBufferSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
+  m_pBufferSSBO->BufferData(
+      8 * group_size_x * group_size_y * sizeof(float), nullptr, GL_DYNAMIC_COPY);
+  m_pBufferSSBO->Release();
+
   // Allocate texture array
   data.mColorBuffer->Bind();
-  glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, texture0.x, texture0.y, mvecTextures.size());
+  if (lBufferSize != texture0.x * texture0.y * mvecTextures.size()) {
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, texture0.x, texture0.y, mvecTextures.size());
+    lBufferSize = texture0.x * texture0.y * mvecTextures.size();
+  }
 
+  mLockTextureAccess.lock();
   int layerCount = 0;
   for (auto texture : mvecTextures) {
     std::cout << "Uplading textures to layer " << layerCount << std::endl;
     glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layerCount, texture.x, texture.y, 1, GL_RED,
         GL_FLOAT, texture.buffer);
+    delete texture.buffer;
     layerCount++;
   }
   mUpdateTextures = false;
+  mLockTextureAccess.unlock();
   data.mColorBuffer->Unbind();
   std::cout << "Uplading textures finished" << std::endl;
 }

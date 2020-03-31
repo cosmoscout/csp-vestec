@@ -10,6 +10,7 @@
 #include <array>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -53,9 +54,9 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
   void UploadTextures();
 
  private:
-  bool  mUpdateTextures = false; //! Flag if a texture upload is required
-  float mOpacity        = 1;     //! Opacity value used in shader to adjust the overlay
-
+  bool             mUpdateTextures  = false; //! Flag if a texture upload is required
+  float            mOpacity         = 1;     //! Opacity value used in shader to adjust the overlay
+  long long        lBufferSize      = 0;     //! Store size of the texture array
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
   VistaGLSLShader* m_pComputeShader = nullptr; //! Vista GLSL shader object used for rendering
 
@@ -77,6 +78,7 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
 
   std::unordered_map<VistaViewport*, GBufferData> mGBufferData; //! Store one buffer per viewport
 
+  std::mutex mLockTextureAccess;
   std::vector<GDALReader::GreyScaleTexture>
       mvecTextures; //! The textured passed from outside via SetOverlayTexture
 
