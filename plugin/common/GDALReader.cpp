@@ -105,7 +105,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   oOperation.WarpRegionToBuffer(0, 0, resX, resY, &bufferData[0], eDT);
   GDALDestroyGenImgProjTransformer(psWarpOptions->pTransformerArg);
   GDALDestroyWarpOptions(psWarpOptions);
-
+  GDALClose(poDatasetSrc);
   /////////////////////// Reprojection End /////////////////
   texture.buffersize   = bufferSize;
   texture.buffer       = (float*)CPLMalloc(bufferSize);
