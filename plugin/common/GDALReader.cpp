@@ -8,7 +8,16 @@
 
 #include <iostream>
 
+std::map<std::string, GDALReader::GreyScaleTexture> GDALReader::TextureCache;
+
 void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename) {
+  // Check for texture in cache
+  std::map<std::string, GreyScaleTexture>::iterator it = TextureCache.find(filename);
+  if (it != TextureCache.end()) {
+    texture = it->second;
+    return;
+  }
+
   // Initialize GDAL
   GDALAllRegister();
 
@@ -114,4 +123,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   texture.dataRange    = d_dataRange;
   texture.lnglatBounds = bounds;
   std::memcpy(texture.buffer, &bufferData[0], bufferSize);
+
+  // Cache the texture
+  TextureCache.insert(std::make_pair(filename, texture));
 }

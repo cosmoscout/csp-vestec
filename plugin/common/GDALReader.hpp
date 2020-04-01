@@ -2,6 +2,7 @@
 #define VESTEC_GDAL_READER
 
 #include <array>
+#include <map>
 #include <string>
 
 class GDALReader {
@@ -24,6 +25,9 @@ class GDALReader {
    * Reads a GDAL supported gray scale image into the texture passed as reference
    */
   static void ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename);
+
+ private:
+  static std::map<std::string, GreyScaleTexture> TextureCache;
 };
 
 #endif // VESTEC_GDAL_READER
