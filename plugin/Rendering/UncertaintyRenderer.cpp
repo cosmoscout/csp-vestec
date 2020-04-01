@@ -107,7 +107,11 @@ void UncertaintyOverlayRenderer::SetOverlayTextures(
 }
 
 bool UncertaintyOverlayRenderer::Do() {
-  if (mvecTextures.size() == 0)
+  mLockTextureAccess.lock();
+  int numTextures = mvecTextures.size();
+  mLockTextureAccess.unlock();
+
+  if (numTextures == 0)
     return false;
 
   // Get viewport information required to get previous depth buffer
@@ -262,6 +266,9 @@ bool UncertaintyOverlayRenderer::Do() {
     loc = m_pSurfaceShader->GetUniformLocation("uBounds");
     glUniform4dv(loc, 1, mvecTextures[0].lnglatBounds.data());
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
+    m_pSurfaceShader->SetUniform(
+        m_pSurfaceShader->GetUniformLocation("uVisMode"), (int)mRenderMode);
+
     auto sunDirection =
         glm::normalize(glm::inverse(matWorldTransform) *
                        (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
@@ -297,11 +304,11 @@ void UncertaintyOverlayRenderer::getGLError(std::string name) {
 }
 
 void UncertaintyOverlayRenderer::UploadTextures() {
-  std::cout << "Uplading textures " << std::endl;
   auto        viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
   auto const& data     = mGBufferData[viewport];
 
   // Get the first texture
+  mLockTextureAccess.lock();
   GDALReader::GreyScaleTexture texture0 = mvecTextures[0];
 
   // Allocate memory for the SSBO
@@ -320,19 +327,19 @@ void UncertaintyOverlayRenderer::UploadTextures() {
     lBufferSize = texture0.x * texture0.y * mvecTextures.size();
   }
 
-  mLockTextureAccess.lock();
   int layerCount = 0;
   for (auto texture : mvecTextures) {
-    std::cout << "Uplading textures to layer " << layerCount << std::endl;
     glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layerCount, texture.x, texture.y, 1, GL_RED,
         GL_FLOAT, texture.buffer);
-    delete texture.buffer;
     layerCount++;
   }
   mUpdateTextures = false;
   mLockTextureAccess.unlock();
   data.mColorBuffer->Unbind();
-  std::cout << "Uplading textures finished" << std::endl;
+}
+
+void UncertaintyOverlayRenderer::SetVisualizationMode(RenderMode mode) {
+  mRenderMode = mode;
 }
 
 bool UncertaintyOverlayRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) {

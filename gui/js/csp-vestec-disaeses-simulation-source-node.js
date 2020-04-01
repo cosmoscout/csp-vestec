@@ -10,10 +10,8 @@ class DiseasesSimulation {
   }
 
   static startAnimation(self, slider){
-      console.log("Starting animation");
-
       var timestep = slider.noUiSlider.get();
-      if(parseInt(timestep) < 365)
+      if(parseInt(timestep) < 364)
       {
         slider.noUiSlider.set(parseInt(timestep) + 1);
       }
@@ -23,7 +21,7 @@ class DiseasesSimulation {
       }
       if(self.animate == true)
       {
-        setTimeout(function() {DiseasesSimulation.startAnimation(self, slider)}, 66);
+        setTimeout(function() {DiseasesSimulation.startAnimation(self, slider)}, 60);
       }
   }
 
@@ -80,7 +78,7 @@ class DiseasesSimulation {
 
           // Initialize the slider
           const slider    = element.querySelector("#slider_day" + node.id);
-          noUiSlider.create(slider, {start : 1, step: 1, animate : false, range : {'min' : 0, 'max' : 365}});
+          noUiSlider.create(slider, {start : 1, step: 1, animate : false, range : {'min' : 0, 'max' : 364}});
 
           //When combo box changes update the files and number of ensemble info
           select.on("change", function() {

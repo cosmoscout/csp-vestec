@@ -71,6 +71,35 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
       "setOpacity", ([pEditor](double id, double val) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetOpacity(val);
       }));
+
+  pEditor->GetGuiItem()->registerCallback<double, double>(
+      "setUncertaintyVisualizationMode", ([pEditor](double id, double val) {
+        UncertaintyOverlayRenderer::RenderMode renderMode;
+        std::cout << "Switching vis to " << (int)val << std::endl;
+        switch ((int)val) {
+        case 1:
+          renderMode = UncertaintyOverlayRenderer::RenderMode::Average;
+          break;
+        case 2:
+          renderMode = UncertaintyOverlayRenderer::RenderMode::Variance;
+          break;
+        case 3:
+          renderMode = UncertaintyOverlayRenderer::RenderMode::Difference;
+          break;
+        case 4:
+          renderMode = UncertaintyOverlayRenderer::RenderMode::Mixed_Variance;
+          break;
+        case 5:
+          renderMode = UncertaintyOverlayRenderer::RenderMode::Mixed_Difference;
+          break;
+        }
+        pEditor->GetNode<UncertaintyRenderNode>(id)->GetRenderNode()->SetVisualizationMode(
+            renderMode);
+      }));
+}
+
+UncertaintyOverlayRenderer* UncertaintyRenderNode::GetRenderNode() {
+  return m_pRenderer;
 }
 
 void UncertaintyRenderNode::SetOpacity(double val) {

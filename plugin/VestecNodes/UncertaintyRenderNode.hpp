@@ -42,6 +42,11 @@ class UncertaintyRenderNode : public VNE::Node {
    */
   void SetOpacity(double val);
 
+  /**
+   * Get the OpenGL uncertainty render node from ViSTA
+   */
+  UncertaintyOverlayRenderer* GetRenderNode();
+
  private:
   cs::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings

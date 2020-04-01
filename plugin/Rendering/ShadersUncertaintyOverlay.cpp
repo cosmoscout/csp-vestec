@@ -233,6 +233,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
     uniform float         uOpacity = 1;
     uniform dvec4         uBounds;
     uniform int           uNumTextures;
+    uniform int           uVisMode = 1;
     uniform vec3          uSunDirection;
 
     in vec2 texcoord;
@@ -367,11 +368,19 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                 float normSimValue      = (average  - position[3]) / (position[4] - position[3]);
                 float normDiffValue     = (absDifference  - position[6]) / (position[7] - position[6]);
                 
-                vec4 scalar = vec4(heat(normSimValue), uOpacity);
-                vec4 uncertainty = vec4(heat(normDiffValue), uOpacity);
-                //vec4 uncertainty = vec4(heatUncertainty(variance), uOpacity);
-                vec4 color = scalar;// * uncertainty;
-
+                vec4 colorScalar = vec4(heat(normSimValue), uOpacity);
+                vec4 colorDifference = vec4(heatUncertainty(normDiffValue), uOpacity);
+                vec4 colorVariance = vec4(heatUncertainty(variance), uOpacity);
+                
+                vec4 color;
+                switch (uVisMode) {
+                    case 1: color = colorScalar; break;
+                    case 2: color = colorVariance; break;
+                    case 3: color = colorDifference; break;
+                    case 4: color = colorScalar * colorVariance; break;
+                    case 5: color = colorScalar * colorDifference; break;
+                }
+      
                 //Lighting using a normal calculated from partial derivative
                 vec3  fPos    = vec3(worldPos); //cast from double to float
                 vec3  dx      = dFdx( fPos );
@@ -386,7 +395,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                 vec3 ambient = ambientStrength * lightColor;
                 vec3 diffuse = lightColor * NdotL;
                 //vec3 result = (ambient + diffuse) * color.rgb;
-                vec4 result = vec4(color.rgb, 1 - variance);
+                vec4 result = vec4(color.rgb, uOpacity);
                
                 FragColor          = result;
             }

@@ -17,13 +17,25 @@ class UncertaintyRenderNode {
 
     // Define HTML elements for the opacity slider
     var htmlOpacity = '\
-        <div class="row">\
-            <div class="col-6 text">Opacity:</div>\
-            <div class="col-6">\
+    <div>\
+      <div class="row">\
+            <div class="col-5 text">Opacity:</div>\
+            <div class="col-7">\
                 <div id="slider_opacity' +
                       node.id + '"></div>\
             </div>\
-        </div>';
+        </div>\
+      <div class="row">\
+        <div class="col-5 text">Mode:</div>\
+        <select id="vis_mode_' + node.id + '" class="combobox col-7">\
+          <option value="1">Average</option>\
+          <option value="2">Variance</option>\
+          <option value="3">Difference</option>\
+          <option value="4">Average*Variance</option>\
+          <option value="5">Average*Difference</option>\
+        </select>\
+      </div>\
+    </div>';
 
     // Slider to control the opcity of the overlay
     const opacity_control = new D3NE.Control(htmlOpacity, (element, control) => {
@@ -35,6 +47,13 @@ class UncertaintyRenderNode {
       // Read the files for the given simulation mode and fill combobox when mode is changed
       slider.noUiSlider.on('slide', function(values, handle) {
         window.call_native("setOpacity", node.id, parseFloat(values[handle]))
+      });
+
+      //Initialize combobox for the visualization mode
+      const select = $(element).find("#vis_mode_" + node.id);
+      select.selectpicker();
+      select.on("change", function() {
+        window.call_native("setUncertaintyVisualizationMode", parseInt(node.id), parseInt($(this).val()));
       });
     });
 
