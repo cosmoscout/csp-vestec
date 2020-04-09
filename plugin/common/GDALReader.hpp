@@ -3,6 +3,7 @@
 
 #include <array>
 #include <map>
+#include <mutex>
 #include <string>
 
 class GDALReader {
@@ -22,12 +23,24 @@ class GDALReader {
   };
 
   /**
+   * Load all reader DLLs
+   */
+  static void InitGDAL();
+
+  /**
    * Reads a GDAL supported gray scale image into the texture passed as reference
    */
   static void ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename);
 
+  /**
+   * Adds a texture with unique path to the cache
+   */
+  static void AddTextureToCache(std::string path, GreyScaleTexture& texture);
+
  private:
   static std::map<std::string, GreyScaleTexture> TextureCache;
+  static std::mutex                              mMutex;
+  static bool                                    mIsInitialized;
 };
 
 #endif // VESTEC_GDAL_READER

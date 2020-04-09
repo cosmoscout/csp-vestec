@@ -109,11 +109,11 @@ void UncertaintyOverlayRenderer::SetOverlayTextures(
 bool UncertaintyOverlayRenderer::Do() {
   mLockTextureAccess.lock();
   int numTextures = mvecTextures.size();
-  mLockTextureAccess.unlock();
 
-  if (numTextures == 0)
+  if (numTextures == 0) {
+    mLockTextureAccess.unlock();
     return false;
-
+  }
   // Get viewport information required to get previous depth buffer
   auto        viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
   auto const& data     = mGBufferData[viewport];
@@ -122,6 +122,7 @@ bool UncertaintyOverlayRenderer::Do() {
     if (mSolarSystem->pActiveBody.get() == nullptr ||
         mSolarSystem->pActiveBody.get()->getCenterName() != "Earth") {
       std::cout << "[TextureOverlayRenderer::Do] No active planet set " << std::endl;
+      mLockTextureAccess.unlock();
       return 0;
     }
     // std::cout << "[TextureOverlayRenderer::Do] Rendering in Do()" << std::endl;
@@ -294,6 +295,7 @@ bool UncertaintyOverlayRenderer::Do() {
     glDepthMask(GL_TRUE);
     glPopAttrib();
   }
+  mLockTextureAccess.unlock();
   return true;
 }
 
@@ -308,7 +310,6 @@ void UncertaintyOverlayRenderer::UploadTextures() {
   auto const& data     = mGBufferData[viewport];
 
   // Get the first texture
-  mLockTextureAccess.lock();
   GDALReader::GreyScaleTexture texture0 = mvecTextures[0];
 
   // Allocate memory for the SSBO
@@ -334,7 +335,6 @@ void UncertaintyOverlayRenderer::UploadTextures() {
     layerCount++;
   }
   mUpdateTextures = false;
-  mLockTextureAccess.unlock();
   data.mColorBuffer->Unbind();
 }
 

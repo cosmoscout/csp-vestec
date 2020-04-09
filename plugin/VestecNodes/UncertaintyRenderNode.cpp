@@ -42,6 +42,9 @@ UncertaintyRenderNode::UncertaintyRenderNode(cs::vestec::Plugin::Settings const&
 
   // Render after planets which are rendered at 100
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pAnchor, static_cast<int>(150));
+
+  // Initialize GDAL only once
+  GDALReader::InitGDAL();
 }
 
 UncertaintyRenderNode::~UncertaintyRenderNode() {

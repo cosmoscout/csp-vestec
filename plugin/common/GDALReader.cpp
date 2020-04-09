@@ -9,17 +9,36 @@
 #include <iostream>
 
 std::map<std::string, GDALReader::GreyScaleTexture> GDALReader::TextureCache;
+std::mutex                                          GDALReader::mMutex;
+bool                                                GDALReader::mIsInitialized = false;
+
+void GDALReader::InitGDAL() {
+  GDALAllRegister();
+  GDALReader::mIsInitialized = true;
+}
+
+void GDALReader::AddTextureToCache(std::string path, GreyScaleTexture& texture) {
+  GDALReader::mMutex.lock();
+  // Cache the texture
+  TextureCache.insert(std::make_pair(path, texture));
+  GDALReader::mMutex.unlock();
+}
 
 void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename) {
-  // Check for texture in cache
-  std::map<std::string, GreyScaleTexture>::iterator it = TextureCache.find(filename);
-  if (it != TextureCache.end()) {
-    texture = it->second;
+  if (!GDALReader::mIsInitialized) {
+    std::cout << "GDAL not initialized! Call GDALReader::InitGDAL() first " << std::endl;
     return;
   }
 
-  // Initialize GDAL
-  GDALAllRegister();
+  // Check for texture in cache
+  GDALReader::mMutex.lock();
+  std::map<std::string, GreyScaleTexture>::iterator it = TextureCache.find(filename);
+  if (it != TextureCache.end()) {
+    texture = it->second;
+    GDALReader::mMutex.unlock();
+    return;
+  }
+  GDALReader::mMutex.unlock();
 
   // Read the source image into a GDAL dataset
   GDALDataset* poDatasetSrc = nullptr;
@@ -33,7 +52,10 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
 
   int resX = 0, resY = 0;
   // Open the file. Needs to be supported by GDAL
+  // TODO: There seems a multithreading issue in netCDF so we need to lock data reading
+  GDALReader::mMutex.lock();
   poDatasetSrc = (GDALDataset*)GDALOpen(filename.data(), GA_ReadOnly);
+  GDALReader::mMutex.unlock();
 
   if (poDatasetSrc == NULL) {
     std::cout << "[GDALReader::ReadGrayScaleTexture] Error: Failed to load " << filename
@@ -124,6 +146,5 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   texture.lnglatBounds = bounds;
   std::memcpy(texture.buffer, &bufferData[0], bufferSize);
 
-  // Cache the texture
-  TextureCache.insert(std::make_pair(filename, texture));
+  GDALReader::AddTextureToCache(filename, texture);
 }
