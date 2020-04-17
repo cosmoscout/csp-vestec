@@ -20,7 +20,9 @@
 #include "ogr_spatialref.h"
 
 #include <iomanip>
+#include <thread>
 #include <vector>
+
 // for convenience
 using json = nlohmann::json;
 

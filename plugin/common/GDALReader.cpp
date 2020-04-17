@@ -6,6 +6,7 @@
 #include "gdalwarper.h"
 #include "ogr_spatialref.h"
 
+#include <cstring>
 #include <iostream>
 
 std::map<std::string, GDALReader::GreyScaleTexture> GDALReader::TextureCache;
