@@ -9,6 +9,7 @@ const std::string CriticalPointsRenderer::SURFACE_VERT = R"(
     // ========================================================================
     layout(location = 0) in vec3  inPos;
     layout(location = 1) in float inPersistence;
+    layout(location = 2) in int   inCriticalType;
 
     uniform mat4          uMatP;
     uniform mat4          uMatMV;
@@ -17,6 +18,7 @@ const std::string CriticalPointsRenderer::SURFACE_VERT = R"(
 
     out vec4 vPos;
     out float persistence;
+    flat out int   criticalType;
 
     float VP_toGeocentricLat(float geodeticLat, vec2 radius)
     {
@@ -47,6 +49,7 @@ const std::string CriticalPointsRenderer::SURFACE_VERT = R"(
          vPos = uMatMV * vec4(posV, 1.0);
          gl_Position = uMatP * vec4(vPos.xyz, 1);
          persistence = inPersistence;
+         criticalType = inCriticalType;
     }
 )";
 
@@ -55,7 +58,8 @@ const std::string CriticalPointsRenderer::SURFACE_FRAG = R"(
 
     in  vec4  vPos;
     in  float persistence;
-    out vec4 FragColor;
+    flat in  int   criticalType;
+    out vec4  FragColor;
 
     uniform mat4          uMatP;
     uniform mat4          uMatMV;
@@ -64,6 +68,7 @@ const std::string CriticalPointsRenderer::SURFACE_FRAG = R"(
     uniform float         uOpacity = 1;
     uniform float         uMinPersistence = 0;
     uniform float         uMaxPersistence = 1;
+    uniform int           uVisualizationMode = 4;
 
     const float PI = 3.14159265359;
 
@@ -78,6 +83,9 @@ const std::string CriticalPointsRenderer::SURFACE_FRAG = R"(
  
     void main()
     {     
+        if(criticalType != uVisualizationMode && uVisualizationMode!= 4)
+            discard;
+
         float value = (persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
         FragColor = vec4(heat(value), 1);
         

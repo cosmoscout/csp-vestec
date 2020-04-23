@@ -41,6 +41,11 @@ class CriticalPointsNode : public VNE::Node {
    */
   void SetOpacity(double val);
 
+  /**
+   * Get the iunderlaying render node
+   */
+  CriticalPointsRenderer* GetRenderNode();
+
  private:
   cs::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings

@@ -20,12 +20,21 @@ class VistaVertexArrayObject;
  */
 class CriticalPointsRenderer : public IVistaOpenGLDraw {
  public:
+  enum RenderMode {
+    MINIMA     = 0, //! Render only points with type minima
+    ONE_SADDLE = 1, //! Render only points with type 1-sadlle
+    TWO_SADDLE = 2, //! Render only points with type 2-sadlle
+    MAXIMA     = 3, //! Render only points with type maxima
+    ALL        = 4, //! Render all points
+  };
+
   /**
    * Structs to store point information
    */
   struct CriticalPoint {
     glm::vec3 lnglatheight;
-    float persistence;
+    float     persistence;
+    int       type; //! E.g. minima, maxima, saddle
   };
 
   /**
@@ -45,6 +54,12 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
    */
   void SetPoints(std::vector<CriticalPoint>& vecPoints);
 
+  /**
+   * Set the visualization mode. Render only minima, maxima, sadlles or all
+   * Default: all
+   */
+  void SetVisualizationMode(RenderMode mode);
+
   // ---------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
   // ---------------------------------------
@@ -52,9 +67,10 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
   virtual bool GetBoundingBox(VistaBoundingBox& bb);
 
  private:
-  float mOpacity       = 1;     //! Opacity value used in shader to adjust the overlay
-  float mMinPersistence       = 0;     //! Persistance range min
-  float mMaxPersistence       = 1;     //! Persistance range max
+  float      mOpacity        = 1; //! Opacity value used in shader to adjust the overlay
+  float      mMinPersistence = 0; //! Persistance range min
+  float      mMaxPersistence = 1; //! Persistance range max
+  RenderMode mRenderMode     = RenderMode::ALL; //! Render all points
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
@@ -67,7 +83,7 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
   std::vector<CriticalPoint> m_vecPoints;
 
   VistaVertexArrayObject* m_VAO;
-  VistaBufferObject* m_VBO;
+  VistaBufferObject*      m_VBO;
 };
 
 #endif // TEXTURE_OVERLAY_RENDERER

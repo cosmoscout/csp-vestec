@@ -11,8 +11,25 @@ class CriticalPointsNode {
     }
 
     _builder(node) {
-        const control = new D3NE.Control('<div>CriticalPoints</div>', (element, control) => {
-            const color = 'rgb(221, 221, 255)';
+        var htmlElements = '\
+        <div class="row">\
+        <div class="col-5 text">Mode:</div>\
+        <select id="vis_mode_' + node.id + '" class="combobox col-7">\
+          <option value="4">All</option>\
+          <option value="0">Minima</option>\
+          <option value="1">1-Saddle</option>\
+          <option value="2">2-Saddle</option>\
+          <option value="3">Maxima</option>\
+        </select>\
+        </div>';
+
+        const control = new D3NE.Control(htmlElements, (element, control) => {
+            //Initialize combobox for the visualization mode
+            const select = $(element).find("#vis_mode_" + node.id);
+            select.selectpicker();
+            select.on("change", function() {
+                window.call_native("setCriticalPointsVisualizationMode", parseInt(node.id), parseInt($(this).val()));
+            });
         });
 
         node.addControl(control);

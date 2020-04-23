@@ -22,8 +22,8 @@
 #include <vtkTable.h>
 
 #include <json.hpp>
-#include <set>
 #include <limits>
+#include <set>
 
 // for convenience
 using json = nlohmann::json;
@@ -78,7 +78,7 @@ void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& t
   cinemaProduct->SetFilepathColumnName(0, 0, 0, 0, "FILE");
   cinemaProduct->Update();
 
-  cinemaProduct->GetOutput()->GetBlock(0)->Print(std::cout);
+  // cinemaProduct->GetOutput()->GetBlock(0)->Print(std::cout);
   auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
   polyFilter->SetInputData(cinemaProduct->GetOutput()->GetBlock(0));
   polyFilter->Update();
@@ -89,13 +89,15 @@ void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& t
       (cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)).c_str());
   dumper->SetInputConnection(polyFilter->GetOutputPort());
   dumper->Write();
-  std::cout << "VTK.js written to: " << cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep) << std::endl;
+  std::cout << "VTK.js written to: "
+            << cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep) << std::endl;
 }
 
 void CinemaDBNode::ReadCaseNames(int id) {
   json args;
 
-  std::cout << "Reading case names from cinema database: " << cs::vestec::Plugin::dataDir << std::endl;
+  std::cout << "Reading case names from cinema database: " << cs::vestec::Plugin::dataDir
+            << std::endl;
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
@@ -118,21 +120,21 @@ void CinemaDBNode::ReadCaseNames(int id) {
 void CinemaDBNode::GetTimeSteps(int id) {
   json args;
 
-  std::cout << "Reading time info from cinema database: " << cs::vestec::Plugin::dataDir << std::endl;
+  std::cout << "Reading time info from cinema database: " << cs::vestec::Plugin::dataDir
+            << std::endl;
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
   reader->Update();
 
-  auto table = vtkTable::SafeDownCast(reader->GetOutput());
+  auto          table = vtkTable::SafeDownCast(reader->GetOutput());
   std::set<int> caseNames;
-  auto timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
+  auto          timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
 
   int min = std::numeric_limits<int>::max();
   int max = std::numeric_limits<int>::min();
 
-  for (int x = 0; x < table->GetNumberOfRows(); ++x)
-  {
+  for (int x = 0; x < table->GetNumberOfRows(); ++x) {
     caseNames.insert(timeColumn->GetValue(x));
     min = std::min(min, timeColumn->GetValue(x));
     max = std::max(max, timeColumn->GetValue(x));

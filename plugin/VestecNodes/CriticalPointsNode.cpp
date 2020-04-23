@@ -64,6 +64,35 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
       "setOpacity", ([pEditor](double id, double val) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetOpacity(val);
       }));
+
+  // Callback to set the visualization mode
+  pEditor->GetGuiItem()->registerCallback<double, double>(
+      "setCriticalPointsVisualizationMode", ([pEditor](double id, double val) {
+        CriticalPointsRenderer::RenderMode renderMode;
+        std::cout << "Switching cp vis to " << (int)val << std::endl;
+        switch ((int)val) {
+        case 0:
+          renderMode = CriticalPointsRenderer::RenderMode::MINIMA;
+          break;
+        case 1:
+          renderMode = CriticalPointsRenderer::RenderMode::ONE_SADDLE;
+          break;
+        case 2:
+          renderMode = CriticalPointsRenderer::RenderMode::TWO_SADDLE;
+          break;
+        case 3:
+          renderMode = CriticalPointsRenderer::RenderMode::MAXIMA;
+          break;
+        case 4:
+          renderMode = CriticalPointsRenderer::RenderMode::ALL;
+          break;
+        }
+        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetVisualizationMode(renderMode);
+      }));
+}
+
+CriticalPointsRenderer* CriticalPointsNode::GetRenderNode() {
+  return m_pRenderer;
 }
 
 void CriticalPointsNode::SetOpacity(double val) {
@@ -105,9 +134,11 @@ void CriticalPointsNode::SetPoints(std::string jsonObj) {
     // Prepare the critical points
     upper.lnglatheight = lnglathU;
     upper.persistence  = persistence;
+    upper.type         = element["criticalType"]["upper"];
 
     lower.lnglatheight = lnglathL;
     lower.persistence  = persistence;
+    lower.type         = element["criticalType"]["lower"];
 
     vecPoints.push_back(upper);
     vecPoints.push_back(lower);
