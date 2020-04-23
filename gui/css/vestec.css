@@ -1,6 +1,11 @@
   body {
 	background-color: transparent;
   }
+
+  .bootstrap-select .dropdown-menu li a span.text {
+    display: inline-block;
+    color: #ddf;
+}
   
   .modal-content {
 	background-color: gray;
@@ -8,6 +13,10 @@
   
   .text {
 	color: #ddf;
+  }
+
+  .dark-text {
+	color: rgb(0, 0, 0);
   }
   
   .ui-resizable-helper { border: 2px dotted rgb(57, 57, 58); }
@@ -168,7 +177,7 @@
   }
   
   .node-editor .node span {
-	color: #ddf;
+	color: #000;
 	font-size: 1.0rem;
   }
   
