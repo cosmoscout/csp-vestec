@@ -2,6 +2,8 @@
 This plugin for CosmoScout VR provides functionalities for urgent decision making using the VESTEC framework. The framework is developed under the VESTEC  - H2020 - EU project and is about emerging use modes for High Performance Computing (HPC). You can find more detailed information about VESTEC on the project website:  
 www.vestec-project.eu
 
+Note: Just clone the "feature/vestec" branch on the CosmoScout VR repository. This plugin is included as git submodule.
+
 ![VESTEC - Portal UI to define and execute workflows on the HPC machines](docs/images/overview.png)
 
 The plugin allows end-users registered to the VESTEC service system (see above image), to kick-off pre-defined workflows on an HPC machine and to analyze the result data in CosmoScout VR using the Node Editor shown in the next image. 
