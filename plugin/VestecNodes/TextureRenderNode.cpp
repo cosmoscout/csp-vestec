@@ -75,7 +75,7 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacity", ([pEditor](double id, double val) {
+      "setOpacityTexture", ([pEditor](double id, double val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
       }));
 

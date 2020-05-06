@@ -35,7 +35,7 @@ class TextureRenderNode {
 
       // Read the files for the given simulation mode and fill combobox when mode is changed
       slider.noUiSlider.on('slide', function(values, handle) {
-        window.call_native("setOpacity", node.id, parseFloat(values[handle]))
+        window.call_native("setOpacityTexture", node.id, parseFloat(values[handle]))
       });
     });
 
