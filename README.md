@@ -4,6 +4,10 @@ www.vestec-project.eu
 
 Note: Just clone the "feature/vestec" branch on the CosmoScout VR repository. This plugin is included as git submodule.
 
+## CosmoScout VR - Build Instructions
+[Build - Documentation](docs%2Fsubpages%2Fbuild.md)
+
+## Plugin Description
 ![VESTEC - Portal UI to define and execute workflows on the HPC machines](docs/images/overview.png)
 
 The plugin allows end-users registered to the VESTEC service system (see above image), to kick-off pre-defined workflows on an HPC machine and to analyze the result data in CosmoScout VR using the Node Editor shown in the next image. 
