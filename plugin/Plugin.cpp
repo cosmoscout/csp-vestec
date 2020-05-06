@@ -42,9 +42,9 @@ namespace cs::vestec {
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::parseSection("csp-vestec", [&] {
-    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
-    o.mFireDir       = cs::core::parseProperty<std::string>("vestec-2D-fire", j);
-    o.mDiseasesDir   = cs::core::parseProperty<std::string>("diseases-dir", j);
+    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-topo-dir", j);
+    o.mFireDir       = cs::core::parseProperty<std::string>("vestec-fire-dir", j);
+    o.mDiseasesDir   = cs::core::parseProperty<std::string>("vestec-diseases-dir", j);
   });
 }
 
@@ -97,47 +97,55 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("TEXTURES");
 
   // Register our node types for the flow editor
-  m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(
+      CinemaDBNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(WildFireSourceNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(
+      WildFireSourceNode::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) {
         return new WildFireSourceNode(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(DiseasesSensorInput::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(
+      DiseasesSensorInput::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) {
         return new DiseasesSensorInput(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { DiseasesSensorInput::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(DiseasesSimulation::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(
+      DiseasesSimulation::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) {
         return new DiseasesSimulation(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { DiseasesSimulation::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(
+      PersistenceNode::GetName(), "Renderer",
       [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
       [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(TextureRenderNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(
+      TextureRenderNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
         return new TextureRenderNode(mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
       },
       [](VNE::NodeEditor* editor) { TextureRenderNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(CriticalPointsNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(
+      CriticalPointsNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
         return new CriticalPointsNode(mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
       },
       [](VNE::NodeEditor* editor) { CriticalPointsNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(UncertaintyRenderNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(
+      UncertaintyRenderNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
         return new UncertaintyRenderNode(mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
