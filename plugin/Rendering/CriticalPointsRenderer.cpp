@@ -44,8 +44,10 @@ CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSyst
 
   m_pSurfaceShader = new VistaGLSLShader();
   m_pSurfaceShader->InitVertexShaderFromString(SURFACE_VERT);
+  m_pSurfaceShader->InitGeometryShaderFromString(SURFACE_GEOM);
   m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
   m_pSurfaceShader->Link();
+
 
   // create buffers ----------------------------------------------------------
   m_VBO = new VistaBufferObject();
@@ -116,8 +118,8 @@ bool CriticalPointsRenderer::Do() {
 
   // save current lighting and meterial state of the OpenGL state machine
   glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
-  // glDisable(GL_CULL_FACE);
-  // glDisable(GL_DEPTH_TEST);
+  //glDisable(GL_CULL_FACE);
+  //glDisable(GL_DEPTH_TEST);
   // glEnable(GL_BLEND);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -131,11 +133,15 @@ bool CriticalPointsRenderer::Do() {
 
   // get matrices and related values -----------------------------------------
   GLfloat glMat[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMat[0]);
-  VistaTransformMatrix matModelView(glMat, true);
 
   glGetFloatv(GL_PROJECTION_MATRIX, &glMat[0]);
   VistaTransformMatrix matProjection(glMat, true);
+
+  auto        activeBody        = mSolarSystem->pActiveBody.get();
+  glm::dmat4  matWorldTransform = activeBody->getWorldTransform();
+
+  VistaTransformMatrix matM(glm::value_ptr(matWorldTransform), true);
+  VistaTransformMatrix matModelView(matM);
   // get matrices and related values -----------------------------------------
 
   // Bind shader before draw
