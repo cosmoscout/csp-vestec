@@ -75,6 +75,7 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
   static const std::string SURFACE_VERT; //! Code for the vertex shader
+  static const std::string SURFACE_GEOM; //! Code for the geometry shader
   static const std::string SURFACE_FRAG; //! Code for the fragment shader
 
   cs::core::SolarSystem*
