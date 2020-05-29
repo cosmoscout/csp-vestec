@@ -39,6 +39,8 @@ layout (triangle_strip, max_vertices = 18) out;
 
 uniform mat4          uMatP;
 uniform mat4          uMatMV;
+uniform float         uHeightScale;
+uniform float         uWidthScale;
 
 in VS_OUT
 {
@@ -95,8 +97,8 @@ void main()
     const int sides = 4;
 
     // Todo replace scalars with uniforms
-    float widthScale = 0.0001 * gs_in_vs[0].persistence;
-    float heightScale = 0.005 * gs_in_vs[0].persistence;
+    float widthScale = 0.0001 * gs_in_vs[0].persistence * uWidthScale;
+    float heightScale = 0.005 * gs_in_vs[0].persistence * uHeightScale;
 
     // Total number of sides + center position
     vec4[sides + 1] positions;

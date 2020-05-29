@@ -69,6 +69,14 @@ void CriticalPointsRenderer::SetVisualizationMode(RenderMode mode) {
   mRenderMode = mode;
 }
 
+void CriticalPointsRenderer::SetHeightScale(float scale) {
+  mHeightScale = scale;
+}
+
+void CriticalPointsRenderer::SetWidthScale(float scale) {
+  mWidthScale = scale;
+}
+
 void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
   std::cout << "Copy data to VBO: " << vecPoints.size() << std::endl;
   m_vecPoints.clear();
@@ -160,6 +168,10 @@ bool CriticalPointsRenderer::Do() {
       m_pSurfaceShader->GetUniformLocation("uMinPersistence"), mMinPersistence);
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), (int)mRenderMode);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uHeightScale"), (float)mHeightScale);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uWidthScale"), (float)mWidthScale);
 
   // Draw points
   // std::cout << "Draw Points: " << m_vecPoints.size() << std::endl;

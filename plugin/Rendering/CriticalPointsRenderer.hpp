@@ -60,6 +60,18 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
    */
   void SetVisualizationMode(RenderMode mode);
 
+  /**
+   * Set the height scale of rendered points
+   * Default: 1 (100%)
+   */
+  void SetHeightScale(float scale);
+
+  /**
+   * Set the width scale of rendered points
+   * Default: 1 (100%)
+   */
+  void SetWidthScale(float scale);
+
   // ---------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
   // ---------------------------------------
@@ -71,6 +83,8 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
   float      mMinPersistence = 0; //! Persistance range min
   float      mMaxPersistence = 1; //! Persistance range max
   RenderMode mRenderMode     = RenderMode::ALL; //! Render all points
+  float      mHeightScale    = 1;
+  float      mWidthScale     = 1;
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
