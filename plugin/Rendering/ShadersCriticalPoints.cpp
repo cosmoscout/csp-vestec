@@ -97,8 +97,8 @@ void main()
     const int sides = 4;
 
     // Todo replace scalars with uniforms
-    float widthScale = 0.0001 * gs_in_vs[0].persistence * uWidthScale;
-    float heightScale = 0.005 * gs_in_vs[0].persistence * uHeightScale;
+    float widthScale = 0.00001 * gs_in_vs[0].persistence * uWidthScale;
+    float heightScale = 0.0005 * gs_in_vs[0].persistence * uHeightScale;
 
     // Total number of sides + center position
     vec4[sides + 1] positions;
