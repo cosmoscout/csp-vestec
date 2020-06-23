@@ -173,6 +173,10 @@ bool CriticalPointsRenderer::Do() {
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uWidthScale"), (float)mWidthScale);
 
+  auto sunDirection = glm::normalize(glm::inverse(matWorldTransform) * (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"), sunDirection[0],
+                               sunDirection[1], sunDirection[2]);
+
   // Draw points
   // std::cout << "Draw Points: " << m_vecPoints.size() << std::endl;
   glDrawArrays(GL_POINTS, 0, (GLsizei)m_vecPoints.size());

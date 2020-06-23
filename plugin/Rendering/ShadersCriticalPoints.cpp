@@ -53,6 +53,7 @@ out GS_OUT
     vec4 vPos;
     float persistence;
     flat int criticalType;
+    vec3 normal;
 } gs_out;
 
 const float PI = 3.14159265359;
@@ -97,7 +98,7 @@ void main()
     const int sides = 4;
 
     // Todo replace scalars with uniforms
-    float widthScale = 0.00001 * gs_in_vs[0].persistence * uWidthScale;
+    float widthScale = 0.00002 * gs_in_vs[0].persistence * uWidthScale;
     float heightScale = 0.0005 * gs_in_vs[0].persistence * uHeightScale;
 
     // Total number of sides + center position
@@ -126,6 +127,12 @@ void main()
         outputVertex(positions[sides]);
         outputVertex(positions[i]);
         outputVertex(positions[(i+1)%sides]);
+
+        vec3 x = (positions[i] - positions[sides]).xyz;
+        vec3 y = (positions[(i+1)%sides] - positions[sides]).xyz;
+
+        gs_out.normal = normalize(cross(x, y));
+
         EndPrimitive();
     }
 
@@ -150,6 +157,7 @@ in GS_OUT
     vec4 vPos;
     float persistence;
     flat int criticalType;
+    vec3 normal;
 } fs_in;
 
 out vec4  FragColor;
@@ -163,7 +171,7 @@ uniform float         uMinPersistence = 0;
 uniform float         uMaxPersistence = 1;
 uniform int           uVisualizationMode = 4;
 
-const float PI = 3.14159265359;
+uniform vec3          uSunDirection;
 
 vec3 heat(float v) {
     float value = 1.0-v;
@@ -177,11 +185,23 @@ vec3 heat(float v) {
 
 void main()
 {
-    if (fs_in.criticalType != uVisualizationMode && uVisualizationMode!= 4)
-    discard;
+    if (fs_in.criticalType != uVisualizationMode && uVisualizationMode!= 4) {
+      discard;
+    }
 
     float value = (fs_in.persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
-    FragColor = vec4(heat(value), 1);
+    vec4 color = vec4(heat(value), 1);
+
+    float ambientStrength = 0.55;
+    vec3 lightColor = vec3(1.0, 1.0, 1.0);
+
+    float diff = max(dot(fs_in.normal, uSunDirection), 0.0);
+    vec3 diffuse = diff * lightColor;
+    vec3 ambient = ambientStrength * lightColor;
+
+    vec3 result = (ambient + diffuse) * color.rgb;
+
+    FragColor = vec4(result, 1);
 
     gl_FragDepth = length(vec3(fs_in.vPos.xyz)) / uFarClip;
 }
