@@ -82,9 +82,11 @@ vec3 VP_toCartesian(vec2 lnglat, vec2 radius)
 }
 
 // Emits a vertex and sets gs_out values
-void outputVertex(vec4 mvPos)
+void outputVertex(vec4 vPos)
 {
-    gs_out.vPos = vec4(mvPos.xzy, 1);
+    vec4 mvPos = uMatMV * vec4(vPos.xyz, 1);
+
+    gs_out.vPos = vec4(mvPos.xyz, 1);
     gs_out.persistence = gs_in_vs[0].persistence;
     gs_out.criticalType = gs_in_vs[0].criticalType;
 
@@ -106,7 +108,7 @@ void main()
 
     // Earth Center
     // Last position = pyramid head (earth center)
-    positions[sides] = uMatMV * vec4(0, 0, 0, 1);
+    positions[sides] = vec4(0, 0, 0, 1);
 
     // First create needed vertex positions
     for (int i = 0; i < sides; i++) {
@@ -119,32 +121,33 @@ void main()
 
         vec3 scaledPos = (posV * (1 + heightScale));
 
-        positions[i] = uMatMV * vec4(scaledPos.xyz, 1);
+        positions[i] = vec4(scaledPos.xyz, 1);
     }
 
     // Emit as triangle
     for (int i = 0; i < sides; i++) {
         outputVertex(positions[sides]);
-        outputVertex(positions[i]);
         outputVertex(positions[(i+1)%sides]);
+        outputVertex(positions[i]);
 
-        vec3 x = (positions[i] - positions[sides]).xyz;
-        vec3 y = (positions[(i+1)%sides] - positions[sides]).xyz;
+        vec3 x = positions[i].xyz - positions[sides].xyz;
+        vec3 y = positions[(i+1)%sides].xyz - positions[sides].xyz;
 
         gs_out.normal = normalize(cross(x, y));
 
         EndPrimitive();
     }
 
-    // Top billboard | TODO Output as strip?
-    outputVertex(positions[0]);
-    outputVertex(positions[1]);
-    outputVertex(positions[2]);
-    EndPrimitive();
-
+    // Top billboard
     outputVertex(positions[2]);
     outputVertex(positions[3]);
+    outputVertex(positions[1]);
     outputVertex(positions[0]);
+
+    vec3 x = positions[1].xyz - positions[0].xyz;
+    vec3 y = positions[2].xyz - positions[0].xyz;
+
+    gs_out.normal = normalize(cross(x, y));
     EndPrimitive();
 }
 )";
@@ -186,16 +189,16 @@ vec3 heat(float v) {
 void main()
 {
     if (fs_in.criticalType != uVisualizationMode && uVisualizationMode!= 4) {
-      discard;
+        discard;
     }
 
     float value = (fs_in.persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
     vec4 color = vec4(heat(value), 1);
 
-    float ambientStrength = 0.55;
+    float ambientStrength = 0.2;
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
-    float diff = max(dot(fs_in.normal, uSunDirection), 0.0);
+    float diff = max(dot(fs_in.normal, -uSunDirection), 0.0);
     vec3 diffuse = diff * lightColor;
     vec3 ambient = ambientStrength * lightColor;
 
