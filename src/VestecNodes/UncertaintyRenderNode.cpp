@@ -11,8 +11,6 @@
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
-#include <json.hpp>
-
 // GDAL c++ includes
 #include "cpl_conv.h" // for CPLMalloc()
 #include "gdal_priv.h"

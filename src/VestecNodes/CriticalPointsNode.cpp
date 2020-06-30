@@ -12,7 +12,6 @@
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
 #include <iomanip>
-#include <json.hpp>
 #include <limits>
 #include <set>
 // for convenience
