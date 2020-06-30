@@ -41,11 +41,9 @@ std::string cs::vestec::Plugin::dataDir = "";
 namespace cs::vestec {
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-vestec", [&] {
-    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-topo-dir", j);
-    o.mFireDir       = cs::core::parseProperty<std::string>("vestec-fire-dir", j);
-    o.mDiseasesDir   = cs::core::parseProperty<std::string>("vestec-diseases-dir", j);
-  });
+  cs::core::Settings::deserialize(j, "vestec-topo-dir", o.mVestecDataDir);
+  cs::core::Settings::deserialize(j, "vestec-fire-dir", o.mFireDir);
+  cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
 }
 
 Plugin::Plugin()
@@ -169,7 +167,7 @@ void Plugin::deInit() {
 void Plugin::update() {
   auto  simTime = mTimeControl->pSimulationTime.get();
   float timeOfDay =
-      cs::utils::convert::toBoostTime(simTime).time_of_day().total_milliseconds() / 1000.0;
+      cs::utils::convert::time::toPosix(simTime).time_of_day().total_milliseconds() / 1000.0;
   // Update plugin per frame
 }
 
