@@ -12,6 +12,8 @@
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "../../../src/cs-utils/logger.hpp"
+#include "logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
@@ -54,7 +56,7 @@ void Plugin::InitGUI() {
 }
 
 void Plugin::init() {
-  std::cout << "Init: CosmoScout VR Plugin for the VESTEC EU project" << std::endl;
+  logger().info("Init: CosmoScout VR Plugin for the VESTEC EU project");
 
   // Add the VESTEC tab to the sidebar
   mGuiManager->addPluginTabToSideBarFromHTML(
@@ -155,7 +157,7 @@ void Plugin::init() {
 
   // m_pVESTEC_UI->callJavascript("simpleGraph");
 
-  std::cout << "[CSP::VESTEC ::Initialize()] Init  done #########################" << std::endl;
+  logger().info("[CSP::VESTEC ::Initialize()] Init  done #########################");
 }
 
 void Plugin::deInit() {
