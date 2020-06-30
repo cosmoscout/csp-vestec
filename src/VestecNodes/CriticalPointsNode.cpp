@@ -21,7 +21,7 @@ using json = nlohmann::json;
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
-CriticalPointsNode::CriticalPointsNode(cs::vestec::Plugin::Settings const& config,
+CriticalPointsNode::CriticalPointsNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
     : VNE::Node(pItem, id)

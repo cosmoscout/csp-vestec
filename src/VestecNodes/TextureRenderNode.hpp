@@ -16,7 +16,7 @@ class NodeEditor;
 
 class TextureRenderNode : public VNE::Node {
  public:
-  TextureRenderNode(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
+  TextureRenderNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
       cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
       cs::core::GraphicsEngine* pEngine);
   virtual ~TextureRenderNode();
@@ -53,7 +53,7 @@ class TextureRenderNode : public VNE::Node {
   void SetUseTime(bool use);
 
  private:
-  cs::vestec::Plugin::Settings
+  csp::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)

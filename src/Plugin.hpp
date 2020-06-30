@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-namespace cs::vestec {
+namespace csp::vestec {
 
 class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
  public:
@@ -70,6 +70,6 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
   VNE::NodeEditor* m_pNodeEditor;
 };
 
-} // namespace cs::vestec
+} // namespace csp::vestec
 
 #endif //

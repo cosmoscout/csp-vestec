@@ -29,5 +29,5 @@ void PersistenceNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->executeJavascript(node);
 
   // Pass data dir for reading vtk js from the exporter
-  pEditor->GetGuiItem()->callJavascript("PersistenceNode.setPath", cs::vestec::Plugin::dataDir);
+  pEditor->GetGuiItem()->callJavascript("PersistenceNode.setPath", csp::vestec::Plugin::dataDir);
 }

@@ -63,7 +63,7 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
 
 void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& timeStep) {
   auto reader = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
   reader->Update();
 
   /////////////////
@@ -86,21 +86,21 @@ void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& t
   ///////////////// Dump to vtk js
   auto dumper = vtkHttpDataSetWriter::New();
   dumper->SetFileName(
-      (cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)).c_str());
+      (csp::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)).c_str());
   dumper->SetInputConnection(polyFilter->GetOutputPort());
   dumper->Write();
   std::cout << "VTK.js written to: "
-            << cs::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep) << std::endl;
+            << csp::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep) << std::endl;
 }
 
 void CinemaDBNode::ReadCaseNames(int id) {
   json args;
 
-  std::cout << "Reading case names from cinema database: " << cs::vestec::Plugin::dataDir
+  std::cout << "Reading case names from cinema database: " << csp::vestec::Plugin::dataDir
             << std::endl;
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
   reader->Update();
 
   auto table = vtkTable::SafeDownCast(reader->GetOutput());
@@ -120,11 +120,11 @@ void CinemaDBNode::ReadCaseNames(int id) {
 void CinemaDBNode::GetTimeSteps(int id) {
   json args;
 
-  std::cout << "Reading time info from cinema database: " << cs::vestec::Plugin::dataDir
+  std::cout << "Reading time info from cinema database: " << csp::vestec::Plugin::dataDir
             << std::endl;
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(cs::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
   reader->Update();
 
   auto          table = vtkTable::SafeDownCast(reader->GetOutput());

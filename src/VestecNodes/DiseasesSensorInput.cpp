@@ -10,7 +10,7 @@
 using json = nlohmann::json;
 
 DiseasesSensorInput::DiseasesSensorInput(
-    cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
+    csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
     : VNE::Node(pItem, id) {
   mPluginConfig = config;
 }

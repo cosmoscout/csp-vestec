@@ -11,7 +11,7 @@ class NodeEditor;
 
 class WildFireSourceNode : public VNE::Node {
  public:
-  WildFireSourceNode(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
+  WildFireSourceNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
   virtual ~WildFireSourceNode();
 
   /**
@@ -36,7 +36,7 @@ class WildFireSourceNode : public VNE::Node {
   void ReadSimulationFileNames(int id, std::string simMode);
 
  private:
-  cs::vestec::Plugin::Settings mPluginConfig;
+  csp::vestec::Plugin::Settings mPluginConfig;
 };
 
 #endif /* WILDFIRE_SOURCE_NODE_HPP_ */

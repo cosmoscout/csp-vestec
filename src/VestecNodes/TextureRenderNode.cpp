@@ -31,7 +31,7 @@ using json = nlohmann::json;
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
-TextureRenderNode::TextureRenderNode(cs::vestec::Plugin::Settings const& config,
+TextureRenderNode::TextureRenderNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
     : VNE::Node(pItem, id)

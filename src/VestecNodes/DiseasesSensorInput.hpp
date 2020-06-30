@@ -11,7 +11,7 @@ class NodeEditor;
 
 class DiseasesSensorInput : public VNE::Node {
  public:
-  DiseasesSensorInput(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
+  DiseasesSensorInput(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
   virtual ~DiseasesSensorInput();
 
   /**
@@ -31,7 +31,7 @@ class DiseasesSensorInput : public VNE::Node {
   void ReadSensorFileNames(int id);
 
  private:
-  cs::vestec::Plugin::Settings mPluginConfig;
+  csp::vestec::Plugin::Settings mPluginConfig;
 };
 
 #endif /* DISEASES_SENSOR_SOURCE_NODE_HPP_ */

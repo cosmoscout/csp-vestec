@@ -29,7 +29,7 @@ using json = nlohmann::json;
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
-UncertaintyRenderNode::UncertaintyRenderNode(cs::vestec::Plugin::Settings const& config,
+UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
     : VNE::Node(pItem, id)

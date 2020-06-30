@@ -28,7 +28,7 @@
 #include "VestecNodes/WildFireSourceNode.hpp"
 
 EXPORT_FN cs::core::PluginBase* create() {
-  return new cs::vestec::Plugin;
+  return new csp::vestec::Plugin;
 }
 
 EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
@@ -36,11 +36,11 @@ EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
 }
 
 // Init data dir
-std::string cs::vestec::Plugin::dataDir = "";
+std::string csp::vestec::Plugin::dataDir = "";
 
-namespace cs::vestec {
+namespace csp::vestec {
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
   cs::core::Settings::deserialize(j, "vestec-topo-dir", o.mVestecDataDir);
   cs::core::Settings::deserialize(j, "vestec-fire-dir", o.mFireDir);
   cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
@@ -171,4 +171,4 @@ void Plugin::update() {
   // Update plugin per frame
 }
 
-} // namespace cs::vestec
+} // namespace csp::vestec

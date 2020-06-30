@@ -11,7 +11,7 @@ class NodeEditor;
 
 class DiseasesSimulation : public VNE::Node {
  public:
-  DiseasesSimulation(cs::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
+  DiseasesSimulation(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
   virtual ~DiseasesSimulation();
 
   /**
@@ -41,7 +41,7 @@ class DiseasesSimulation : public VNE::Node {
   void SetSimulationModes(int id);
 
  private:
-  cs::vestec::Plugin::Settings mPluginConfig;
+  csp::vestec::Plugin::Settings mPluginConfig;
 };
 
 #endif /* DISEASES_SIMULATION_NODE_HPP_ */
