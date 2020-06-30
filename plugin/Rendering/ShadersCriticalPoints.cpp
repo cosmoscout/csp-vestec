@@ -35,7 +35,7 @@ const std::string CriticalPointsRenderer::SURFACE_GEOM = R"(
 #version 430
 
 layout (points) in;
-layout (triangle_strip, max_vertices = 18) out;
+layout (triangle_strip, max_vertices = 16) out;
 
 uniform mat4          uMatP;
 uniform mat4          uMatMV;
