@@ -46,17 +46,17 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
 
   // Example callback for communication from JavaScript to C++
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "readCaseNames", ([pEditor](double id, std::string params) {
+      "readCaseNames", "Returns available case names", ([pEditor](double id, std::string params) {
         pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "getTimeSteps", ([pEditor](double id, std::string params) {
+      "getTimeSteps", "Returns time steps for a case", ([pEditor](double id, std::string params) {
         pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
       }));
 
   pEditor->GetGuiItem()->registerCallback<std::string, std::string>(
-      "convertFile", ([](const std::string& caseName, std::string timeStep) {
+      "convertFile", "Converts a .vtu file to .json", ([](const std::string& caseName, std::string timeStep) {
         CinemaDBNode::ConvertFile(caseName, timeStep);
       }));
 }

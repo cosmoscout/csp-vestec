@@ -69,24 +69,24 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "readSimulationResults", ([pEditor](double id, std::string params) {
+      "readSimulationResults", "Reads simulation data", ([pEditor](double id, std::string params) {
         pEditor->GetNode<TextureRenderNode>(id)->ReadSimulationResult(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacityTexture", ([pEditor](double id, double val) {
+      "setOpacityTexture", "Adjusts the opacity of the rendering", ([pEditor](double id, double val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
       }));
 
   // Callback to adjust the simulation time used to discard pixels
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setTime", ([pEditor](double id, double val) {
+      "setTime", "Adjusts the simulation time used to discard pixels", ([pEditor](double id, double val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetTime(val);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, bool>(
-      "set_enable_time", ([pEditor](double id, bool val) {
+      "set_enable_time", "Enables the simulation time", ([pEditor](double id, bool val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetUseTime(val);
       }));
 }

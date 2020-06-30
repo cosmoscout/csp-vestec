@@ -213,21 +213,21 @@ void NodeEditor::InitNodeEditor() {
   m_pWebView->waitForFinishedLoading();
   // Register the required callbacks
   m_pWebView->registerCallback<double, std::string>(
-      "AddNewNode", ([this](double const& filterID, std::string name) {
+      "AddNewNode", "Adds a new Node to the Node Editor", ([this](double const& filterID, std::string name) {
         this->AddNewNode((int)filterID, name);
       }));
 
   m_pWebView->registerCallback<double>(
-      "DeleteNode", ([this](double const& filterID) { this->DeleteNode((int)filterID); }));
+      "DeleteNode", "Deletes a Node from the Node Editor", ([this](double const& filterID) { this->DeleteNode((int)filterID); }));
 
   m_pWebView->registerCallback<double, double, double, double>(
-      "AddConnection", ([this](double const& outputNode, double const& inputNode,
+      "AddConnection", "Adds a new Node connection", ([this](double const& outputNode, double const& inputNode,
                             double const& outputPort, double const& inputPort) {
         this->AddConnection((int)outputNode, (int)inputNode, (int)outputPort, (int)inputPort);
       }));
 
   m_pWebView->registerCallback<double, double, double, double>(
-      "DeleteConnection", ([this](double const& outputNode, double const& inputNode,
+      "DeleteConnection", "Deletes a Node connection", ([this](double const& outputNode, double const& inputNode,
                                double const& outputPort, double const& inputPort) {
         this->DeleteConnection((int)outputNode, (int)inputNode, (int)outputPort, (int)inputPort);
       }));

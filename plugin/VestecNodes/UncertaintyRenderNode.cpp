@@ -67,18 +67,18 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "setTextureFiles", ([pEditor](double id, std::string params) {
+      "setTextureFiles", "Reads simulation data", ([pEditor](double id, std::string params) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetTextureFiles(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacityUncertainty", ([pEditor](double id, double val) {
+      "setOpacityUncertainty", "Adjusts the opacity of the rendering", ([pEditor](double id, double val) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetOpacity(val);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setUncertaintyVisualizationMode", ([pEditor](double id, double val) {
+      "setUncertaintyVisualizationMode", "Sets the uncertainty visualization mode", ([pEditor](double id, double val) {
         UncertaintyOverlayRenderer::RenderMode renderMode;
         std::cout << "Switching vis to " << (int)val << std::endl;
         switch ((int)val) {

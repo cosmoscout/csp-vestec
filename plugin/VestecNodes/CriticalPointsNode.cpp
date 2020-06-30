@@ -55,19 +55,19 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "setPoints", ([pEditor](double id, std::string params) {
+      "setPoints", "Reads simulation data", ([pEditor](double id, std::string params) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetPoints(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacity", ([pEditor](double id, double val) {
+      "setOpacity", "Adjust the opacity of the rendering", ([pEditor](double id, double val) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetOpacity(val);
       }));
 
   // Callback to set the visualization mode
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setCriticalPointsVisualizationMode", ([pEditor](double id, double val) {
+      "setCriticalPointsVisualizationMode", "Sets the visualization mode", ([pEditor](double id, double val) {
         CriticalPointsRenderer::RenderMode renderMode;
         std::cout << "Switching cp vis to " << (int)val << std::endl;
         switch ((int)val) {
