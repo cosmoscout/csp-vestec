@@ -10,7 +10,6 @@
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
 
-#include "../../../../src/cs-utils/filesystem.hpp"
 #include <vtkHttpDataSetWriter.h>
 
 #include <ttkCinemaProductReader.h>
