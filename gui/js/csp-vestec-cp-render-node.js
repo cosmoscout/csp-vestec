@@ -28,7 +28,7 @@ class CriticalPointsNode {
             const select = $(element).find("#vis_mode_" + node.id);
             select.selectpicker();
             select.on("change", function() {
-                window.call_native("setCriticalPointsVisualizationMode", parseInt(node.id), parseInt($(this).val()));
+                window.callNative("setCriticalPointsVisualizationMode", parseInt(node.id), parseInt($(this).val()));
             });
         });
 
@@ -59,7 +59,7 @@ class CriticalPointsNode {
             if(this.lastInputString != JSON.stringify(inputs[0][0]))
             {
                 //Send points to C++ for rendering in OGL
-                window.call_native("setPoints", node.id, JSON.stringify(inputs[0][0]));
+                window.callNative("setPoints", node.id, JSON.stringify(inputs[0][0]));
                 this.lastInputString = JSON.stringify(inputs[0][0]);
             }
         }

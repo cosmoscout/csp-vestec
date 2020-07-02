@@ -84,19 +84,19 @@ class DiseasesSimulation {
           select.on("change", function() {
             console.log("Change combo box");
             //Updat the number of enseble members 
-            window.call_native("setNumberOfEnsembleMembers", parseInt(node.id), $(this).val());
+            window.callNative("setNumberOfEnsembleMembers", parseInt(node.id), $(this).val());
             
             //Get the files for the simulation mode and timestep
             var timestep = $(element).find("#slider_day" + node.id).val();
             var simPath  = $(element).find("#sim_mode_" + node.id).val();
-            window.call_native("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
+            window.callNative("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
           });
 
           // Event handling when slider changes
           slider.noUiSlider.on('set', function(values, handle) {
             var timestep = values[handle];
             var simPath  = $(element).find("#sim_mode_" + node.id).val();
-            window.call_native("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
+            window.callNative("getFilesForTimeStep", parseInt(node.id), simPath.toString(), parseFloat(timestep));
           });
 
           var self = this;
@@ -116,7 +116,7 @@ class DiseasesSimulation {
           });
 
           //Call once for initialization
-          window.call_native('readDiseasesSimulationModes', parseInt(node.id));
+          window.callNative('readDiseasesSimulationModes', parseInt(node.id));
         });
     node.addControl(simcontrol);
 

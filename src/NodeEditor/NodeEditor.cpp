@@ -159,7 +159,7 @@ void NodeEditor::InitNodeEditor() {
     nodeEditor.editor.eventListener.on('nodecreate', (node, persistent) => { 
     try
     {
-        window.call_native("AddNewNode", parseInt(node.id), node.title);
+        window.callNative("AddNewNode", parseInt(node.id), node.title);
     }catch (e) {
         console.log(e);
     }
@@ -168,7 +168,7 @@ void NodeEditor::InitNodeEditor() {
     nodeEditor.editor.eventListener.on('noderemove', (node, persistent) => { 
     try
     {
-        window.call_native("DeleteNode", parseInt(node.id), node.title);
+        window.callNative("DeleteNode", parseInt(node.id), node.title);
     }catch (e) {
         console.log(e);
     }
@@ -177,7 +177,7 @@ void NodeEditor::InitNodeEditor() {
     nodeEditor.editor.eventListener.on('connectioncreate', (connection, persistent) => { 
     try
     {
-         window.call_native("AddConnection", parseInt(connection.output.node.id),parseInt(connection.input.node.id),
+         window.callNative("AddConnection", parseInt(connection.output.node.id),parseInt(connection.input.node.id),
             connection.output.node.outputs.findIndex(output => output == connection.output),
 						connection.input.node.inputs.findIndex(input => input == connection.input));
     }catch (e) {
@@ -188,7 +188,7 @@ void NodeEditor::InitNodeEditor() {
     nodeEditor.editor.eventListener.on('connectionremove', (connection, persistent) => { 
     try
     {
-         window.call_native("DeleteConnection", parseInt(connection.output.node.id),parseInt(connection.input.node.id),
+         window.callNative("DeleteConnection", parseInt(connection.output.node.id),parseInt(connection.input.node.id),
             connection.output.node.outputs.findIndex(output => output == connection.output),
 						connection.input.node.inputs.findIndex(input => input == connection.input));
     }catch (e) {

@@ -46,14 +46,14 @@ class UncertaintyRenderNode {
 
       // Read the files for the given simulation mode and fill combobox when mode is changed
       slider.noUiSlider.on('slide', function(values, handle) {
-        window.call_native("setOpacityUncertainty", node.id, parseFloat(values[handle]))
+        window.callNative("setOpacityUncertainty", node.id, parseFloat(values[handle]))
       });
 
       //Initialize combobox for the visualization mode
       const select = $(element).find("#vis_mode_" + node.id);
       select.selectpicker();
       select.on("change", function() {
-        window.call_native("setUncertaintyVisualizationMode", parseInt(node.id), parseInt($(this).val()));
+        window.callNative("setUncertaintyVisualizationMode", parseInt(node.id), parseInt($(this).val()));
       });
     });
 
@@ -78,7 +78,7 @@ class UncertaintyRenderNode {
   _worker(node, inputs, outputs) {
     /** @type {UncertaintyRenderNode} */
     if (inputs[0].length > 0 && JSON.stringify(inputs[0][0]) != this.lastFiles) {
-      window.call_native("setTextureFiles", node.id, JSON.stringify(inputs[0][0]));
+      window.callNative("setTextureFiles", node.id, JSON.stringify(inputs[0][0]));
       this.lastFiles = JSON.stringify(inputs[0][0]);
     }
   }

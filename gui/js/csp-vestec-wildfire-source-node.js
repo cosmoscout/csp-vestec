@@ -22,7 +22,7 @@ class WildFireSourceNode {
           // Read the files for the given simulation mode and fill combobox when mode is changed
           select.on("change", function() {
             // Now, since simulation mode changed, read the files for that simulation mode
-            window.call_native("readSimulationFileNames", node.id, $(this).val());
+            window.callNative("readSimulationFileNames", node.id, $(this).val());
 
             if (typeof nodeEditor.engine !== 'undefined') {
               nodeEditor.engine.process(nodeEditor.editor.toJSON());
@@ -30,7 +30,7 @@ class WildFireSourceNode {
           });
 
           // Initially fill the combobox with simulation mode values (read from C++)
-          window.call_native("readSimulationModes", parseInt(node.id), "");
+          window.callNative("readSimulationModes", parseInt(node.id), "");
         });
 
     // Combobox for file selection

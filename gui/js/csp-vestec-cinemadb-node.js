@@ -14,7 +14,7 @@ class CinemaDBNode {
         const output = new D3NE.Output("CINEMA_DB", nodeEditor.sockets.CINEMA_DB);
 
         const caseNames = new D3NE.Control(`<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`, (element, control) => {
-            window.call_native('readCaseNames', node.id, '');
+            window.callNative('readCaseNames', node.id, '');
             const select = $(`#case_names_${node.id}`);
 
             select.selectpicker();
@@ -32,7 +32,7 @@ class CinemaDBNode {
         });
 
         const timeSteps = new D3NE.Control(`<div id="time_slider_${node.id}" class="slider"></div>`, (element, control) => {
-            window.call_native('getTimeSteps', node.id, '');
+            window.callNative('getTimeSteps', node.id, '');
         });
 
         node.addControl(caseNames);
@@ -59,7 +59,7 @@ class CinemaDBNode {
         if (node.data.converted !== fileName) {
             console.debug(`[CinemaDB Node #${node.id}] Converting ${fileName}.`);
 
-            window.call_native('convertFile', node.data.caseName, node.data.timeStep);
+            window.callNative('convertFile', node.data.caseName, node.data.timeStep);
             node.data.converted = fileName;
         } 
         

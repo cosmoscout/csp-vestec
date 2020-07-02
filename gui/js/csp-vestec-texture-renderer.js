@@ -35,7 +35,7 @@ class TextureRenderNode {
 
       // Read the files for the given simulation mode and fill combobox when mode is changed
       slider.noUiSlider.on('slide', function(values, handle) {
-        window.call_native("setOpacityTexture", node.id, parseFloat(values[handle]))
+        window.callNative("setOpacityTexture", node.id, parseFloat(values[handle]))
       });
     });
 
@@ -64,12 +64,12 @@ class TextureRenderNode {
       noUiSlider.create(slider, {start : 6, animate : false, range : {'min' : 0, 'max' : 6}});
 
       $(element).find("#set_enable_time" + node.id).on("click", function() {
-        window.call_native("set_enable_time", node.id, $(this).is(":checked"));
+        window.callNative("set_enable_time", node.id, $(this).is(":checked"));
       });
 
       // Set the time value for the renderer
       slider.noUiSlider.on('slide', function(values, handle) {
-        window.call_native("setTime", node.id, parseFloat(values[handle]))
+        window.callNative("setTime", node.id, parseFloat(values[handle]))
       });
     });
 
@@ -98,7 +98,7 @@ class TextureRenderNode {
     // input[0][0] = the first array on input port 0
     // input[0][0][0] = the first entry in the array (filename)
     if (inputs[0] != undefined && inputs[0][0][0].toString() != this.lastFile) {
-      window.call_native("readSimulationResults", node.id, inputs[0][0][0].toString());
+      window.callNative("readSimulationResults", node.id, inputs[0][0][0].toString());
       this.lastFile = inputs[0][0][0].toString();
     }
   }

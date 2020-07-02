@@ -29,7 +29,7 @@ class DiseasesSensorInput {
           });
 
           // Now, since simulation mode changed, read the files for that simulation mode
-          window.call_native("readSensorFileNames", parseInt(node.id));
+          window.callNative("readSensorFileNames", parseInt(node.id));
         });
 
     // Add control elements
