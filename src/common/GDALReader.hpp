@@ -6,6 +6,8 @@
 #include <mutex>
 #include <string>
 
+#include "../logger.hpp"
+
 class GDALReader {
  public:
   /**
