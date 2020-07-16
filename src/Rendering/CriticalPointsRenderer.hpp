@@ -5,6 +5,7 @@
 #include <VistaMath/VistaBoundingBox.h>
 
 #include "../../../../src/cs-core/SolarSystem.hpp"
+#include "../logger.hpp"
 
 #include <vector>
 

@@ -42,7 +42,7 @@ using json = nlohmann::json;
 
 UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
     : mSolarSystem(pSolarSystem) {
-  std::cout << "Compile shader for UncertaintyOverlayRenderer " << std::endl;
+  csp::vestec::logger().debug("[UncertaintyOverlayRenderer] Compiling shader");
 
   m_pSurfaceShader = nullptr;
   m_pSurfaceShader = new VistaGLSLShader();
@@ -83,7 +83,7 @@ UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pS
 
     mGBufferData[viewport.second] = bufferData;
   }
-  std::cout << "Compile shader for TextureOverlayRenderer done " << std::endl;
+  csp::vestec::logger().debug("[UncertaintyOverlayRenderer] Compiling shader done");
 }
 
 UncertaintyOverlayRenderer::~UncertaintyOverlayRenderer() {
@@ -121,9 +121,10 @@ bool UncertaintyOverlayRenderer::Do() {
     // get active planet
     if (mSolarSystem->pActiveBody.get() == nullptr ||
         mSolarSystem->pActiveBody.get()->getCenterName() != "Earth") {
-      std::cout << "[TextureOverlayRenderer::Do] No active planet set " << std::endl;
+      csp::vestec::logger().info("[UncertaintyOverlayRenderer::Do] No active planet set");
+
       mLockTextureAccess.unlock();
-      return 0;
+      return false;
     }
     // std::cout << "[TextureOverlayRenderer::Do] Rendering in Do()" << std::endl;
     // save current lighting and meterial state of the OpenGL state machine
@@ -301,8 +302,9 @@ bool UncertaintyOverlayRenderer::Do() {
 
 void UncertaintyOverlayRenderer::getGLError(std::string name) {
   int error = glGetError();
-  if (error != 0)
-    std::cout << " Error in" << name << " Error code: " << error << std::endl;
+  if (error != 0) {
+    csp::vestec::logger().error("[UncertaintyOverlayRenderer]  Error in" + name + " Error code: " + std::to_string(error));
+  }
 }
 
 void UncertaintyOverlayRenderer::UploadTextures() {

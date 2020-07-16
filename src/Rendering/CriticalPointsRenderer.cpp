@@ -13,33 +13,20 @@
 #include <VistaOGLExt/Rendering/ABuffer/VistaABufferOIT.h>
 #include <VistaOGLExt/VistaBufferObject.h>
 #include <VistaOGLExt/VistaGLSLShader.h>
-#include <VistaOGLExt/VistaOGLUtils.h>
-#include <VistaOGLExt/VistaShaderRegistry.h>
-#include <VistaOGLExt/VistaTexture.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
-// CosmoScout includes
-#include "../../../../src/cs-core/SolarSystem.hpp"
-#include "../../../../src/cs-scene/CelestialAnchor.hpp"
-#include "../../../../src/cs-scene/CelestialBody.hpp"
-
-// Standard includes
-#include <GL/gl.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <algorithm>
-#include <fstream>
 #include <functional>
 #include <json.hpp>
 #include <sstream>
-#include <unordered_set>
 
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
 using json = nlohmann::json;
 
 CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSystem)
     : mSolarSystem(pSolarSystem) {
-  std::cout << "Compile shader for CriticalPointsRenderer " << std::endl;
+  csp::vestec::logger().debug("[CriticalPointsRenderer] Compiling shader");
   m_pSurfaceShader = nullptr;
 
   m_pSurfaceShader = new VistaGLSLShader();
@@ -51,10 +38,11 @@ CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSyst
   m_VBO = new VistaBufferObject();
   m_VAO = new VistaVertexArrayObject();
 
-  std::cout << "Compile shader for CriticalPointsRenderer done " << std::endl;
+  csp::vestec::logger().debug("[CriticalPointsRenderer] Compiling shader done");
 }
 
 CriticalPointsRenderer::~CriticalPointsRenderer() {
+  delete m_pSurfaceShader;
   delete m_VAO;
   delete m_VBO;
 }
@@ -68,7 +56,7 @@ void CriticalPointsRenderer::SetVisualizationMode(RenderMode mode) {
 }
 
 void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
-  std::cout << "Copy data to VBO: " << vecPoints.size() << std::endl;
+  csp::vestec::logger().debug("[CriticalPointsRenderer] Copy data to VBO: " + std::to_string(vecPoints.size()));
   m_vecPoints.clear();
 
   // Get persistence range
@@ -83,7 +71,7 @@ void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
   m_VBO->Bind(GL_ARRAY_BUFFER);
   m_VBO->BufferData(vecPoints.size() * sizeof(CriticalPoint), &(vecPoints[0]), GL_STATIC_DRAW);
   m_VBO->Release();
-  std::cout << "Copy data to VBO done" << std::endl;
+  csp::vestec::logger().debug("[CriticalPointsRenderer] Copy data to VBO done");
 
   // Configure vertex positions
   m_VAO->EnableAttributeArray(0);
@@ -100,18 +88,19 @@ void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
       2, 1, GL_INT, sizeof(CriticalPoint), 4 * sizeof(float), m_VBO);
 
   m_vecPoints = vecPoints;
-  std::cout << "Configure VAO done" << std::endl;
+  csp::vestec::logger().debug("[CriticalPointsRenderer] Configure VAO done");
 }
 
 bool CriticalPointsRenderer::Do() {
-  if (m_vecPoints.size() < 1)
-    return 0;
+  if (m_vecPoints.empty()) {
+    return false;
+  }
 
   // get active planet
   if (mSolarSystem->pActiveBody.get() == nullptr ||
       mSolarSystem->pActiveBody.get()->getCenterName() != "Earth") {
-    std::cout << "[CriticalPointsRenderer::Do] No active planet set " << std::endl;
-    return 0;
+    csp::vestec::logger().info("[CriticalPointsRenderer::Do] No active planet set");
+    return false;
   }
 
   // save current lighting and meterial state of the OpenGL state machine
@@ -147,17 +136,16 @@ bool CriticalPointsRenderer::Do() {
   loc = m_pSurfaceShader->GetUniformLocation("uMatMV");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matModelView.GetData());
 
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float)farClip);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), static_cast<float>(farClip));
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uMaxPersistence"), mMaxPersistence);
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uMinPersistence"), mMinPersistence);
   m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), (int)mRenderMode);
+      m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), static_cast<int>(mRenderMode));
 
   // Draw points
-  // std::cout << "Draw Points: " << m_vecPoints.size() << std::endl;
-  glDrawArrays(GL_POINTS, 0, (GLsizei)m_vecPoints.size());
+  glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_vecPoints.size()));
 
   // Release shader
   m_pSurfaceShader->Release();

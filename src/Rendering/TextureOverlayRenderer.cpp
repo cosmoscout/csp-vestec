@@ -40,7 +40,7 @@ using json = nlohmann::json;
 
 TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
     : mSolarSystem(pSolarSystem) {
-  std::cout << "Compile shader for TextureOverlayRenderer " << std::endl;
+  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling shader");
 
   m_pSurfaceShader = nullptr;
   m_pSurfaceShader = new VistaGLSLShader();
@@ -73,7 +73,7 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
 
     mGBufferData[viewport.second] = bufferData;
   }
-  std::cout << "Compile shader for TextureOverlayRenderer done " << std::endl;
+  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling shader done");
 }
 
 TextureOverlayRenderer::~TextureOverlayRenderer() {
@@ -107,10 +107,11 @@ bool TextureOverlayRenderer::Do() {
   // get active planet
   if (mSolarSystem->pActiveBody.get() == nullptr ||
       mSolarSystem->pActiveBody.get()->getCenterName() != "Earth") {
-    std::cout << "[TextureOverlayRenderer::Do] No active planet set " << std::endl;
-    return 0;
+    csp::vestec::logger().info("[TextureOverlayRenderer::Do] No active planet set");
+
+    return false;
   }
-  // std::cout << "[TextureOverlayRenderer::Do] Rendering in Do()" << std::endl;
+
   // save current lighting and meterial state of the OpenGL state machine
   glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
   glEnable(GL_TEXTURE_2D);
@@ -204,7 +205,6 @@ bool TextureOverlayRenderer::Do() {
   
   int depthBits = 0;
   glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-  //std::cout << "Depth buffer bits : " << depthBits << std::endl;
 
   // Dummy draw
   glDrawArrays(GL_POINTS, 0, 1);
