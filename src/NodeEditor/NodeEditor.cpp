@@ -29,14 +29,15 @@ int NodeEditor::GetMaxNodeID() {
   int maxID = 0;
 
   for (auto const& it : m_mapNodes) {
-    if (it.first > maxID)
+    if (it.first > maxID) {
       maxID = it.first;
+}
   }
 
   return maxID;
 }
 
-void NodeEditor::RegisterNodeType(std::string name, std::string category,
+void NodeEditor::RegisterNodeType(const std::string& name, std::string category,
     std::function<Node*(cs::gui::GuiItem*, int id)> fFactory,
     std::function<void(NodeEditor*)>                fInit) {
   m_mapCreatorFunctions[name] = fFactory;
@@ -44,19 +45,19 @@ void NodeEditor::RegisterNodeType(std::string name, std::string category,
   m_mapCategories[category].push_back(name);
 }
 
-void NodeEditor::RegisterSocketType(std::string name) {
+void NodeEditor::RegisterSocketType(const std::string& name) {
   m_vecSockets.push_back(name);
 }
 
-void NodeEditor::AddNewNode(int id, std::string name) {
+void NodeEditor::AddNewNode(int id, const std::string& name) {
   auto it = m_mapCreatorFunctions.find(name);
   if (it != m_mapCreatorFunctions.end()) {
-    std::cout << "\t [NodeEditor::AddNewNode] New " << name << "node added to editor! ID = " << id
-              << std::endl;
+    csp::vestec::logger().info("[NodeEditor::AddNewNode] New " + name + "node added to editor! ID = " + std::to_string(id));
+
     Node* pNode    = m_mapCreatorFunctions[name](m_pWebView, id);
     m_mapNodes[id] = pNode;
   } else {
-    std::cout << "\t[NodeEditor::AddNewNode] No creator function found for " << name << std::endl;
+    csp::vestec::logger().info("[NodeEditor::AddNewNode] No creator function found for " + name);
   }
 }
 
@@ -65,7 +66,7 @@ void NodeEditor::DeleteNode(int id) {
   if (it != m_mapNodes.end()) {
     delete it->second;
     m_mapNodes.erase(it);
-    std::cout << "\t[NodeEditor::DeleteNode] Delete node with id " << id << std::endl;
+    csp::vestec::logger().info("[NodeEditor::DeleteNode] Delete node with id " + std::to_string(id));
   }
 }
 
@@ -79,12 +80,10 @@ void NodeEditor::AddConnection(int from, int to, int fromPort, int toPort) {
 
     node1->AddOutportNode(to, node2, fromPort, toPort);
     node2->AddInportNode(from, node1, fromPort, toPort);
-    std::cout << "\t[NodeEditor::AddConnection] Add connection from node " << from << " to node "
-              << to << std::endl;
+    csp::vestec::logger().info("[NodeEditor::AddConnection] Add connection from node " + std::to_string(from) + " to node " + std::to_string(to));
+
   } else {
-    std::cout << "\t[NodeEditor::AddConnection] Error in node editor! Nodes "
-                 "for connection are not found"
-              << std::endl;
+    csp::vestec::logger().error("[NodeEditor::AddConnection] Error in node editor! Nodes for connection are not found");
   }
 }
 
@@ -98,20 +97,16 @@ void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
 
     node2->RemoveInputNode(from, fromPort, toPort);
     node1->RemoveOutputNode(to, fromPort, toPort);
-    std::cout << "\t[NodeEditor::DeleteConnection] Delete connection from node " << from
-              << " to node " << to << std::endl;
+    csp::vestec::logger().info("[NodeEditor::DeleteConnection] Delete connection from node " + std::to_string(from) + " to node " + std::to_string(to));
   } else if (it1 != m_mapNodes.end()) {
     Node* node = it1->second;
     node->RemoveOutputNode(to, fromPort, toPort);
-    std::cout << "\t[NodeEditor::DeleteConnection] Only removed output "
-                 "ports of node "
-              << from << std::endl;
+    csp::vestec::logger().info("[NodeEditor::DeleteConnection] Only removed output ports of node " + std::to_string(from));
+
   } else if (it2 != m_mapNodes.end()) {
     Node* node = it2->second;
     node->RemoveInputNode(from, fromPort, toPort);
-    std::cout << "\t[NodeEditor::DeleteConnection] Only removed input ports "
-                 "of node "
-              << to << std::endl;
+    csp::vestec::logger().info("[NodeEditor::DeleteConnection] Only removed input ports of node " + std::to_string(to));
   }
 }
 
@@ -212,24 +207,30 @@ void NodeEditor::InitNodeEditor() {
   m_pWebView->executeJavascript(strJavascriptIniCode);
   m_pWebView->waitForFinishedLoading();
   // Register the required callbacks
-  m_pWebView->registerCallback<double, std::string>(
-      "AddNewNode", "Adds a new Node to the Node Editor", ([this](double const& filterID, std::string name) {
-        this->AddNewNode((int)filterID, name);
+  m_pWebView->registerCallback<double , std::string>(
+      "AddNewNode", "Adds a new Node to the Node Editor", std::function([this](double  filterID, std::string name) {
+        this->AddNewNode(static_cast<int>(filterID), name);
       }));
 
-  m_pWebView->registerCallback<double>(
-      "DeleteNode", "Deletes a Node from the Node Editor", ([this](double const& filterID) { this->DeleteNode((int)filterID); }));
+  m_pWebView->registerCallback<double >(
+      "DeleteNode", "Deletes a Node from the Node Editor", std::function([this](double  filterID) { this->DeleteNode(static_cast<int>(filterID)); }));
 
-  m_pWebView->registerCallback<double, double, double, double>(
-      "AddConnection", "Adds a new Node connection", ([this](double const& outputNode, double const& inputNode,
-                            double const& outputPort, double const& inputPort) {
-        this->AddConnection((int)outputNode, (int)inputNode, (int)outputPort, (int)inputPort);
+  m_pWebView->registerCallback<double , double , double , double >(
+      "AddConnection", "Adds a new Node connection", std::function([this](double  outputNode, double  inputNode,
+                            double  outputPort, double  inputPort) {
+        this->AddConnection(static_cast<int>(outputNode),
+            static_cast<int>(inputNode),
+            static_cast<int>(outputPort),
+            static_cast<int>(inputPort));
       }));
 
-  m_pWebView->registerCallback<double, double, double, double>(
-      "DeleteConnection", "Deletes a Node connection", ([this](double const& outputNode, double const& inputNode,
-                               double const& outputPort, double const& inputPort) {
-        this->DeleteConnection((int)outputNode, (int)inputNode, (int)outputPort, (int)inputPort);
+  m_pWebView->registerCallback<double, double, double , double >(
+      "DeleteConnection", "Deletes a Node connection", std::function([this](double  outputNode, double  inputNode,
+                               double  outputPort, double  inputPort) {
+        this->DeleteConnection(static_cast<int>(outputNode),
+            static_cast<int>(inputNode),
+            static_cast<int>(outputPort),
+            static_cast<int>(inputPort));
       }));
 }
 } // namespace VNE

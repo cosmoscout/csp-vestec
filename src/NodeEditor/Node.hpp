@@ -3,6 +3,8 @@
 #define NodeEditor_NODE_HPP_
 
 #include "../../../../src/cs-gui/GuiItem.hpp"
+#include "../logger.hpp"
+#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <map>
 #include <vector>
 
@@ -29,6 +31,7 @@ class Node {
 
  protected:
   cs::gui::GuiItem* m_pItem;
+  std::unique_ptr<VistaOpenGLNode> m_pNode = nullptr; //! The VISTA OpenGL node in the scene graph
 
  private:
   int m_iID;

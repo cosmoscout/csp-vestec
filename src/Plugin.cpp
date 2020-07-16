@@ -11,8 +11,6 @@
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-utils/convert.hpp"
-#include "../../../src/cs-utils/utils.hpp"
-#include "../../../src/cs-utils/logger.hpp"
 #include "../../../src/cs-utils/filesystem.hpp"
 #include "logger.hpp"
 
@@ -23,7 +21,7 @@
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
 #include "VestecNodes/CriticalPointsNode.hpp"
-#include "VestecNodes/DiseasesSensorInput.hpp"
+#include "VestecNodes/DiseasesSensorInputNode.hpp"
 #include "VestecNodes/DiseasesSimulationNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
@@ -57,53 +55,33 @@ void Plugin::InitGUI() {
 }
 
 void Plugin::init() {
-  logger().info("Init: CosmoScout VR Plugin for the VESTEC EU project");
+  logger().info("[CSP::VESTEC::Initialize] CosmoScout VR Plugin for the VESTEC EU project");
 
   // Add the VESTEC tab to the sidebar
   mGuiManager->addPluginTabToSideBarFromHTML(
       "VESTEC", "whatshot", "../share/resources/gui/vestec_tab.html");
   // mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/vestec_sidebar.js");
 
-  logger().debug("UI.css");
   mGuiManager->addCssToGui("third-party/css/jquery-ui.min.css");
-  logger().debug("vested.css");
   mGuiManager->addCssToGui("css/vestec.css");
 
-  logger().debug("alight");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/alight.min.js");
-  logger().debug("jquery-ui");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/jquery-ui.min.js");
-  logger().debug("d3-node");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/d3-node-editor.js");
-  logger().debug("vtk.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/vtk_13.7.1.js");
 
-  logger().debug("vestec.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/vestec.js");
 
-  logger().debug("vestec window load");
   auto vestecWindowHtml = cs::utils::filesystem::loadToString("../share/resources/gui/vestecWindow.html");
-  logger().debug("vestec window add");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecWindowHtml, "body");
-
-  // Adding the main GUI item for VESTEC to cosmoscout
-/*  m_pVESTEC_UI = new cs::gui::GuiItem("file://../share/resources/gui/vestecWindow.html", 1);
-  mGuiManager->addGuiItem(m_pVESTEC_UI, 10);
-  m_pVESTEC_UI->setRelSizeX(1.0f);
-  m_pVESTEC_UI->setRelSizeY(1.0f);
-  m_pVESTEC_UI->setRelPositionY(1.f);
-  m_pVESTEC_UI->setRelPositionX(0.f);
-  m_pVESTEC_UI->setRelOffsetY(-0.45f);
-  m_pVESTEC_UI->setRelOffsetX(0.5f);
-  m_pVESTEC_UI->waitForFinishedLoading();*/
 
   // Read the plugin settings from the scene config
   mPluginSettings = mAllSettings->mPlugins.at("csp-vestec");
 
   // add anchor node and register to solar system
-/*  mVestecTransform = std::make_shared<cs::scene::CelestialAnchorNode>(
+  mVestecTransform = std::make_shared<cs::scene::CelestialAnchorNode>(
       mSceneGraph->GetRoot(), mSceneGraph->GetNodeBridge(), "", "Earth", "IAU_Earth");
-  mSolarSystem->registerAnchor(mVestecTransform);*/
+  mSolarSystem->registerAnchor(mVestecTransform);
 
   // Initialize and append gui elements
   InitGUI();
@@ -133,11 +111,11 @@ void Plugin::init() {
       [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(
-      DiseasesSensorInput::GetName(), "Sources",
+      DiseasesSensorInputNode::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) {
-        return new DiseasesSensorInput(mPluginSettings, webView, id);
+        return new DiseasesSensorInputNode(mPluginSettings, webView, id);
       },
-      [](VNE::NodeEditor* editor) { DiseasesSensorInput::Init(editor); });
+      [](VNE::NodeEditor* editor) { DiseasesSensorInputNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(
       DiseasesSimulation::GetName(), "Sources",
@@ -180,12 +158,12 @@ void Plugin::init() {
 
   // m_pVESTEC_UI->callJavascript("simpleGraph");
 
-  logger().info("[CSP::VESTEC ::Initialize()] Init  done #########################");
+  logger().info("[CSP::VESTEC::Initialize] Done");
 }
 
 void Plugin::deInit() {
-/*  mSolarSystem->unregisterAnchor(mVestecTransform);
-  mSceneGraph->GetRoot()->DisconnectChild(mVestecTransform.get());*/
+  mSolarSystem->unregisterAnchor(mVestecTransform);
+  mSceneGraph->GetRoot()->DisconnectChild(mVestecTransform.get());
   delete m_pNodeEditor;
 }
 

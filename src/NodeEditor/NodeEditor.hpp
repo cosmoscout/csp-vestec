@@ -3,6 +3,7 @@
 #define NODEEDITOR_HPP_
 
 #include "../../../../src/cs-gui/GuiItem.hpp"
+#include "../logger.hpp"
 #include "Node.hpp"
 #include <functional>
 #include <map>
@@ -19,14 +20,14 @@ class NodeEditor {
   /**
    * Register a new node to the editor
    */
-  void RegisterNodeType(std::string name, std::string category,
+  void RegisterNodeType(const std::string& name, std::string category,
       std::function<Node*(cs::gui::GuiItem*, int id)> fFactory,
       std::function<void(NodeEditor*)>                fInit);
 
   /**
    * Register a new socket connection with own type
    */
-  void RegisterSocketType(std::string name);
+  void RegisterSocketType(const std::string& name);
 
   /**
    * Initialize the D§-node editor. Inserts javascript code to the document
@@ -36,7 +37,7 @@ class NodeEditor {
   /**
    * Add a new node to the manager
    */
-  void AddNewNode(int id, std::string name);
+  void AddNewNode(int id, const std::string& name);
 
   /**
    * Delete an existing node
