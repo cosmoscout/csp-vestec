@@ -5,34 +5,80 @@
  * It gets points stored in a JSON object as input
  */
 class CriticalPointsNode {
-    constructor()
-    {
-        this.lastInputString = "";
-    }
+    lastInputString = "";
 
     _builder(node) {
-        var htmlElements = '\
-        <div class="row">\
-        <div class="col-5 text">Mode:</div>\
-        <select id="vis_mode_' + node.id + '" class="combobox col-7">\
-          <option value="4">All</option>\
-          <option value="0">Minima</option>\
-          <option value="1">1-Saddle</option>\
-          <option value="2">2-Saddle</option>\
-          <option value="3">Maxima</option>\
-        </select>\
-        </div>';
+        const renderModeHtml =
+            `<div class="row">
+                <div class="col-5 text">Mode:</div>
+                <select id="vis_mode_${node.id}" class="combobox col-7">
+                    <option value="4">All</option>
+                    <option value="0">Minima</option>
+                    <option value="1">1-Saddle</option>
+                    <option value="2">2-Saddle</option>
+                    <option value="3">Maxima</option>
+                </select>
+            </div>`;
 
-        const control = new D3NE.Control(htmlElements, (element, control) => {
+        const renderModeControl = new D3NE.Control(renderModeHtml, (element, control) => {
             //Initialize combobox for the visualization mode
             const select = $(element).find("#vis_mode_" + node.id);
             select.selectpicker();
-            select.on("change", function() {
+            select.on("change", function () {
                 window.call_native("setCriticalPointsVisualizationMode", parseInt(node.id), parseInt($(this).val()));
             });
         });
 
-        node.addControl(control);
+        const sliderOptions = {
+            start: 1,
+            step: 0.1,
+            snap: false,
+            animate: false,
+            range: {
+                'min': 1,
+                'max': 5,
+            },
+        };
+
+        const heightControlHTML =
+            `<div class="row">
+                <div class="col-12 text text-left">Height Scale:</div>
+                <div class="col-12 my-2">
+                    <div id="height_scale_${node.id}"></div>
+                </div> 
+            </div>`;
+
+        const heightControl = new D3NE.Control(heightControlHTML, (element, control) => {
+            const heightScale = element.querySelector(`#height_scale_${node.id}`);
+
+            noUiSlider.create(heightScale, sliderOptions);
+
+            heightScale.noUiSlider.on('update', (value) => {
+                window.call_native("setCriticalPointsHeightScale", parseInt(node.id), parseFloat(value));
+            });
+        });
+
+        const widthControlHTML =
+            `<div class="row">
+                <div class="col-12 text text-left">Width Scale:</div>
+                <div class="col-12 my-2">
+                    <div id="width_scale_${node.id}"></div>
+                </div>
+            </div>`;
+
+        const widthControl = new D3NE.Control(widthControlHTML, (element, control) => {
+            const widthScale = element.querySelector(`#width_scale_${node.id}`);
+
+            noUiSlider.create(widthScale, sliderOptions);
+
+            widthScale.noUiSlider.on('update', (value) => {
+                window.call_native("setCriticalPointsWidthScale", parseInt(node.id), parseFloat(value));
+            });
+        });
+
+        node.addControl(renderModeControl);
+        node.addControl(heightControl);
+        node.addControl(widthControl);
 
         node.data.activeFile = null;
 
@@ -55,15 +101,13 @@ class CriticalPointsNode {
         if (inputs[0].length === 0) {
             console.debug(`[CriticalPointsNode #${node.id}] Input Empty`);
             return;
-        }else{
-            if(this.lastInputString != JSON.stringify(inputs[0][0]))
-            {
-                //Send points to C++ for rendering in OGL
-                window.call_native("setPoints", node.id, JSON.stringify(inputs[0][0]));
-                this.lastInputString = JSON.stringify(inputs[0][0]);
-            }
         }
 
+        if (this.lastInputString !== JSON.stringify(inputs[0][0])) {
+            //Send points to C++ for rendering in OGL
+            window.call_native("setPoints", node.id, JSON.stringify(inputs[0][0]));
+            this.lastInputString = JSON.stringify(inputs[0][0]);
+        }
     }
 
     /**
