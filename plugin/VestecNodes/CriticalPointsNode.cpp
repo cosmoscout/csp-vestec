@@ -39,6 +39,7 @@ CriticalPointsNode::CriticalPointsNode(cs::vestec::Plugin::Settings const& confi
 }
 
 CriticalPointsNode::~CriticalPointsNode() {
+  delete m_pParent;
   delete m_pRenderer;
 }
 

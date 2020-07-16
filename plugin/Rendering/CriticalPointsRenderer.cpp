@@ -57,6 +57,7 @@ CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSyst
 }
 
 CriticalPointsRenderer::~CriticalPointsRenderer() {
+  delete m_pSurfaceShader;
   delete m_VAO;
   delete m_VBO;
 }
@@ -172,6 +173,10 @@ bool CriticalPointsRenderer::Do() {
       m_pSurfaceShader->GetUniformLocation("uHeightScale"), (float)mHeightScale);
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uWidthScale"), (float)mWidthScale);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uMinPersistence"), (float)mMinPersistence);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uMaxPersistence"), (float)mMaxPersistence);
 
   auto sunDirection = glm::normalize(glm::inverse(matWorldTransform) * (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"), sunDirection[0],
