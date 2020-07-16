@@ -39,6 +39,8 @@ layout (triangle_strip, max_vertices = 16) out;
 
 uniform mat4          uMatP;
 uniform mat4          uMatMV;
+uniform float         uMinPersistence;
+uniform float         uMaxPersistence;
 uniform float         uHeightScale;
 uniform float         uWidthScale;
 
@@ -95,13 +97,16 @@ void outputVertex(vec4 vPos)
     EmitVertex();
 }
 
+float map(float value, float outMin, float outMax) {
+    return outMin + (outMax - outMin) * (value - uMinPersistence) / (uMaxPersistence - uMinPersistence);
+}
+
 void main()
 {
     const int sides = 4;
 
-    // Todo replace scalars with uniforms
-    float widthScale = 0.00002 * gs_in_vs[0].persistence * uWidthScale;
-    float heightScale = 0.0005 * gs_in_vs[0].persistence * uHeightScale;
+    float widthScale = map((gs_in_vs[0].persistence * uWidthScale), 0.0000125, 0.00015);
+    float heightScale = map((gs_in_vs[0].persistence * uHeightScale), 1, 1.005);
 
     // Total number of sides + center position
     vec4[sides + 1] positions;
@@ -119,7 +124,7 @@ void main()
 
         vec3 posV = VP_toCartesian(inPos.xy, vec2(6378500, 6378500));
 
-        vec3 scaledPos = (posV * (1 + heightScale));
+        vec3 scaledPos = posV * heightScale;
 
         positions[i] = vec4(scaledPos.xyz, 1);
     }
