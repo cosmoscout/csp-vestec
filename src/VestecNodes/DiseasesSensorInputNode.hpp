@@ -9,10 +9,10 @@ namespace VNE {
 class NodeEditor;
 }
 
-class DiseasesSensorInput : public VNE::Node {
+class DiseasesSensorInputNode : public VNE::Node {
  public:
-  DiseasesSensorInput(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
-  virtual ~DiseasesSensorInput();
+  DiseasesSensorInputNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
+  virtual ~DiseasesSensorInputNode();
 
   /**
    * These static functions are required and needs to be implemented

@@ -1,19 +1,16 @@
 
 #include "CriticalPointsNode.hpp"
-#include "../../../../src/cs-utils/convert.hpp"
 #include "../../../../src/cs-utils/filesystem.hpp"
-#include "../NodeEditor/NodeEditor.hpp"
 #include "../Rendering/TextureOverlayRenderer.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaGraphicsManager.h>
-#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
-#include <iomanip>
 #include <limits>
 #include <set>
+
 // for convenience
 using json = nlohmann::json;
 
@@ -28,16 +25,18 @@ CriticalPointsNode::CriticalPointsNode(csp::vestec::Plugin::Settings const& conf
   // Store config data for later usage
   mPluginConfig = config;
 
-  // Add a CriticalPointsRenderer to the VISTA scene graph
-  auto pSG    = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   m_pRenderer = new CriticalPointsRenderer(pSolarSystem);
-  m_pParent   = pSG->NewOpenGLNode(m_pAnchor, m_pRenderer);
 
-  // Render after planets which are rendered at 100
-  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pAnchor, static_cast<int>(200));
+  // Add a TextureOverlayRenderer to the VISTA scene graph
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  m_pNode.reset(pSG->NewOpenGLNode(m_pAnchor, m_pRenderer));
+
+  // Render after planets which are rendered at cs::utils::DrawOrder::ePlanets
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pNode.get(),  static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 }
 
 CriticalPointsNode::~CriticalPointsNode() {
+  m_pAnchor->DisconnectChild(m_pNode.get());
   delete m_pRenderer;
 }
 
@@ -46,6 +45,7 @@ std::string CriticalPointsNode::GetName() {
 }
 
 void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
+  csp::vestec::logger().debug("[" + GetName() + "] Init");
   // Load JavaScipt content from file which defines the node
   // in the node editor
   std::string code =
@@ -54,22 +54,23 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "setPoints", "Reads simulation data", ([pEditor](double id, std::string params) {
+      "setPoints", "Reads simulation data", std::function([pEditor](double id, std::string params) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetPoints(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacity", "Adjust the opacity of the rendering", ([pEditor](double id, double val) {
+      "setOpacity", "Adjust the opacity of the rendering", std::function([pEditor](double id, double val) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetOpacity(val);
       }));
 
   // Callback to set the visualization mode
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setCriticalPointsVisualizationMode", "Sets the visualization mode", ([pEditor](double id, double val) {
-        CriticalPointsRenderer::RenderMode renderMode;
-        std::cout << "Switching cp vis to " << (int)val << std::endl;
-        switch ((int)val) {
+      "setCriticalPointsVisualizationMode", "Sets the visualization mode", std::function([pEditor](double id, double val) {
+        CriticalPointsRenderer::RenderMode renderMode = CriticalPointsRenderer::RenderMode::ALL;
+        csp::vestec::logger().debug("[" + GetName() + "] Switching cp vis to " + std::to_string(val));
+
+        switch (static_cast<int>(val)) {
         case 0:
           renderMode = CriticalPointsRenderer::RenderMode::MINIMA;
           break;
@@ -98,7 +99,7 @@ void CriticalPointsNode::SetOpacity(double val) {
   m_pRenderer->SetOpacity(val);
 }
 
-void CriticalPointsNode::SetPoints(std::string jsonObj) {
+void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
   // Forward to OGL renderer
   json args = json::parse(jsonObj);
 
@@ -110,8 +111,8 @@ void CriticalPointsNode::SetPoints(std::string jsonObj) {
 
   // range-based for over persistence pairs
   for (auto& element : args) {
-    CriticalPointsRenderer::CriticalPoint upper;
-    CriticalPointsRenderer::CriticalPoint lower;
+    CriticalPointsRenderer::CriticalPoint upper{};
+    CriticalPointsRenderer::CriticalPoint lower{};
 
     // Get the world coordinates for the critical point pair
     glm::dvec3 posU(element["coordinates"]["upper"]["x"], element["coordinates"]["upper"]["y"],
@@ -144,13 +145,13 @@ void CriticalPointsNode::SetPoints(std::string jsonObj) {
   }
 
   // Pass min max peristence values to the end of the vector
-  CriticalPointsRenderer::CriticalPoint minP;
-  CriticalPointsRenderer::CriticalPoint maxP;
+  CriticalPointsRenderer::CriticalPoint minP{};
+  CriticalPointsRenderer::CriticalPoint maxP{};
   minP.persistence = minPersistence;
   maxP.persistence = maxPersistence;
   vecPoints.push_back(minP);
   vecPoints.push_back(maxP);
 
   m_pRenderer->SetPoints(vecPoints);
-  std::cout << "Got points from JavaScript" << std::endl;
+  csp::vestec::logger().debug("[" + GetName() + "::SetPoints] Got points from JavaScript");
 }

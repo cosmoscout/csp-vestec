@@ -1,21 +1,11 @@
 
 #include "UncertaintyRenderNode.hpp"
 #include "../../../../src/cs-utils/filesystem.hpp"
-#include "../NodeEditor/NodeEditor.hpp"
-#include "../Rendering/TextureOverlayRenderer.hpp"
-#include "../common/GDALReader.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaGraphicsManager.h>
-#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
-
-// GDAL c++ includes
-#include "cpl_conv.h" // for CPLMalloc()
-#include "gdal_priv.h"
-#include "gdalwarper.h"
-#include "ogr_spatialref.h"
 
 #include <iomanip>
 #include <thread>
@@ -35,20 +25,21 @@ UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const
   // Store config data for later usage
   mPluginConfig = config;
 
-  // Add a TextureOverlayRenderer to the VISTA scene graph
-  auto pSG    = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   m_pRenderer = new UncertaintyOverlayRenderer(pSolarSystem);
-  m_pParent   = pSG->NewOpenGLNode(m_pAnchor, m_pRenderer);
 
-  // Render after planets which are rendered at 100
-  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pAnchor, static_cast<int>(150));
+  // Add a TextureOverlayRenderer to the VISTA scene graph
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  m_pNode.reset(pSG->NewOpenGLNode(m_pAnchor, m_pRenderer));
+
+  // Render after planets which are rendered at cs::utils::DrawOrder::ePlanets
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems) - 50);
 
   // Initialize GDAL only once
   GDALReader::InitGDAL();
 }
 
 UncertaintyRenderNode::~UncertaintyRenderNode() {
-  delete m_pParent;
+  m_pAnchor->DisconnectChild(m_pNode.get());
   delete m_pRenderer;
 }
 
@@ -65,20 +56,22 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "setTextureFiles", "Reads simulation data", ([pEditor](double id, std::string params) {
+      "setTextureFiles", "Reads simulation data", std::function([pEditor](double id, std::string params) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetTextureFiles(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacityUncertainty", "Adjusts the opacity of the rendering", ([pEditor](double id, double val) {
+      "setOpacityUncertainty", "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetOpacity(val);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setUncertaintyVisualizationMode", "Sets the uncertainty visualization mode", ([pEditor](double id, double val) {
+      "setUncertaintyVisualizationMode", "Sets the uncertainty visualization mode", std::function([pEditor](double id, double val) {
         UncertaintyOverlayRenderer::RenderMode renderMode;
-        std::cout << "Switching vis to " << (int)val << std::endl;
+
+        csp::vestec::logger().debug("[" + GetName() + "] Switching cp vis to " + std::to_string(val));
+
         switch ((int)val) {
         case 1:
           renderMode = UncertaintyOverlayRenderer::RenderMode::Average;

@@ -57,7 +57,6 @@ class TextureRenderNode : public VNE::Node {
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
-  VistaOpenGLNode*        m_pParent = nullptr; //! The VISTA OpenGL node in the scene graph
   TextureOverlayRenderer* m_pRenderer =
       nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
 };

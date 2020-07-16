@@ -1,28 +1,30 @@
 
-#include "DiseasesSensorInput.hpp"
-#include "../NodeEditor/NodeEditor.hpp"
+#include "DiseasesSensorInputNode.hpp"
 
 #include "../../../../src/cs-utils/filesystem.hpp"
 
 #include <json.hpp>
 #include <set>
+
 // for convenience
 using json = nlohmann::json;
 
-DiseasesSensorInput::DiseasesSensorInput(
+DiseasesSensorInputNode::DiseasesSensorInputNode(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
     : VNE::Node(pItem, id) {
   mPluginConfig = config;
 }
 
-DiseasesSensorInput::~DiseasesSensorInput() {
+DiseasesSensorInputNode::~DiseasesSensorInputNode() {
 }
 
-std::string DiseasesSensorInput::GetName() {
+std::string DiseasesSensorInputNode::GetName() {
   return "DiseasesSensorInput";
 }
 
-void DiseasesSensorInput::Init(VNE::NodeEditor* pEditor) {
+void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
+  csp::vestec::logger().debug("[" + GetName() + "] Init");
+
   // Load JavaScipt content from file
   std::string code = cs::utils::filesystem::loadToString(
       "../share/resources/gui/js/csp-vestec-disaeses-sensor-source-node.js");
@@ -30,12 +32,12 @@ void DiseasesSensorInput::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double>("readSensorFileNames", "Reads sensor file names", ([pEditor](double id) {
-    pEditor->GetNode<DiseasesSensorInput>(id)->ReadSensorFileNames(id);
+  pEditor->GetGuiItem()->registerCallback<double>("readSensorFileNames", "Reads sensor file names", std::function([pEditor](double id) {
+    pEditor->GetNode<DiseasesSensorInputNode>(id)->ReadSensorFileNames(id);
   }));
 }
 
-void DiseasesSensorInput::ReadSensorFileNames(int id) {
+void DiseasesSensorInputNode::ReadSensorFileNames(int id) {
   std::set<std::string> lFiles(
       cs::utils::filesystem::listFiles(mPluginConfig.mDiseasesDir + "/input"));
   json args(lFiles);

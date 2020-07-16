@@ -1,12 +1,11 @@
 
 #include "DiseasesSimulationNode.hpp"
-#include "../NodeEditor/NodeEditor.hpp"
 
 #include "../../../../src/cs-utils/filesystem.hpp"
 
 #include <json.hpp>
 #include <set>
-#include <sstream>
+
 // for convenience
 using json = nlohmann::json;
 
@@ -32,17 +31,17 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
 
   // Example callback for communication from JavaScript to C++
   pEditor->GetGuiItem()->registerCallback<double, std::string, double>(
-      "getFilesForTimeStep", "Returns files for a time step", ([pEditor](double id, std::string mode, double t) {
+      "getFilesForTimeStep", "Returns files for a time step", std::function([pEditor](double id, std::string mode, double t) {
         pEditor->GetNode<DiseasesSimulation>(id)->GetFileNamesForTimeStep(id, mode, t);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "setNumberOfEnsembleMembers", "Sets the number of ensemble members", ([pEditor](double id, std::string path) {
+      "setNumberOfEnsembleMembers", "Sets the number of ensemble members", std::function([pEditor](double id, std::string path) {
         pEditor->GetNode<DiseasesSimulation>(id)->SetNumberOfEnsembleMembers(id, path);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double>("readDiseasesSimulationModes", "Returns available diseases simulation modes",
-      ([pEditor](double id) { pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id); }));
+                                                  std::function([pEditor](double id) { pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id); }));
 }
 
 void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, double t) {

@@ -34,7 +34,7 @@ class CriticalPointsNode : public VNE::Node {
   /**
    * Set the points to be renderer stored in the json object
    */
-  void SetPoints(std::string jsonObj);
+  void SetPoints(const std::string& jsonObj);
 
   /**
    * Sets the opacity of the rendering
@@ -51,9 +51,9 @@ class CriticalPointsNode : public VNE::Node {
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
-  VistaOpenGLNode*        m_pParent = nullptr; //! The VISTA OpenGL node in the scene graph
   CriticalPointsRenderer* m_pRenderer =
       nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
+
 };
 
 #endif /* CRITICALPOINTS_SOURCE_NODE_HPP_ */

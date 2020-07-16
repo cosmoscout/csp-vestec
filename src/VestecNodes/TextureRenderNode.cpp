@@ -1,29 +1,17 @@
 
 #include "TextureRenderNode.hpp"
 #include "../../../../src/cs-utils/filesystem.hpp"
-#include "../NodeEditor/NodeEditor.hpp"
-#include "../Rendering/TextureOverlayRenderer.hpp"
-#include "../common/GDALReader.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaGraphicsManager.h>
-#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image.h>
-#include <tiffio.h>
 
-// GDAL c++ includes
-#include "cpl_conv.h" // for CPLMalloc()
-#include "gdal_priv.h"
-#include "gdalwarper.h"
-#include "ogr_spatialref.h"
-
-#include <iomanip>
 #include <vector>
+
 // for convenience
 using json = nlohmann::json;
 
@@ -38,20 +26,21 @@ TextureRenderNode::TextureRenderNode(csp::vestec::Plugin::Settings const& config
   // Store config data for later usage
   mPluginConfig = config;
 
-  // Add a TextureOverlayRenderer to the VISTA scene graph
-  auto pSG    = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   m_pRenderer = new TextureOverlayRenderer(pSolarSystem);
-  m_pParent   = pSG->NewOpenGLNode(m_pAnchor, m_pRenderer);
 
-  // Render after planets which are rendered at 100
-  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pAnchor, static_cast<int>(150));
+  // Add a TextureOverlayRenderer to the VISTA scene graph
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  m_pNode.reset(pSG->NewOpenGLNode(m_pAnchor, m_pRenderer));
+
+  // Render after planets which are rendered at cs::utils::DrawOrder::ePlanets
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems) - 50);
 
   // Initialize GDAL only once
   GDALReader::InitGDAL();
 }
 
 TextureRenderNode::~TextureRenderNode() {
-  delete m_pParent;
+  m_pAnchor->DisconnectChild(m_pNode.get());
   delete m_pRenderer;
 }
 
@@ -68,24 +57,24 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "readSimulationResults", "Reads simulation data", ([pEditor](double id, std::string params) {
+      "readSimulationResults", "Reads simulation data", std::function([pEditor](double id, std::string params) {
         pEditor->GetNode<TextureRenderNode>(id)->ReadSimulationResult(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacityTexture", "Adjusts the opacity of the rendering", ([pEditor](double id, double val) {
+      "setOpacityTexture", "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
       }));
 
   // Callback to adjust the simulation time used to discard pixels
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setTime", "Adjusts the simulation time used to discard pixels", ([pEditor](double id, double val) {
+      "setTime", "Adjusts the simulation time used to discard pixels", std::function([pEditor](double id, double val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetTime(val);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, bool>(
-      "set_enable_time", "Enables the simulation time", ([pEditor](double id, bool val) {
+      "set_enable_time", "Enables the simulation time", std::function([pEditor](double id, bool val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetUseTime(val);
       }));
 }
