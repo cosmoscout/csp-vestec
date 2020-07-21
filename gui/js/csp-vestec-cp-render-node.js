@@ -54,7 +54,7 @@ class CriticalPointsNode {
             noUiSlider.create(heightScale, sliderOptions);
 
             heightScale.noUiSlider.on('update', (value) => {
-                window.call_native("setCriticalPointsHeightScale", parseInt(node.id), parseFloat(value));
+                window.callNative("setCriticalPointsHeightScale", parseInt(node.id), parseFloat(value));
             });
         });
 
@@ -72,7 +72,7 @@ class CriticalPointsNode {
             noUiSlider.create(widthScale, sliderOptions);
 
             widthScale.noUiSlider.on('update', (value) => {
-                window.call_native("setCriticalPointsWidthScale", parseInt(node.id), parseFloat(value));
+                window.callNative("setCriticalPointsWidthScale", parseInt(node.id), parseFloat(value));
             });
         });
 
@@ -101,13 +101,13 @@ class CriticalPointsNode {
         if (inputs[0].length === 0) {
             console.debug(`[CriticalPointsNode #${node.id}] Input Empty`);
             return;
-        }else{
-            if(this.lastInputString != JSON.stringify(inputs[0][0]))
-            {
-                //Send points to C++ for rendering in OGL
-                window.callNative("setPoints", node.id, JSON.stringify(inputs[0][0]));
-                this.lastInputString = JSON.stringify(inputs[0][0]);
-            }
+        }
+
+        if(this.lastInputString !== JSON.stringify(inputs[0][0])) {
+            //Send points to C++ for rendering in OGL
+            window.callNative("setPoints", node.id, JSON.stringify(inputs[0][0]));
+            this.lastInputString = JSON.stringify(inputs[0][0]);
+        }
     }
 
     /**
