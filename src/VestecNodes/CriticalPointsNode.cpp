@@ -92,14 +92,14 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback to adjust the height of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setCriticalPointsHeightScale", ([pEditor](double id, double val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetHeightScale((float)val);
+      "setCriticalPointsHeightScale", "Changes the scale of the critical points height", std::function([pEditor](double id, double val) {
+        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetHeightScale(static_cast<float>(val));
       }));
 
   // Callback to adjust the width of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setCriticalPointsWidthScale", ([pEditor](double id, double val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetWidthScale((float)val);
+      "setCriticalPointsWidthScale", "Changes the scale of the critical points width", std::function([pEditor](double id, double val) {
+        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetWidthScale(static_cast<float>(val));
       }));
 }
 
@@ -136,7 +136,7 @@ void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
     glm::dvec3 lnglathU = (posU * M_PI) / glm::dvec3(180);
     glm::dvec3 lnglathL = (posL * M_PI) / glm::dvec3(180);
 
-    // get the peristence value
+    // get the persistence value
     float persistence = -1;
     persistence       = element["persistence"];
 
@@ -156,7 +156,7 @@ void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
     vecPoints.push_back(lower);
   }
 
-  // Pass min max peristence values to the end of the vector
+  // Pass min max persistence values to the end of the vector
   CriticalPointsRenderer::CriticalPoint minP{};
   CriticalPointsRenderer::CriticalPoint maxP{};
   minP.persistence = minPersistence;
