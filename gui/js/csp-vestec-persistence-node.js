@@ -75,12 +75,9 @@ class PersistenceNode {
             e.stopPropagation();
 
             if (element.dataset.minimized === 'true') {
-              console.log(element.dataset.minimized, 'ismini');
               canvas.classList.remove('hidden');
               element.dataset.minimized = 'false';
-            } else {
-              console.log(element.dataset.minimized, 'isnot');
-              canvas.classList.add('hidden');
+            } else {canvas.classList.add('hidden');
               element.dataset.minimized = 'true';
             }
           });
