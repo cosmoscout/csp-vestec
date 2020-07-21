@@ -120,7 +120,9 @@ bool CriticalPointsRenderer::Do() {
   // glEnable(GL_BLEND);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
-  double nearClip, farClip;
+  double nearClip;
+  double farClip;
+
   GetVistaSystem()
       ->GetDisplayManager()
       ->GetCurrentRenderInfo()
@@ -158,9 +160,9 @@ bool CriticalPointsRenderer::Do() {
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), static_cast<int>(mRenderMode));
   m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uHeightScale"), (float)mHeightScale);
+      m_pSurfaceShader->GetUniformLocation("uHeightScale"), mHeightScale);
   m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uWidthScale"), (float)mWidthScale);
+      m_pSurfaceShader->GetUniformLocation("uWidthScale"), mWidthScale);
 
   auto sunDirection = glm::normalize(glm::inverse(matWorldTransform) * (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"), sunDirection[0],
