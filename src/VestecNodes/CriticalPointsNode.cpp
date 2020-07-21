@@ -89,6 +89,18 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
         }
         pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetVisualizationMode(renderMode);
       }));
+
+  // Callback to adjust the height of the rendering
+  pEditor->GetGuiItem()->registerCallback<double, double>(
+      "setCriticalPointsHeightScale", ([pEditor](double id, double val) {
+        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetHeightScale((float)val);
+      }));
+
+  // Callback to adjust the width of the rendering
+  pEditor->GetGuiItem()->registerCallback<double, double>(
+      "setCriticalPointsWidthScale", ([pEditor](double id, double val) {
+        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetWidthScale((float)val);
+      }));
 }
 
 CriticalPointsRenderer* CriticalPointsNode::GetRenderNode() {

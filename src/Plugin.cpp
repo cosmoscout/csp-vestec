@@ -41,10 +41,12 @@ std::string csp::vestec::Plugin::dataDir = "";
 
 namespace csp::vestec {
 
-void from_json(nlohmann::json const& j, Plugin::Settings& o) {
-  cs::core::Settings::deserialize(j, "vestec-topo-dir", o.mVestecDataDir);
-  cs::core::Settings::deserialize(j, "vestec-fire-dir", o.mFireDir);
-  cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
+void from_json(const nlohmann::json& j, Plugin::Settings& o) {
+  cs::core::parseSection("csp-vestec", [&] {
+    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
+    o.mFireDir       = cs::core::parseProperty<std::string>("vestec-fire-dir", j);
+    o.mDiseasesDir   = cs::core::parseProperty<std::string>("vestec-diseases-dir", j);
+  });
 }
 
 Plugin::Plugin()

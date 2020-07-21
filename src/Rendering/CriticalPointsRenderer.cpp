@@ -31,8 +31,10 @@ CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSyst
 
   m_pSurfaceShader = new VistaGLSLShader();
   m_pSurfaceShader->InitVertexShaderFromString(SURFACE_VERT);
+  m_pSurfaceShader->InitGeometryShaderFromString(SURFACE_GEOM);
   m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
   m_pSurfaceShader->Link();
+
 
   // create buffers ----------------------------------------------------------
   m_VBO = new VistaBufferObject();
@@ -53,6 +55,14 @@ void CriticalPointsRenderer::SetOpacity(double val) {
 
 void CriticalPointsRenderer::SetVisualizationMode(RenderMode mode) {
   mRenderMode = mode;
+}
+
+void CriticalPointsRenderer::SetHeightScale(float scale) {
+  mHeightScale = scale;
+}
+
+void CriticalPointsRenderer::SetWidthScale(float scale) {
+  mWidthScale = scale;
 }
 
 void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
@@ -105,8 +115,8 @@ bool CriticalPointsRenderer::Do() {
 
   // save current lighting and meterial state of the OpenGL state machine
   glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
-  // glDisable(GL_CULL_FACE);
-  // glDisable(GL_DEPTH_TEST);
+  //glDisable(GL_CULL_FACE);
+  //glDisable(GL_DEPTH_TEST);
   // glEnable(GL_BLEND);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -120,11 +130,15 @@ bool CriticalPointsRenderer::Do() {
 
   // get matrices and related values -----------------------------------------
   GLfloat glMat[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMat[0]);
-  VistaTransformMatrix matModelView(glMat, true);
 
   glGetFloatv(GL_PROJECTION_MATRIX, &glMat[0]);
   VistaTransformMatrix matProjection(glMat, true);
+
+  auto        activeBody        = mSolarSystem->pActiveBody.get();
+  glm::dmat4  matWorldTransform = activeBody->getWorldTransform();
+
+  VistaTransformMatrix matM(glm::value_ptr(matWorldTransform), true);
+  VistaTransformMatrix matModelView(matM);
   // get matrices and related values -----------------------------------------
 
   // Bind shader before draw
@@ -143,6 +157,14 @@ bool CriticalPointsRenderer::Do() {
       m_pSurfaceShader->GetUniformLocation("uMinPersistence"), mMinPersistence);
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), static_cast<int>(mRenderMode));
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uHeightScale"), (float)mHeightScale);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uWidthScale"), (float)mWidthScale);
+
+  auto sunDirection = glm::normalize(glm::inverse(matWorldTransform) * (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"), sunDirection[0],
+                               sunDirection[1], sunDirection[2]);
 
   // Draw points
   glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_vecPoints.size()));
