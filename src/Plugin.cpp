@@ -60,7 +60,6 @@ void Plugin::init() {
   // Add the VESTEC tab to the sidebar
   mGuiManager->addPluginTabToSideBarFromHTML(
       "VESTEC", "whatshot", "../share/resources/gui/vestec_tab.html");
-  // mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/vestec_sidebar.js");
 
   mGuiManager->addCssToGui("third-party/css/jquery-ui.min.css");
   mGuiManager->addCssToGui("css/vestec.css");
@@ -70,10 +69,22 @@ void Plugin::init() {
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/d3-node-editor.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/vtk_13.7.1.js");
 
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/vestec.js");
-
   auto vestecWindowHtml = cs::utils::filesystem::loadToString("../share/resources/gui/vestecWindow.html");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecWindowHtml, "body");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.initDraggableWindows");
+
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec.js");
+
+  // Register a callback to toggle the node editor.
+  std::string callback = "vestecNodeEditor.toggle";
+  mGuiManager->getGui()->registerCallback(
+      callback, "Toggles the Vestec Node Editor.", std::function([this]() {
+        mGuiManager->getGui()->executeJavascript(
+            "document.getElementById('csp-vestec-node-editor').classList.toggle('visible')");
+      }));
+
+  // Add a timeline button to toggle the node editor.
+  mGuiManager->addTimelineButton("Toggle Vestec Node Editor", "dashboard", callback);
 
   // Read the plugin settings from the scene config
   mPluginSettings = mAllSettings->mPlugins.at("csp-vestec");
