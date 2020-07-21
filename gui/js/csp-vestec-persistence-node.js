@@ -47,6 +47,7 @@ class PersistenceNode {
 
           control.putData('renderer', renderer);
           control.putData('canvas', canvas);
+
           nodeEditor.engine.process(nodeEditor.editor.toJSON());
         });
 
@@ -88,6 +89,18 @@ class PersistenceNode {
         });
 
     node.addControl(minimizeButton);
+
+    const resetSelection = new D3NE.Control(`<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>`, (element, control) => {
+      element.classList.add('hidden');
+
+      element.addEventListener('click', () => {
+        node.data.renderer.setActiveSelectionBounds(undefined);
+      });
+
+      control.putData('resetBtn', element);
+    });
+
+    node.addControl(resetSelection);
 
     node.data.activeFile = null;
 
@@ -131,6 +144,7 @@ class PersistenceNode {
     }
 
     node.data.button.classList.remove('hidden');
+    node.data.resetBtn.classList.remove('hidden');
 
     const fileName = `${inputs[0][0].caseName}_${inputs[0][0].timeStep}`;
 
