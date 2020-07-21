@@ -84,7 +84,7 @@ vec3 VP_toCartesian(vec2 lnglat, vec2 radius)
 }
 
 // Emits a vertex and sets gs_out values
-void outputVertex(vec4 vPos)
+void outputVertex(vec4 vPos, int i, int sides, vec4[5] positions)
 {
     vec4 mvPos = uMatMV * vec4(vPos.xyz, 1);
 
@@ -92,11 +92,17 @@ void outputVertex(vec4 vPos)
     gs_out.persistence = gs_in_vs[0].persistence;
     gs_out.criticalType = gs_in_vs[0].criticalType;
 
+    vec3 x = positions[i].xyz - positions[sides].xyz;
+    vec3 y = positions[(i+1)%sides].xyz - positions[sides].xyz;
+
+    gs_out.normal = normalize(cross(x, y));
+
     gl_Position = uMatP * vec4(mvPos.xyz, 1.0);
 
     EmitVertex();
 }
 
+// Maps the point persistence to a pre-defined range
 float map(float value, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - uMinPersistence) / (uMaxPersistence - uMinPersistence);
 }
@@ -131,28 +137,17 @@ void main()
 
     // Emit as triangle
     for (int i = 0; i < sides; i++) {
-        outputVertex(positions[sides]);
-        outputVertex(positions[(i+1)%sides]);
-        outputVertex(positions[i]);
-
-        vec3 x = positions[i].xyz - positions[sides].xyz;
-        vec3 y = positions[(i+1)%sides].xyz - positions[sides].xyz;
-
-        gs_out.normal = normalize(cross(x, y));
-
+        outputVertex(positions[sides], i, sides, positions);
+        outputVertex(positions[(i+1)%sides], i, sides, positions);
+        outputVertex(positions[i], i, sides, positions);
         EndPrimitive();
     }
 
     // Top billboard
-    outputVertex(positions[2]);
-    outputVertex(positions[3]);
-    outputVertex(positions[1]);
-    outputVertex(positions[0]);
-
-    vec3 x = positions[1].xyz - positions[0].xyz;
-    vec3 y = positions[2].xyz - positions[0].xyz;
-
-    gs_out.normal = normalize(cross(x, y));
+    outputVertex(positions[2], 1, 0, positions);
+    outputVertex(positions[3], 1, 0, positions);
+    outputVertex(positions[1], 1, 0, positions);
+    outputVertex(positions[0], 1, 0, positions);
     EndPrimitive();
 }
 )";
@@ -209,7 +204,7 @@ void main()
 
     vec3 result = (ambient + diffuse) * color.rgb;
 
-    FragColor = vec4(result, 1);
+    FragColor = vec4(result.rgb, 1);
 
     gl_FragDepth = length(vec3(fs_in.vPos.xyz)) / uFarClip;
 }
