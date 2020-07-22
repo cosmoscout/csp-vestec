@@ -105,8 +105,8 @@ void main()
 {
     const int sides = 4;
 
-    float widthScale = map((gs_in_vs[0].persistence * uWidthScale), 0.0000125, 0.00015);
-    float heightScale = map((gs_in_vs[0].persistence * uHeightScale), 1, 1.005);
+    float widthScale = map((gs_in_vs[0].persistence * uWidthScale), 0.00000125, 0.000015);
+    float heightScale = map((gs_in_vs[0].persistence * uHeightScale), 1, 1.00015);
 
     // Total number of sides + center position
     vec4[sides + 1] positions;
