@@ -12,11 +12,9 @@
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/filesystem.hpp"
-#include "logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
-#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
 // Include VESTEC nodes
 #include "VestecNodes/CinemaDBNode.hpp"
@@ -28,18 +26,28 @@
 #include "VestecNodes/UncertaintyRenderNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 EXPORT_FN cs::core::PluginBase* create() {
   return new csp::vestec::Plugin;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
   delete pluginBase;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Init data dir
-std::string csp::vestec::Plugin::dataDir = "";
+std::string csp::vestec::Plugin::dataDir;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace csp::vestec {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::Settings::deserialize(j, "vestec-topo-dir", o.mVestecDataDir);
@@ -47,12 +55,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
 }
 
-Plugin::Plugin()
-    : mProperties(std::make_shared<Properties>()) {
-}
-
-void Plugin::InitGUI() {
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::init() {
   logger().info("[CSP::VESTEC::Initialize] CosmoScout VR Plugin for the VESTEC EU project");
@@ -94,9 +97,6 @@ void Plugin::init() {
   mVestecTransform = std::make_shared<cs::scene::CelestialAnchorNode>(
       mSceneGraph->GetRoot(), mSceneGraph->GetNodeBridge(), "", "Earth", "IAU_Earth");
   mSolarSystem->registerAnchor(mVestecTransform);
-
-  // Initialize and append gui elements
-  InitGUI();
 
   // Set the data dir which is used by other classes
   Plugin::dataDir = mPluginSettings.mVestecDataDir;
@@ -160,10 +160,10 @@ void Plugin::init() {
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
 
-  // m_pVESTEC_UI->callJavascript("simpleGraph");
-
   logger().info("[CSP::VESTEC::Initialize] Done");
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
   mSolarSystem->unregisterAnchor(mVestecTransform);
@@ -171,11 +171,15 @@ void Plugin::deInit() {
   delete m_pNodeEditor;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Plugin::update() {
   auto  simTime = mTimeControl->pSimulationTime.get();
   float timeOfDay =
       cs::utils::convert::time::toPosix(simTime).time_of_day().total_milliseconds() / 1000.0;
   // Update plugin per frame
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } // namespace csp::vestec
