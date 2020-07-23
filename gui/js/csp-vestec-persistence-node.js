@@ -21,20 +21,20 @@ class PersistenceNode {
           const color = 'rgb(221, 221, 255)';
 
           const renderer = new PersistenceRenderer(element, node.id, {
-            strokeStyle : color,
-            axesTextColor : color,
-            axesColor : color,
-            axesTickColor : color,
-            padding : {
-              left : 40,
-              top : 20,
-              right : 20,
-              bottom : 40,
+            strokeStyle: color,
+            axesTextColor: color,
+            axesColor: color,
+            axesTickColor: color,
+            padding: {
+              left: 40,
+              top: 20,
+              right: 20,
+              bottom: 40,
             },
-            waitTime : 1,
-            enablePersistenceFilter : true,
-            enableSelectionFilter : true,
-            selectionStopPropagation : true
+            waitTime: 1,
+            enablePersistenceFilter: true,
+            enableSelectionFilter: true,
+            selectionStopPropagation: true
           });
 
           // Update graph processing on selection changes
@@ -57,16 +57,16 @@ class PersistenceNode {
         '<button data-minimized="false" class="hidden"><i class="material-icons minimize">picture_in_picture</i></button>',
         (element, control) => {
           Object.assign(element.style, {
-            border : 0,
-            background : 'none',
-            position : 'absolute',
-            top : 0,
-            right : 0,
-            zIndex : 1,
+            border: 0,
+            background: 'none',
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            zIndex: 1,
           });
 
           Object.assign(element.parentNode.style, {
-            padding : 0,
+            padding: 0,
           });
 
           const canvas = control.getData('canvas');
@@ -77,7 +77,8 @@ class PersistenceNode {
             if (element.dataset.minimized === 'true') {
               canvas.classList.remove('hidden');
               element.dataset.minimized = 'false';
-            } else {canvas.classList.add('hidden');
+            } else {
+              canvas.classList.add('hidden');
               element.dataset.minimized = 'true';
             }
           });
@@ -87,15 +88,17 @@ class PersistenceNode {
 
     node.addControl(minimizeButton);
 
-    const resetSelection = new D3NE.Control(`<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>`, (element, control) => {
-      element.classList.add('hidden');
+    const resetSelection = new D3NE.Control(
+        `<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>`,
+        (element, control) => {
+          element.classList.add('hidden');
 
-      element.addEventListener('click', () => {
-        node.data.renderer.setActiveSelectionBounds(undefined);
-      });
+          element.addEventListener('click', () => {
+            node.data.renderer.setActiveSelectionBounds(undefined);
+          });
 
-      control.putData('resetBtn', element);
-    });
+          control.putData('resetBtn', element);
+        });
 
     node.addControl(resetSelection);
 
@@ -166,8 +169,8 @@ class PersistenceNode {
     this._checkD3NE();
 
     return new D3NE.Component('PersistenceNode', {
-      builder : this._builder.bind(this),
-      worker : this._worker.bind(this),
+      builder: this._builder.bind(this),
+      worker: this._worker.bind(this),
     });
   }
 

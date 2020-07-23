@@ -87,8 +87,8 @@ class WildFireSourceNode {
     this._checkD3NE();
 
     return new D3NE.Component('WildFireSourceNode', {
-      builder : this._builder.bind(this),
-      worker : this._worker.bind(this),
+      builder: this._builder.bind(this),
+      worker: this._worker.bind(this),
     });
   }
 

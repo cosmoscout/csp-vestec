@@ -35,7 +35,6 @@ CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSyst
   m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
   m_pSurfaceShader->Link();
 
-
   // create buffers ----------------------------------------------------------
   m_VBO = new VistaBufferObject();
   m_VAO = new VistaVertexArrayObject();
@@ -66,7 +65,8 @@ void CriticalPointsRenderer::SetWidthScale(float scale) {
 }
 
 void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
-  csp::vestec::logger().debug("[CriticalPointsRenderer] Copy data to VBO: " + std::to_string(vecPoints.size()));
+  csp::vestec::logger().debug(
+      "[CriticalPointsRenderer] Copy data to VBO: " + std::to_string(vecPoints.size()));
   m_vecPoints.clear();
 
   // Get persistence range
@@ -115,8 +115,8 @@ bool CriticalPointsRenderer::Do() {
 
   // save current lighting and meterial state of the OpenGL state machine
   glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
-  //glDisable(GL_CULL_FACE);
-  //glDisable(GL_DEPTH_TEST);
+  // glDisable(GL_CULL_FACE);
+  // glDisable(GL_DEPTH_TEST);
   // glEnable(GL_BLEND);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -136,8 +136,8 @@ bool CriticalPointsRenderer::Do() {
   glGetFloatv(GL_PROJECTION_MATRIX, &glMat[0]);
   VistaTransformMatrix matProjection(glMat, true);
 
-  auto        activeBody        = mSolarSystem->pActiveBody.get();
-  glm::dmat4  matWorldTransform = activeBody->getWorldTransform();
+  auto       activeBody        = mSolarSystem->pActiveBody.get();
+  glm::dmat4 matWorldTransform = activeBody->getWorldTransform();
 
   VistaTransformMatrix matM(glm::value_ptr(matWorldTransform), true);
   VistaTransformMatrix matModelView(matM);
@@ -152,21 +152,22 @@ bool CriticalPointsRenderer::Do() {
   loc = m_pSurfaceShader->GetUniformLocation("uMatMV");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matModelView.GetData());
 
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), static_cast<float>(farClip));
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uFarClip"), static_cast<float>(farClip));
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uMaxPersistence"), mMaxPersistence);
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uMinPersistence"), mMinPersistence);
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), static_cast<int>(mRenderMode));
-  m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uHeightScale"), mHeightScale);
-  m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uWidthScale"), mWidthScale);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uHeightScale"), mHeightScale);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uWidthScale"), mWidthScale);
 
-  auto sunDirection = glm::normalize(glm::inverse(matWorldTransform) * (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"), sunDirection[0],
-                               sunDirection[1], sunDirection[2]);
+  auto sunDirection =
+      glm::normalize(glm::inverse(matWorldTransform) *
+                     (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
+      sunDirection[0], sunDirection[1], sunDirection[2]);
 
   // Draw points
   glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_vecPoints.size()));

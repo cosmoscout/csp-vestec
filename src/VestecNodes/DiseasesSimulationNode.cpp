@@ -30,18 +30,21 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double, std::string, double>(
-      "getFilesForTimeStep", "Returns files for a time step", std::function([pEditor](double id, std::string mode, double t) {
+  pEditor->GetGuiItem()->registerCallback<double, std::string, double>("getFilesForTimeStep",
+      "Returns files for a time step",
+      std::function([pEditor](double id, std::string mode, double t) {
         pEditor->GetNode<DiseasesSimulation>(id)->GetFileNamesForTimeStep(id, mode, t);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "setNumberOfEnsembleMembers", "Sets the number of ensemble members", std::function([pEditor](double id, std::string path) {
+  pEditor->GetGuiItem()->registerCallback<double, std::string>("setNumberOfEnsembleMembers",
+      "Sets the number of ensemble members", std::function([pEditor](double id, std::string path) {
         pEditor->GetNode<DiseasesSimulation>(id)->SetNumberOfEnsembleMembers(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double>("readDiseasesSimulationModes", "Returns available diseases simulation modes",
-                                                  std::function([pEditor](double id) { pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id); }));
+  pEditor->GetGuiItem()->registerCallback<double>("readDiseasesSimulationModes",
+      "Returns available diseases simulation modes", std::function([pEditor](double id) {
+        pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id);
+      }));
 }
 
 void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, double t) {

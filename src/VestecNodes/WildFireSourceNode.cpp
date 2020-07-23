@@ -24,18 +24,19 @@ std::string WildFireSourceNode::GetName() {
 
 void WildFireSourceNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScript content from file
-  std::string code = cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-wildfire-source-node.js");
+  std::string code = cs::utils::filesystem::loadToString(
+      "../share/resources/gui/js/csp-vestec-wildfire-source-node.js");
 
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "readSimulationModes", "Returns available simulation modes", std::function([pEditor](double id, std::string params) {
+  pEditor->GetGuiItem()->registerCallback<double, std::string>("readSimulationModes",
+      "Returns available simulation modes", std::function([pEditor](double id, std::string params) {
         pEditor->GetNode<WildFireSourceNode>(id)->ReadSimulationModes(id);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "readSimulationFileNames", "Returns simulation file names", std::function([pEditor](double id, std::string params) {
+  pEditor->GetGuiItem()->registerCallback<double, std::string>("readSimulationFileNames",
+      "Returns simulation file names", std::function([pEditor](double id, std::string params) {
         pEditor->GetNode<WildFireSourceNode>(id)->ReadSimulationFileNames(id, params);
       }));
 }

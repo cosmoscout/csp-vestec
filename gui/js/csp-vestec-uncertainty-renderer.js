@@ -27,7 +27,8 @@ class UncertaintyRenderNode {
         </div>\
       <div class="row">\
         <div class="col-5 text">Mode:</div>\
-        <select id="vis_mode_' + node.id + '" class="combobox col-7">\
+        <select id="vis_mode_' +
+                      node.id + '" class="combobox col-7">\
           <option value="1">Average</option>\
           <option value="2">Variance</option>\
           <option value="3">Difference</option>\
@@ -42,18 +43,19 @@ class UncertaintyRenderNode {
       // Initialize HTML elements
       var sliderQuery = "#slider_opacity" + node.id;
       const slider    = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, {start : 1, animate : false, range : {'min' : 0, 'max' : 1}});
+      noUiSlider.create(slider, {start: 1, animate: false, range: {'min': 0, 'max': 1}});
 
       // Read the files for the given simulation mode and fill combobox when mode is changed
       slider.noUiSlider.on('slide', function(values, handle) {
         window.callNative("setOpacityUncertainty", node.id, parseFloat(values[handle]))
       });
 
-      //Initialize combobox for the visualization mode
+      // Initialize combobox for the visualization mode
       const select = $(element).find("#vis_mode_" + node.id);
       select.selectpicker();
       select.on("change", function() {
-        window.callNative("setUncertaintyVisualizationMode", parseInt(node.id), parseInt($(this).val()));
+        window.callNative(
+            "setUncertaintyVisualizationMode", parseInt(node.id), parseInt($(this).val()));
       });
     });
 
@@ -92,8 +94,8 @@ class UncertaintyRenderNode {
     this._checkD3NE();
 
     return new D3NE.Component('UncertaintyRenderNode', {
-      builder : this._builder.bind(this),
-      worker : this._worker.bind(this),
+      builder: this._builder.bind(this),
+      worker: this._worker.bind(this),
     });
   }
 
@@ -110,6 +112,6 @@ class UncertaintyRenderNode {
 }
 
 (() => {
-  const renderNode                = new UncertaintyRenderNode();
+  const renderNode                       = new UncertaintyRenderNode();
   nodeEditor.nodes.UncertaintyRenderNode = renderNode.getComponent();
 })();

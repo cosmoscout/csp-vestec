@@ -16,8 +16,8 @@ class NodeEditor;
 
 class UncertaintyRenderNode : public VNE::Node {
  public:
-  UncertaintyRenderNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
-      cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
+  UncertaintyRenderNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem,
+      int id, cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
       cs::core::GraphicsEngine* pEngine);
   virtual ~UncertaintyRenderNode();
 

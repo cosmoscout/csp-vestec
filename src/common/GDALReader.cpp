@@ -27,7 +27,8 @@ void GDALReader::AddTextureToCache(std::string path, GreyScaleTexture& texture) 
 
 void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename) {
   if (!GDALReader::mIsInitialized) {
-    csp::vestec::logger().error("[GDALReader] GDAL not initialized! Call GDALReader::InitGDAL() first");
+    csp::vestec::logger().error(
+        "[GDALReader] GDAL not initialized! Call GDALReader::InitGDAL() first");
     return;
   }
 
@@ -64,7 +65,8 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   }
 
   if (poDatasetSrc->GetProjectionRef() == NULL) {
-    csp::vestec::logger().error("[GDALReader::ReadGrayScaleTexture] No projection defined for " + filename);
+    csp::vestec::logger().error(
+        "[GDALReader::ReadGrayScaleTexture] No projection defined for " + filename);
     return;
   }
 

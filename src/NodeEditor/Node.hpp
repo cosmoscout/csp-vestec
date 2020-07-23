@@ -30,7 +30,7 @@ class Node {
   std::vector<std::map<std::pair<int, int>, Node*>>& GetOutputPorts();
 
  protected:
-  cs::gui::GuiItem* m_pItem;
+  cs::gui::GuiItem*                m_pItem;
   std::unique_ptr<VistaOpenGLNode> m_pNode = nullptr; //! The VISTA OpenGL node in the scene graph
 
  private:

@@ -32,7 +32,8 @@ UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const
   m_pNode.reset(pSG->NewOpenGLNode(m_pAnchor, m_pRenderer));
 
   // Render after planets which are rendered at cs::utils::DrawOrder::ePlanets
-  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems) - 50);
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems) - 50);
 
   // Initialize GDAL only once
   GDALReader::InitGDAL();
@@ -55,22 +56,23 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Callback which reads simulation data (path+x is given from JavaScript)
-  pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "setTextureFiles", "Reads simulation data", std::function([pEditor](double id, std::string params) {
+  pEditor->GetGuiItem()->registerCallback<double, std::string>("setTextureFiles",
+      "Reads simulation data", std::function([pEditor](double id, std::string params) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetTextureFiles(params);
       }));
 
   // Callback to adjust the opacity of the rendering
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacityUncertainty", "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
+  pEditor->GetGuiItem()->registerCallback<double, double>("setOpacityUncertainty",
+      "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetOpacity(val);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setUncertaintyVisualizationMode", "Sets the uncertainty visualization mode", std::function([pEditor](double id, double val) {
+  pEditor->GetGuiItem()->registerCallback<double, double>("setUncertaintyVisualizationMode",
+      "Sets the uncertainty visualization mode", std::function([pEditor](double id, double val) {
         UncertaintyOverlayRenderer::RenderMode renderMode;
 
-        csp::vestec::logger().debug("[" + GetName() + "] Switching cp vis to " + std::to_string(val));
+        csp::vestec::logger().debug(
+            "[" + GetName() + "] Switching cp vis to " + std::to_string(val));
 
         switch ((int)val) {
         case 1:

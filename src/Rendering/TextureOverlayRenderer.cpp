@@ -87,13 +87,11 @@ void TextureOverlayRenderer::SetOpacity(double val) {
   mOpacity = val;
 }
 
-void TextureOverlayRenderer::SetTime(double val)
-{
+void TextureOverlayRenderer::SetTime(double val) {
   mTime = val;
 }
 
-void TextureOverlayRenderer::SetUseTime(bool use)
-{
+void TextureOverlayRenderer::SetUseTime(bool use) {
   mUseTime = use;
 }
 
@@ -175,9 +173,9 @@ bool TextureOverlayRenderer::Do() {
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSimBuffer"), 1);
 
   // Why is there no set uniform for matrices??? //TODO: There is one
-  glm::dmat4  InverseWorldTransform =  glm::inverse(matWorldTransform);
-  GLint loc = m_pSurfaceShader->GetUniformLocation("uMatInvMV");
-  //glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMV.GetData());
+  glm::dmat4 InverseWorldTransform = glm::inverse(matWorldTransform);
+  GLint      loc                   = m_pSurfaceShader->GetUniformLocation("uMatInvMV");
+  // glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMV.GetData());
   glUniformMatrix4dv(loc, 1, GL_FALSE, glm::value_ptr(InverseWorldTransform));
   loc = m_pSurfaceShader->GetUniformLocation("uMatInvMVP");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMVP.GetData());
@@ -187,22 +185,25 @@ bool TextureOverlayRenderer::Do() {
   glUniformMatrix4fv(loc, 1, GL_FALSE, matMV.GetData());
 
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float)farClip);
-  
-  //m_pSurfaceShader->SetUniform(
+
+  // m_pSurfaceShader->SetUniform(
   //    m_pSurfaceShader->GetUniformLocation("uBounds"), 4, 1, mTexture.lnglatBounds.data());
-  //Double precision bounds
+  // Double precision bounds
   loc = m_pSurfaceShader->GetUniformLocation("uBounds");
   glUniform4dv(loc, 1, mTexture.lnglatBounds.data());
 
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRange"), (float)mTexture.dataRange[0], (float)mTexture.dataRange[1]);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRange"),
+      (float)mTexture.dataRange[0], (float)mTexture.dataRange[1]);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), (float)mTime);
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), (bool) mUseTime);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), (bool)mUseTime);
 
-  auto sunDirection = glm::normalize(glm::inverse(matWorldTransform) * (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"), sunDirection[0],
-        sunDirection[1], sunDirection[2]);
-  
+  auto sunDirection =
+      glm::normalize(glm::inverse(matWorldTransform) *
+                     (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
+      sunDirection[0], sunDirection[1], sunDirection[2]);
+
   int depthBits = 0;
   glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 

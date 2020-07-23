@@ -11,7 +11,8 @@ class NodeEditor;
 
 class DiseasesSensorInputNode : public VNE::Node {
  public:
-  DiseasesSensorInputNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
+  DiseasesSensorInputNode(
+      csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
   virtual ~DiseasesSensorInputNode();
 
   /**

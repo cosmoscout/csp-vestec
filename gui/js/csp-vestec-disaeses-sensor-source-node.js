@@ -68,8 +68,8 @@ class DiseasesSensorInput {
     this._checkD3NE();
 
     return new D3NE.Component('DiseasesSensorInput', {
-      builder : this._builder.bind(this),
-      worker : this._worker.bind(this),
+      builder: this._builder.bind(this),
+      worker: this._worker.bind(this),
     });
   }
 

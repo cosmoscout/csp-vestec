@@ -303,7 +303,8 @@ bool UncertaintyOverlayRenderer::Do() {
 void UncertaintyOverlayRenderer::getGLError(std::string name) {
   int error = glGetError();
   if (error != 0) {
-    csp::vestec::logger().error("[UncertaintyOverlayRenderer]  Error in" + name + " Error code: " + std::to_string(error));
+    csp::vestec::logger().error(
+        "[UncertaintyOverlayRenderer]  Error in" + name + " Error code: " + std::to_string(error));
   }
 }
 

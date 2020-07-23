@@ -33,7 +33,8 @@ TextureRenderNode::TextureRenderNode(csp::vestec::Plugin::Settings const& config
   m_pNode.reset(pSG->NewOpenGLNode(m_pAnchor, m_pRenderer));
 
   // Render after planets which are rendered at cs::utils::DrawOrder::ePlanets
-  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems) - 50);
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems) - 50);
 
   // Initialize GDAL only once
   GDALReader::InitGDAL();
@@ -56,25 +57,26 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Callback which reads simulation data (path+x is given from JavaScript)
-  pEditor->GetGuiItem()->registerCallback<double, std::string>(
-      "readSimulationResults", "Reads simulation data", std::function([pEditor](double id, std::string params) {
+  pEditor->GetGuiItem()->registerCallback<double, std::string>("readSimulationResults",
+      "Reads simulation data", std::function([pEditor](double id, std::string params) {
         pEditor->GetNode<TextureRenderNode>(id)->ReadSimulationResult(params);
       }));
 
   // Callback to adjust the opacity of the rendering
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacityTexture", "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
+  pEditor->GetGuiItem()->registerCallback<double, double>("setOpacityTexture",
+      "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
       }));
 
   // Callback to adjust the simulation time used to discard pixels
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setTime", "Adjusts the simulation time used to discard pixels", std::function([pEditor](double id, double val) {
+  pEditor->GetGuiItem()->registerCallback<double, double>("setTime",
+      "Adjusts the simulation time used to discard pixels",
+      std::function([pEditor](double id, double val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetTime(val);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, bool>(
-      "set_enable_time", "Enables the simulation time", std::function([pEditor](double id, bool val) {
+  pEditor->GetGuiItem()->registerCallback<double, bool>("set_enable_time",
+      "Enables the simulation time", std::function([pEditor](double id, bool val) {
         pEditor->GetNode<TextureRenderNode>(id)->SetUseTime(val);
       }));
 }

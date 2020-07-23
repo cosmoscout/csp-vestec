@@ -209,4 +209,3 @@ void main()
     gl_FragDepth = length(vec3(fs_in.vPos.xyz)) / uFarClip;
 }
 )";
-

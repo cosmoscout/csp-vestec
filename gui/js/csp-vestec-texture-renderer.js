@@ -31,7 +31,7 @@ class TextureRenderNode {
       // Initialize HTML elements
       var sliderQuery = "#slider_opacity" + node.id;
       const slider    = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, {start : 1, animate : false, range : {'min' : 0, 'max' : 1}});
+      noUiSlider.create(slider, {start: 1, animate: false, range: {'min': 0, 'max': 1}});
 
       // Read the files for the given simulation mode and fill combobox when mode is changed
       slider.noUiSlider.on('slide', function(values, handle) {
@@ -61,7 +61,7 @@ class TextureRenderNode {
       // Initialize HTML elements
       var sliderQuery = "#slider_time" + node.id;
       const slider    = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, {start : 6, animate : false, range : {'min' : 0, 'max' : 6}});
+      noUiSlider.create(slider, {start: 6, animate: false, range: {'min': 0, 'max': 6}});
 
       $(element).find("#set_enable_time" + node.id).on("click", function() {
         window.callNative("set_enable_time", node.id, $(this).is(":checked"));
@@ -112,8 +112,8 @@ class TextureRenderNode {
     this._checkD3NE();
 
     return new D3NE.Component('TextureRenderNode', {
-      builder : this._builder.bind(this),
-      worker : this._worker.bind(this),
+      builder: this._builder.bind(this),
+      worker: this._worker.bind(this),
     });
   }
 

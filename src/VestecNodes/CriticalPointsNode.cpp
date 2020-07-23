@@ -32,7 +32,8 @@ CriticalPointsNode::CriticalPointsNode(csp::vestec::Plugin::Settings const& conf
   m_pNode.reset(pSG->NewOpenGLNode(m_pAnchor, m_pRenderer));
 
   // Render after planets which are rendered at cs::utils::DrawOrder::ePlanets
-  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(m_pNode.get(),  static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 }
 
 CriticalPointsNode::~CriticalPointsNode() {
@@ -59,16 +60,17 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
       }));
 
   // Callback to adjust the opacity of the rendering
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setOpacity", "Adjust the opacity of the rendering", std::function([pEditor](double id, double val) {
+  pEditor->GetGuiItem()->registerCallback<double, double>("setOpacity",
+      "Adjust the opacity of the rendering", std::function([pEditor](double id, double val) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetOpacity(val);
       }));
 
   // Callback to set the visualization mode
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setCriticalPointsVisualizationMode", "Sets the visualization mode", std::function([pEditor](double id, double val) {
+  pEditor->GetGuiItem()->registerCallback<double, double>("setCriticalPointsVisualizationMode",
+      "Sets the visualization mode", std::function([pEditor](double id, double val) {
         CriticalPointsRenderer::RenderMode renderMode = CriticalPointsRenderer::RenderMode::ALL;
-        csp::vestec::logger().debug("[" + GetName() + "] Switching cp vis to " + std::to_string(val));
+        csp::vestec::logger().debug(
+            "[" + GetName() + "] Switching cp vis to " + std::to_string(val));
 
         switch (static_cast<int>(val)) {
         case 0:
@@ -91,15 +93,19 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
       }));
 
   // Callback to adjust the height of the rendering
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setCriticalPointsHeightScale", "Changes the scale of the critical points height", std::function([pEditor](double id, double val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetHeightScale(static_cast<float>(val));
+  pEditor->GetGuiItem()->registerCallback<double, double>("setCriticalPointsHeightScale",
+      "Changes the scale of the critical points height",
+      std::function([pEditor](double id, double val) {
+        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetHeightScale(
+            static_cast<float>(val));
       }));
 
   // Callback to adjust the width of the rendering
-  pEditor->GetGuiItem()->registerCallback<double, double>(
-      "setCriticalPointsWidthScale", "Changes the scale of the critical points width", std::function([pEditor](double id, double val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetWidthScale(static_cast<float>(val));
+  pEditor->GetGuiItem()->registerCallback<double, double>("setCriticalPointsWidthScale",
+      "Changes the scale of the critical points width",
+      std::function([pEditor](double id, double val) {
+        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetWidthScale(
+            static_cast<float>(val));
       }));
 }
 
