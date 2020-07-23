@@ -1,4 +1,4 @@
-/* global D3NE, nodeEditor, vtk, Selection */
+/* global D3NE, vtk, Selection */
 
 /**
  * Node for rendering texture input. Only takes the first file
@@ -78,7 +78,7 @@ class TextureRenderNode {
     node.addControl(time_control);
 
     // Define the input type
-    const input = new D3NE.Input('TEXTURE(S)', nodeEditor.sockets.TEXTURES);
+    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestec.sockets.TEXTURES);
     node.addInput(input);
     return node;
   }
@@ -130,6 +130,6 @@ class TextureRenderNode {
 }
 
 (() => {
-  const texRenderNode                = new TextureRenderNode();
-  nodeEditor.nodes.TextureRenderNode = texRenderNode.getComponent();
+  const texRenderNode = new TextureRenderNode();
+  CosmoScout.vestec.addNode('TextureRenderNode', texRenderNode.getComponent());
 })();

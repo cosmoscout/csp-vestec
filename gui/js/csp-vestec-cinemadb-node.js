@@ -1,4 +1,4 @@
-/* global nodeEditor, $, noUiSlider */
+/* global CosmoScout.vestec, $, noUiSlider */
 
 class CinemaDBNode {
   /**
@@ -11,7 +11,7 @@ class CinemaDBNode {
    * @returns {*}
    */
   builder(node) {
-    const output = new D3NE.Output("CINEMA_DB", nodeEditor.sockets.CINEMA_DB);
+    const output = new D3NE.Output("CINEMA_DB", CosmoScout.vestec.sockets.CINEMA_DB);
 
     const caseNames = new D3NE.Control(
         `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
@@ -27,9 +27,7 @@ class CinemaDBNode {
           element.addEventListener('change', (event) => {
             control.putData('caseName', event.target.value);
 
-            if (typeof nodeEditor.engine !== 'undefined') {
-              nodeEditor.engine.process(nodeEditor.editor.toJSON());
-            }
+            CosmoScout.vestec.updateEditor();
           });
         });
 
@@ -41,6 +39,7 @@ class CinemaDBNode {
     node.addControl(caseNames);
     node.addControl(timeSteps);
     node.addOutput(output);
+
     return node;
   }
 
@@ -125,7 +124,7 @@ class CinemaDBNode {
     });
 
     slider.noUiSlider.on('update', (values) => {
-      const node = nodeEditor.editor.nodes.find(node => node.id === id);
+      const node = CosmoScout.vestec.editor.nodes.find(node => node.id === id);
 
       if (typeof node !== 'undefined') {
         node.data.timeStep = Number(values[0]).toFixed(0)
@@ -135,13 +134,11 @@ class CinemaDBNode {
     });
 
     slider.noUiSlider.on('set', (values) => {
-      if (typeof nodeEditor.engine !== 'undefined') {
-        nodeEditor.engine.process(nodeEditor.editor.toJSON());
-      }
+      CosmoScout.vestec.updateEditor();
     });
 
     // Just do once after initialization
-    nodeEditor.engine.process(nodeEditor.editor.toJSON());
+    CosmoScout.vestec.updateEditor();
   }
 
   /**
@@ -162,7 +159,7 @@ class CinemaDBNode {
     select.html(liSimulations);
     select.selectpicker('refresh');
 
-    const node = nodeEditor.editor.nodes.find(node => node.id === id);
+    const node = CosmoScout.vestec.editor.nodes.find(node => node.id === id);
 
     if (typeof node !== 'undefined') {
       node.data.caseName = select.val();
@@ -175,5 +172,5 @@ class CinemaDBNode {
 (() => {
   const cinemaDBNode = new CinemaDBNode();
 
-  nodeEditor.nodes.CinemaDBNode = cinemaDBNode.getComponent();
+  CosmoScout.vestec.addNode('CinemaDBNode', cinemaDBNode.getComponent());
 })();

@@ -1,4 +1,4 @@
-/* global D3NE, nodeEditor, vtk, Selection */
+/* global D3NE, vtk, Selection */
 
 /**
  * Node for reading and selecting the wildfire simulation data
@@ -23,9 +23,7 @@ class DiseasesSensorInput {
             // Forward file to output
             control.putData('sensorFile', $(this).val());
 
-            if (typeof nodeEditor.engine !== 'undefined') {
-              nodeEditor.engine.process(nodeEditor.editor.toJSON());
-            }
+            CosmoScout.vestec.updateEditor();
           });
 
           // Now, since simulation mode changed, read the files for that simulation mode
@@ -36,7 +34,7 @@ class DiseasesSensorInput {
     node.addControl(simulation_file);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURE', nodeEditor.sockets.TEXTURES);
+    const output = new D3NE.Output('TEXTURE', CosmoScout.vestec.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
@@ -103,6 +101,6 @@ class DiseasesSensorInput {
 }
 
 (() => {
-  const diseasesInput                  = new DiseasesSensorInput();
-  nodeEditor.nodes.DiseasesSensorInput = diseasesInput.getComponent();
+  const diseasesInput = new DiseasesSensorInput();
+  CosmoScout.vestec.addNode('DiseasesSensorInput', diseasesInput.getComponent());
 })();

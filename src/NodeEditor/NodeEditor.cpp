@@ -118,14 +118,9 @@ void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
 }
 
 void NodeEditor::InitNodeEditor() {
-  m_pWebView->executeJavascript("var nodeEditor = {};");
-  m_pWebView->executeJavascript("nodeEditor.sockets = {};");
-  m_pWebView->executeJavascript("nodeEditor.nodes = {};");
-
-  // Loop over sockets and create/insert javascript code
+  // Loop over sockets and add them to the editor
   for (auto const& name : m_vecSockets) {
-    m_pWebView->executeJavascript(
-        "nodeEditor.sockets." + name + " = new D3NE.Socket('data', '" + name + "', 'hint');");
+    m_pWebView->callJavascript("CosmoScout.vestec.addSocket", name);
   }
 
   // Loop over registered node types and make them in javascript available
@@ -133,85 +128,23 @@ void NodeEditor::InitNodeEditor() {
     nodeInitFunction.second(this);
   }
 
-  // Initialize the node editor
-  std::string strJavascriptIniCode = "nodeEditor.components = [";
+  // Add node editor components
   for (auto const& name : m_mapInitFunctions) {
-    strJavascriptIniCode += "nodeEditor.nodes." + name.first + ",";
+    m_pWebView->callJavascript("CosmoScout.vestec.addComponent", name.first);
   }
-  strJavascriptIniCode.back() = ']';
-  strJavascriptIniCode += ";\n";
 
-  // Create string for the menu
-  strJavascriptIniCode += "nodeEditor.menu = new D3NE.ContextMenu({";
+  // Build the context menu
   for (auto const& category : m_mapCategories) {
-    strJavascriptIniCode += "'" + category.first + "':{";
+    m_pWebView->callJavascript("CosmoScout.vestec.addContextMenuCategory", category.first);
+
     for (auto const& node : category.second) {
-      strJavascriptIniCode += "'" + node + "': nodeEditor.nodes." + node + ",";
+      m_pWebView->callJavascript("CosmoScout.vestec.addContextMenuContent", category.first, node);
     }
-    strJavascriptIniCode.back() = '}';
-    strJavascriptIniCode += ",";
   }
-  strJavascriptIniCode.back() = '}';
-  strJavascriptIniCode += ");\n";
 
-  strJavascriptIniCode += R"(  
-	nodeEditor.container = document.querySelector('#d3-node-editor');
-	nodeEditor.editor = new D3NE.NodeEditor('demo@0.1.0', nodeEditor.container, nodeEditor.components, nodeEditor.menu);
+  m_pWebView->callJavascript("CosmoScout.vestec.initContextMenu");
+  m_pWebView->callJavascript("CosmoScout.vestec.initNodeEditor");
 
-    nodeEditor.editor.eventListener.on('nodecreate', (node, persistent) => { 
-    try
-    {
-        window.callNative("AddNewNode", parseInt(node.id), node.title);
-    }catch (e) {
-        console.log(e);
-    }
-    });
-
-    nodeEditor.editor.eventListener.on('noderemove', (node, persistent) => { 
-    try
-    {
-        window.callNative("DeleteNode", parseInt(node.id), node.title);
-    }catch (e) {
-        console.log(e);
-    }
-    });
-
-    nodeEditor.editor.eventListener.on('connectioncreate', (connection, persistent) => { 
-    try
-    {
-         window.callNative("AddConnection", parseInt(connection.output.node.id),parseInt(connection.input.node.id),
-            connection.output.node.outputs.findIndex(output => output == connection.output),
-						connection.input.node.inputs.findIndex(input => input == connection.input));
-    }catch (e) {
-        console.log(e);
-    }
-    });
-
-    nodeEditor.editor.eventListener.on('connectionremove', (connection, persistent) => { 
-    try
-    {
-         window.callNative("DeleteConnection", parseInt(connection.output.node.id),parseInt(connection.input.node.id),
-            connection.output.node.outputs.findIndex(output => output == connection.output),
-						connection.input.node.inputs.findIndex(input => input == connection.input));
-    }catch (e) {
-        console.log(e);
-    }
-
-    });
-
-    nodeEditor.engine = new D3NE.Engine("demo@0.1.0", nodeEditor.components);
-
-    nodeEditor.editor.eventListener.on("change", async function() {
-        await nodeEditor.engine.abort();
-        await nodeEditor.engine.process(nodeEditor.editor.toJSON());
-    });
-
-    nodeEditor.editor.view.zoomAt(nodeEditor.editor.nodes);
-    nodeEditor.engine.process(nodeEditor.editor.toJSON());
-    nodeEditor.editor.view.resize();
-)";
-
-  m_pWebView->executeJavascript(strJavascriptIniCode);
   m_pWebView->waitForFinishedLoading();
   // Register the required callbacks
   m_pWebView->registerCallback<double, std::string>("AddNewNode",

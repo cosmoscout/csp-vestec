@@ -24,9 +24,7 @@ class WildFireSourceNode {
             // Now, since simulation mode changed, read the files for that simulation mode
             window.callNative("readSimulationFileNames", node.id, $(this).val());
 
-            if (typeof nodeEditor.engine !== 'undefined') {
-              nodeEditor.engine.process(nodeEditor.editor.toJSON());
-            }
+            CosmoScout.vestec.updateEditor();
           });
 
           // Initially fill the combobox with simulation mode values (read from C++)
@@ -44,9 +42,7 @@ class WildFireSourceNode {
             // Forward file to output
             control.putData('simulationFile', $(this).val());
 
-            if (typeof nodeEditor.engine !== 'undefined') {
-              nodeEditor.engine.process(nodeEditor.editor.toJSON());
-            }
+            CosmoScout.vestec.updateEditor();
           });
         });
 
@@ -55,7 +51,7 @@ class WildFireSourceNode {
     node.addControl(simulation_file);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURES', nodeEditor.sockets.TEXTURES);
+    const output = new D3NE.Output('TEXTURES', CosmoScout.vestec.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
@@ -137,6 +133,6 @@ class WildFireSourceNode {
 }
 
 (() => {
-  const wildFireNode                  = new WildFireSourceNode();
-  nodeEditor.nodes.WildFireSourceNode = wildFireNode.getComponent();
+  const wildFireNode = new WildFireSourceNode();
+  CosmoScout.vestec.addNode('WildFireSourceNode', wildFireNode.getComponent());
 })();

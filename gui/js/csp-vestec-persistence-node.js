@@ -1,4 +1,4 @@
-/* global D3NE, nodeEditor, vtk, Selection */
+/* global D3NE, CosmoScout.vestec, vtk, Selection */
 
 /**
  * Node drawing a persistence diagram for a given vtk file
@@ -39,7 +39,7 @@ class PersistenceNode {
 
           // Update graph processing on selection changes
           renderer.container.addEventListener('pointsdrawn', (event /* CustomEvent */) => {
-            nodeEditor.engine.process(nodeEditor.editor.toJSON());
+            CosmoScout.vestec.updateEditor();
           });
 
           const canvas = renderer.renderer.getCanvas();
@@ -48,7 +48,7 @@ class PersistenceNode {
           control.putData('renderer', renderer);
           control.putData('canvas', canvas);
 
-          nodeEditor.engine.process(nodeEditor.editor.toJSON());
+          CosmoScout.vestec.updateEditor();
         });
 
     node.addControl(renderer);
@@ -104,11 +104,11 @@ class PersistenceNode {
 
     node.data.activeFile = null;
 
-    const input = new D3NE.Input('CinemaDB', nodeEditor.sockets.CINEMA_DB);
+    const input = new D3NE.Input('CinemaDB', CosmoScout.vestec.sockets.CINEMA_DB);
 
     node.addInput(input);
 
-    const output = new D3NE.Output('Points', nodeEditor.sockets.POINT_ARRAY);
+    const output = new D3NE.Output('Points', CosmoScout.vestec.sockets.POINT_ARRAY);
 
     node.addOutput(output);
 
@@ -197,5 +197,5 @@ class PersistenceNode {
 (() => {
   const persistenceNode = new PersistenceNode();
 
-  nodeEditor.nodes.PersistenceNode = persistenceNode.getComponent();
+  CosmoScout.vestec.addNode('PersistenceNode', persistenceNode.getComponent());
 })();
