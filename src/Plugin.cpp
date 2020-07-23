@@ -67,7 +67,7 @@ void Plugin::init() {
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/alight.min.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/jquery-ui.min.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/d3-node-editor.js");
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/vtk_13.7.1.js");
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/vtk_14.8.1.js");
 
   auto vestecWindowHtml =
       cs::utils::filesystem::loadToString("../share/resources/gui/vestecWindow.html");
