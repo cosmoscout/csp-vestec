@@ -44,7 +44,7 @@ namespace csp::vestec {
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::parseSection("csp-vestec", [&] {
-    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-data-dir", j);
+    o.mVestecDataDir = cs::core::parseProperty<std::string>("vestec-topo-dir", j);
     o.mFireDir       = cs::core::parseProperty<std::string>("vestec-fire-dir", j);
     o.mDiseasesDir   = cs::core::parseProperty<std::string>("vestec-diseases-dir", j);
   });
