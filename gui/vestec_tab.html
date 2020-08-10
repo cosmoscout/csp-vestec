@@ -1,36 +1,45 @@
+<!--
 <div class="strike">
     <span>VESTEC Server and use case selction</span>
 </div>
+-->
 
-<div class="row">
+<div class="row my-3">
     <div class="col-5">
         VESTEC Server
     </div>
     <div class="col-7">
-        <select id="set_vestec_server" class="simple-value-dropdown">
-            <option value="0">vestec.epcc.uk</option>
-            <option value="1">vestec.dlr.de</option>
-            <option value="2">vestec.kth.se</option>
-        </select>
+        <span id="vestec-server">loading...</span>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-5">
-        Simulation ensemble
+<div class="row-12">
+    <span id="vestec-response"></span>
+</div>
+
+<div class="row" id="vestec-login-row">
+    <div class="col-12">
+        <div class="form-group">
+            <label for="vestec-username">Username:</label>
+            <input type="text" class="text-input form-control" id="vestec-username" />
+        </div>
+        <div class="form-group">
+            <label for="vestec-password">Password:</label>
+            <input type="password" class="text-input form-control" id="vestec-password" />
+        </div>
+
+        <button class="btn light-glass w-100" id="vestec-login-btn">Login</button>
     </div>
-    <div class="col-7">
-        <select id="set_simulations" class="simple-value-dropdown">
-            <!-- Filled by JavaScript Function called from vestec data loader  -->
-            <option value="0">Fire(Run-1)</option>
-            <option value="0">Diseases(Run-1)</option>
-            <option value="0">SpaceWeather(Run-1)</option>
-        </select>
+</div>
+
+<div class="row d-none" id="vestec-logout-row">
+    <div class="col-12">
+        <button class="btn light-glass w-100" id="vestec-logout-btn">Logout</button>
     </div>
 </div>
 
 
-<div class="strike">
+<!--<div class="strike">
     <span>Settings</span>
 </div>
 
@@ -45,4 +54,4 @@
             <span>Visible</span>
         </label>
     </div>
-</div>
+</div>-->
