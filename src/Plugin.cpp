@@ -53,6 +53,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::Settings::deserialize(j, "vestec-topo-dir", o.mVestecDataDir);
   cs::core::Settings::deserialize(j, "vestec-fire-dir", o.mFireDir);
   cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
+  cs::core::Settings::deserialize(j, "vestec-server", o.mVestecServer);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +160,8 @@ void Plugin::init() {
 
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
+
+  mGuiManager->getGui()->callJavascript("CosmoScout.vestecNE.setServer", mPluginSettings.mVestecServer);
 
   logger().info("[CSP::VESTEC::Initialize] Done");
 }

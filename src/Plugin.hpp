@@ -30,6 +30,7 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
     std::string mVestecDataDir; ///< Directory where cinemaDB is stored
     std::string mFireDir;       ///< Directory where the fire simulation output is stored
     std::string mDiseasesDir; ///< Directory where the diseases simulation and sensor data is stored
+    std::string mVestecServer; ///< Vestec Server - Login / Workflows
   };
 
   void init() override;

@@ -80,7 +80,7 @@ class CriticalPointsNode {
 
     node.data.activeFile = null;
 
-    const input = new D3NE.Input('Points', CosmoScout.vestec.sockets.POINT_ARRAY);
+    const input = new D3NE.Input('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
 
     node.addInput(input);
 
@@ -138,5 +138,5 @@ class CriticalPointsNode {
 (() => {
   const CPnode = new CriticalPointsNode();
 
-  CosmoScout.vestec.addNode('CriticalPointsNode', CPnode.getComponent());
+  CosmoScout.vestecNE.addNode('CriticalPointsNode', CPnode.getComponent());
 })();

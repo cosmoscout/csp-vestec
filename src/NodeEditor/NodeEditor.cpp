@@ -120,7 +120,7 @@ void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
 void NodeEditor::InitNodeEditor() {
   // Loop over sockets and add them to the editor
   for (auto const& name : m_vecSockets) {
-    m_pWebView->callJavascript("CosmoScout.vestec.addSocket", name);
+    m_pWebView->callJavascript("CosmoScout.vestecNE.addSocket", name);
   }
 
   // Loop over registered node types and make them in javascript available
@@ -130,20 +130,20 @@ void NodeEditor::InitNodeEditor() {
 
   // Add node editor components
   for (auto const& name : m_mapInitFunctions) {
-    m_pWebView->callJavascript("CosmoScout.vestec.addComponent", name.first);
+    m_pWebView->callJavascript("CosmoScout.vestecNE.addComponent", name.first);
   }
 
   // Build the context menu
   for (auto const& category : m_mapCategories) {
-    m_pWebView->callJavascript("CosmoScout.vestec.addContextMenuCategory", category.first);
+    m_pWebView->callJavascript("CosmoScout.vestecNE.addContextMenuCategory", category.first);
 
     for (auto const& node : category.second) {
-      m_pWebView->callJavascript("CosmoScout.vestec.addContextMenuContent", category.first, node);
+      m_pWebView->callJavascript("CosmoScout.vestecNE.addContextMenuContent", category.first, node);
     }
   }
 
-  m_pWebView->callJavascript("CosmoScout.vestec.initContextMenu");
-  m_pWebView->callJavascript("CosmoScout.vestec.initNodeEditor");
+  m_pWebView->callJavascript("CosmoScout.vestecNE.initContextMenu");
+  m_pWebView->callJavascript("CosmoScout.vestecNE.initNodeEditor");
 
   m_pWebView->waitForFinishedLoading();
   // Register the required callbacks

@@ -1,4 +1,4 @@
-/* global D3NE, CosmoScout.vestec.nodeEditor, vtk, Selection */
+/* global D3NE, CosmoScout.vestecNE.nodeEditor, vtk, Selection */
 
 /**
  * Node for rendering texture input. Only takes the first file!
@@ -63,7 +63,7 @@ class UncertaintyRenderNode {
     node.addControl(opacity_control);
 
     // Define the input type
-    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestec.sockets.TEXTURES);
+    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(input);
     return node;
   }
@@ -113,5 +113,5 @@ class UncertaintyRenderNode {
 
 (() => {
   const renderNode = new UncertaintyRenderNode();
-  CosmoScout.vestec.addNode('UncertaintyRenderNode', renderNode.getComponent());
+  CosmoScout.vestecNE.addNode('UncertaintyRenderNode', renderNode.getComponent());
 })();

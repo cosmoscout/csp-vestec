@@ -78,7 +78,7 @@ class TextureRenderNode {
     node.addControl(time_control);
 
     // Define the input type
-    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestec.sockets.TEXTURES);
+    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(input);
     return node;
   }
@@ -131,5 +131,5 @@ class TextureRenderNode {
 
 (() => {
   const texRenderNode = new TextureRenderNode();
-  CosmoScout.vestec.addNode('TextureRenderNode', texRenderNode.getComponent());
+  CosmoScout.vestecNE.addNode('TextureRenderNode', texRenderNode.getComponent());
 })();

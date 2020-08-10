@@ -119,7 +119,7 @@ class DiseasesSimulation {
     node.addControl(simcontrol);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURE(s)', CosmoScout.vestec.sockets.TEXTURES);
+    const output = new D3NE.Output('TEXTURE(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
@@ -188,7 +188,7 @@ class DiseasesSimulation {
    * Receive the filelist from c++
    */
   static setFileListForTimeStep(id, fileList) {
-    const node = CosmoScout.vestec.editor.nodes.find(node => node.id === id);
+    const node = CosmoScout.vestecNE.editor.nodes.find(node => node.id === id);
     if (typeof node !== 'undefined') {
       node.data.fileList = [];
       const json         = JSON.parse(fileList);
@@ -197,11 +197,11 @@ class DiseasesSimulation {
       }
     }
     // Files have changed trigger a processing step
-    CosmoScout.vestec.updateEditor();
+    CosmoScout.vestecNE.updateEditor();
   }
 }
 
 (() => {
   const diseasesSim = new DiseasesSimulation();
-  CosmoScout.vestec.addNode('DiseasesSimulation', diseasesSim.getComponent());
+  CosmoScout.vestecNE.addNode('DiseasesSimulation', diseasesSim.getComponent());
 })();

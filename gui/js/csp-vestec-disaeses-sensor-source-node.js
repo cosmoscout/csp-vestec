@@ -23,7 +23,7 @@ class DiseasesSensorInput {
             // Forward file to output
             control.putData('sensorFile', $(this).val());
 
-            CosmoScout.vestec.updateEditor();
+            CosmoScout.vestecNE.updateEditor();
           });
 
           // Now, since simulation mode changed, read the files for that simulation mode
@@ -34,7 +34,7 @@ class DiseasesSensorInput {
     node.addControl(simulation_file);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURE', CosmoScout.vestec.sockets.TEXTURES);
+    const output = new D3NE.Output('TEXTURE', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
@@ -102,5 +102,5 @@ class DiseasesSensorInput {
 
 (() => {
   const diseasesInput = new DiseasesSensorInput();
-  CosmoScout.vestec.addNode('DiseasesSensorInput', diseasesInput.getComponent());
+  CosmoScout.vestecNE.addNode('DiseasesSensorInput', diseasesInput.getComponent());
 })();
