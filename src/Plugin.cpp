@@ -78,6 +78,7 @@ void Plugin::init() {
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecWindowHtml, "body");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.initDraggableWindows");
 
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-node-editor.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec.js");
 
   // Register a callback to toggle the node editor.
@@ -161,7 +162,7 @@ void Plugin::init() {
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
 
-  mGuiManager->getGui()->callJavascript("CosmoScout.vestecNE.setServer", mPluginSettings.mVestecServer);
+  mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setServer", mPluginSettings.mVestecServer);
 
   logger().info("[CSP::VESTEC::Initialize] Done");
 }
