@@ -13,22 +13,28 @@
          */
         server;
 
+        /**
+         * The bearer token from login
+         */
         token;
 
-        statusElement;
+        /**
+         * Id of the checkStatus interval
+         * @see {checkStatus}
+         */
+        authCheckIntervalId;
 
         /**
          * @inheritDoc
          */
         init() {
-            this.statusElement = document.getElementById('vestec-response');
             document.getElementById('vestec-login-btn').addEventListener('click', this.login.bind(this));
+            document.getElementById('vestec-logout-btn').addEventListener('click', this.logout.bind(this));
         }
-
 
         /**
          * Sets the vestec server url
-         * @param url
+         * @param url {string}
          */
         setServer(url) {
             console.debug(`Set vestec server to ${url}`);
@@ -42,7 +48,7 @@
          */
         async login() {
             if (typeof this.server === 'undefined') {
-                this.statusElement.innerText = `Vestec server undefined. Call 'setServer' first.`;
+                CosmoScout.notifications.print('Server undefined', `Call 'setServer' first.`, 'error');
 
                 return;
             }
@@ -50,46 +56,74 @@
             const username = document.getElementById('vestec-username');
             const password = document.getElementById('vestec-password');
 
+            if (username.value.length === 0 || password.value.length === 0) {
+                username.classList.add('is-invalid');
+                password.classList.add('is-invalid');
+
+                return;
+            }
+
             username.classList.add('disabled');
             password.classList.add('disabled');
+            username.classList.remove('is-invalid');
+            password.classList.remove('is-invalid');
 
-            const row = document.getElementById('vestec-login-row');
+            this._hide('login');
+            this._show('status');
+            this._statusText('Logging in...');
 
-            row.classList.add('d-none');
-            this.statusElement.innerText = 'Logging in...';
+            CosmoScout.notifications.print('Login', 'Logging in...', 'play_arrow');
 
-            const response = await fetch(this._buildUrl('login'), {
+            await fetch(this._buildUrl('login'), {
                 method: 'POST',
                 headers: this._buildHeaders(),
                 body: JSON.stringify({
                     'username': username.value,
                     'password': password.value
                 })
-            }).then(value => {
-                if (!value.ok) {
-                    row.classList.remove('d-none');
+            }).then(response => {
+                if (!response.ok) {
+                    this._show('login');
 
-                    if (value.status === 400) {
-                        username.classList.add('is-invalid');
-                        password.classList.add('is-invalid');
+                    CosmoScout.notifications.print('Login failed', `Error ${response.status}.`, 'error');
 
-                        this.statusElement.innerText = 'Invalid credentials';
-                    } else {
-                        this.statusElement.innerText = `Could not connect to server, error ${value.status}.`;
-                        console.error(value);
-                    }
+                    console.error(response);
 
                     return;
                 }
 
-                value.body.getReader().read().then(token => {
-                    this.token = token;
+                return response.json();
+            }).then(response => {
+                if (typeof response.status !== 'undefined' && response.status === 400) {
+                    this._show('login');
 
-                    document.getElementById('vestec-logout-row').classList.remove('d-none');
-                });
-            }).catch(() => {
-                row.classList.remove('d-none');
-                this.statusElement.innerText = `Could not connect to server.`;
+                    username.classList.add('is-invalid');
+                    password.classList.add('is-invalid');
+
+                    CosmoScout.notifications.print('Login failed', 'Invalid credentials.', 'warning');
+
+                    return;
+                }
+
+                if (typeof response.access_token === 'undefined') {
+                    CosmoScout.notifications.print('Missing token', 'Could not retreive access token.', 'error');
+                    this._show('login');
+
+                    return;
+                }
+
+                this.token = response.access_token;
+
+                CosmoScout.notifications.print('Login successful', 'Successfully logged in.', 'done');
+                document.getElementById('vestec-current-user').innerText = `Logged in as ${username.value}`;
+
+                this._show('logout');
+
+                // Check if the user is still logged in each minute
+                this.authCheckIntervalId = setInterval(this.checkStatus.bind(this), 60000);
+            }).catch(this._defaultCatch.bind(this)).finally(() => {
+                this._hide('status');
+                this._statusText();
             });
         }
 
@@ -101,21 +135,29 @@
             await fetch(this._buildUrl('authorised'), {
                 headers: this._buildHeaders(),
             }).then(response => {
+                return response.json();
+            }).then(response => {
                 if (response.status === 403) {
-                    // Logged Out
+                    CosmoScout.notifications.print('Session expired', 'Please login again.', 'warning');
+                    this._handleLogout();
                 }
-            }).catch(() => {
-                // Logged out
-            });
+            }).catch(this._defaultCatch.bind(this));
         }
 
         /**
          * This call logs out a user, deleting the current session for that user so subsequent API calls with the token will be unauthorised
+         *
          * @returns {Promise<void>}
          */
         async logout() {
-            if (typeof this.server === 'undefined' || typeof this.token === 'undefined') {
-                this.statusElement.innerText = 'No Server or token set.';
+            if (typeof this.server === 'undefined') {
+                CosmoScout.notifications.print('Server undefined', `Call 'setServer' first.`, 'error');
+
+                return;
+            }
+
+            if (typeof this.token === 'undefined') {
+                CosmoScout.notifications.print('Missing token', 'User is not logged in.', 'error');
 
                 return;
             }
@@ -124,10 +166,45 @@
                 method: 'DELETE',
                 headers: this._buildHeaders(),
             }).then(() => {
-                delete this.token;
-            });
+                CosmoScout.notifications.print('Logout successful', 'Successfully logged out.', 'done');
+                this._handleLogout();
+            }).catch(this._defaultCatch.bind(this));
         }
 
+        /**
+         * Things to handle on logout
+         *
+         * @private
+         */
+        _handleLogout() {
+            this._hide('logout');
+            this._show('login');
+            document.getElementById('vestec-current-user').innerText = '';
+
+            delete this.token;
+
+            clearInterval(this.authCheckIntervalId);
+        }
+
+        /**
+         * The default catch method on network error
+         * @private
+         */
+        _defaultCatch() {
+            this._hide('logout');
+            this._hide('status');
+            this._statusText();
+            this._show('login');
+
+            CosmoScout.notifications.print('Connection failed', 'Could not connect to server.', 'error');
+        }
+
+        /**
+         * Builds the vestec url
+         * @param part {string} The endpoint to access
+         * @returns {string} The final url
+         * @private
+         */
         _buildUrl(part) {
             if (typeof this.server === 'undefined') {
                 throw new Error(`Vestec Server undefined. Call 'CosmoScout.${this.name}.setServer' first.`);
@@ -136,6 +213,12 @@
             return `${this.server}/flask/${part}`;
         }
 
+        /**
+         * Builds the request headers
+         * appends the bearer token if present
+         * @returns {{"Content-Type": string}}
+         * @private
+         */
         _buildHeaders() {
             const base = {
                 'Content-Type': 'application/json',
@@ -147,7 +230,45 @@
 
             return base;
         }
+
+        /**
+         * Sets the innerText of 'vestec-status-text'
+         * Text gets cleared if argument is missing or null
+         * @param text {string|null}
+         * @private
+         */
+        _statusText(text = null) {
+            if (text === null) {
+                document.getElementById('vestec-status-text').innerText = '';
+            } else {
+                document.getElementById('vestec-status-text').innerText = text;
+            }
+        }
+
+        /**
+         * Adds the 'invisible' class from the provided element names
+         * Elements ids are searched as 'vestec-ELEMENT-row'
+         * @param elements {string}
+         * @private
+         */
+        _hide(...elements) {
+            elements.forEach(el => {
+                document.getElementById(`vestec-${el}-row`).classList.add('invisible');
+            });
+        }
+
+        /**
+         * Removes the 'invisible' class from the provided element names
+         * Elements ids are searched as 'vestec-ELEMENT-row'
+         * @param elements {string}
+         * @private
+         */
+        _show(...elements) {
+            elements.forEach(el => {
+                document.getElementById(`vestec-${el}-row`).classList.remove('invisible');
+            });
+        }
     }
 
-    CosmoScout.init(VestecLoginApi);
+    CosmoScout.init(VestecApi);
 })();

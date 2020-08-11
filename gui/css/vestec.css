@@ -20,23 +20,6 @@
     color: rgb(0, 0, 0);
 }
 
-#csp-vestec-node-editor #vestec-tabs {
-    border-bottom: 0;
-}
-
-#csp-vestec-node-editor #vestec-tabs .nav-item {
-    padding: 6px 4px 2px 4px;
-    margin: 0 10px;
-}
-
-#csp-vestec-node-editor .vestec-container {
-    padding: 0 0 !important;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
 #csp-vestec-node-editor .vestec-info {
     background-color: var(--cs-color-text);
     border-top-left-radius: 15px;
@@ -97,6 +80,39 @@
     border-width: 2px;
     border-color: gray;
     overflow: hidden;
+}
+
+#vestec-logout-row,
+#vestec-status-row {
+    height: 30px;
+}
+
+#vestec-login-row {
+    height: 200px;
+}
+
+.row.hideable {
+    transition: opacity 0.25s, height 0.25s;
+    opacity: 1;
+}
+
+.row.hideable.invisible {
+    opacity: 0;
+    height: 0 !important; /* eww */
+    margin-bottom: 0 !important; /* eww */
+}
+
+#vestec-status-row .material-icons {
+    animation: spin infinite 3s linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-360deg);
+    }
 }
 
 .node-editor {

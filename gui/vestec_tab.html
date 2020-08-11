@@ -9,30 +9,36 @@
         VESTEC Server
     </div>
     <div class="col-7">
-        <span id="vestec-server">loading...</span>
+        <p id="vestec-server" class="mb-2">loading...</p>
+        <p id="vestec-current-user" class="mb-0"></p>
     </div>
 </div>
 
-<div class="row-12">
-    <span id="vestec-response"></span>
+<div class="row hideable mb-3 invisible" id="vestec-status-row">
+    <div class="col-12">
+        <p>
+            <span id="vestec-status-text"></span>
+            <i class="material-icons">autorenew</i>
+        </p>
+    </div>
 </div>
 
-<div class="row" id="vestec-login-row">
+<div class="row hideable mb-3" id="vestec-login-row">
     <div class="col-12">
         <div class="form-group">
             <label for="vestec-username">Username:</label>
-            <input type="text" class="text-input form-control" id="vestec-username" />
+            <input type="text" class="text-input form-control" id="vestec-username" required />
         </div>
         <div class="form-group">
             <label for="vestec-password">Password:</label>
-            <input type="password" class="text-input form-control" id="vestec-password" />
+            <input type="password" class="text-input form-control" id="vestec-password" required />
         </div>
 
-        <button class="btn light-glass w-100" id="vestec-login-btn">Login</button>
+        <button class="btn glass w-100" id="vestec-login-btn">Login</button>
     </div>
 </div>
 
-<div class="row d-none" id="vestec-logout-row">
+<div class="row hideable mb-3 invisible" id="vestec-logout-row">
     <div class="col-12">
         <button class="btn light-glass w-100" id="vestec-logout-btn">Logout</button>
     </div>
