@@ -34,8 +34,30 @@
      * @inheritDoc
      */
     init() {
-      document.getElementById('vestec-login-btn').addEventListener('click', this.login.bind(this));
-      document.getElementById('vestec-logout-btn').addEventListener('click', this.logout.bind(this));
+      document.getElementById('csp-vestec-login-btn').addEventListener('click', this.login.bind(this));
+      document.getElementById('csp-vestec-logout-btn').addEventListener('click', this.logout.bind(this));
+
+      const formattedPos = () => {
+        return CosmoScout.utils.formatLongitude(CosmoScout.state.observerLngLatHeight[0]) + CosmoScout.utils.formatLatitude(CosmoScout.state.observerLngLatHeight[1])
+      };
+
+      document.getElementById('csp-vestec-incident-select-upper-left').addEventListener('click', () => {
+        document.getElementById('csp-vestec-incident-upper-left').value = formattedPos(); //TODO
+      });
+
+      document.getElementById('csp-vestec-incident-select-lower-right').addEventListener('click', () => {
+        document.getElementById('csp-vestec-incident-lower-right').value = formattedPos(); //TODO
+      });
+
+      document.getElementById('csp-vestec-create-incident-btn').addEventListener('click', () => {
+        document.getElementById('csp-vestec-incident-window').classList.toggle('visible');
+      });
+      
+      document.getElementById('csp-vestec-incident-submit').addEventListener('click', this._submitIncident.bind(this));
+      // Don't automatically submit form, leaves validity check active
+      document.querySelector('#csp-vestec-incident-window form').addEventListener('submit', (event) => {
+        event.preventDefault();
+      });
     }
 
     /**
@@ -45,7 +67,7 @@
     setServer(url) {
       console.debug(`Set vestec server to ${url}`);
       this.server = url;
-      document.getElementById('vestec-server').innerText = url;
+      document.getElementById('csp-vestec-server').innerText = url;
     }
 
     /**
@@ -60,8 +82,8 @@
         return;
       }
 
-      const username = document.getElementById('vestec-username');
-      const password = document.getElementById('vestec-password');
+      const username = document.getElementById('csp-vestec-username');
+      const password = document.getElementById('csp-vestec-password');
 
       if (username.value.length === 0 || password.value.length === 0) {
         username.classList.add('is-invalid');
@@ -113,7 +135,7 @@
         }
 
         if (typeof response.access_token === 'undefined') {
-          CosmoScout.notifications.print('Missing token', 'Could not retreive access token.', 'error');
+          CosmoScout.notifications.print('Missing token', 'Could not retrieve access token.', 'error');
           this._show('login');
 
           return;
@@ -122,13 +144,15 @@
         this.token = response.access_token;
 
         CosmoScout.notifications.print('Login successful', 'Successfully logged in.', 'done');
-        document.getElementById('vestec-current-user').innerText = `Logged in as ${username.value}`;
+        document.getElementById('csp-vestec-current-user').innerText = `Logged in as ${username.value}`;
 
-        this._show('logout');
+        this._show('logout', 'create-incident');
 
         // Check if the user is still logged in each minute
-        this.checkStatus();
-        this.authCheckIntervalId = setInterval(this.checkStatus.bind(this), 60000);
+        this.checkStatus().then(() => {
+          this._showIncidentWindowContent();
+          this.authCheckIntervalId = setInterval(this.checkStatus.bind(this), 60000);
+        });
       }).catch(this._defaultCatch.bind(this))
         .finally(() => {
           this._hide('status');
@@ -183,7 +207,7 @@
 
     /**
      * Returns the available workflows for the user
-     * @returns {Promise<any>}
+     * @returns {Promise<string[]>}
      * @throws {Error}
      */
     async getWorkflows() {
@@ -235,14 +259,16 @@
      * @private
      */
     _handleLogout() {
-      this._hide('logout');
+      this._hide('logout', 'create-incident');
       this._show('login');
-      document.getElementById('vestec-current-user').innerText = '';
+      document.getElementById('csp-vestec-current-user').innerText = '';
 
       this.authorized = false;
       delete this.token;
 
       clearInterval(this.authCheckIntervalId);
+
+      this._hideIncidentWindowContent();
     }
 
     /**
@@ -250,7 +276,7 @@
      * @private
      */
     _defaultCatch() {
-      this._hide('logout');
+      this._hide('logout', 'create-incident');
       this._hide('status');
       this._statusText();
       this._show('login');
@@ -305,9 +331,9 @@
      */
     _statusText(text = null) {
       if (text === null) {
-        document.getElementById('vestec-status-text').innerText = '';
+        document.getElementById('csp-vestec-status-text').innerText = '';
       } else {
-        document.getElementById('vestec-status-text').innerText = text;
+        document.getElementById('csp-vestec-status-text').innerText = text;
       }
     }
 
@@ -319,7 +345,7 @@
      */
     _hide(...elements) {
       elements.forEach((el) => {
-        document.getElementById(`vestec-${el}-row`).classList.add('invisible');
+        document.getElementById(`csp-vestec-${el}-row`).classList.add('invisible');
       });
     }
 
@@ -331,7 +357,7 @@
      */
     _show(...elements) {
       elements.forEach((el) => {
-        document.getElementById(`vestec-${el}-row`).classList.remove('invisible');
+        document.getElementById(`csp-vestec-${el}-row`).classList.remove('invisible');
       });
     }
 
@@ -345,6 +371,66 @@
 
         throw new Error('You are not logged in into the vestec system.');
       }
+    }
+
+    /**
+     * Hides the create incident form content if the current user is not logged into the vestec system
+     * @private
+     */
+    _hideIncidentWindowContent() {
+      const window = document.querySelector('#csp-vestec-incident-window');
+
+      window.querySelector('form').classList.add('hidden');
+      window.querySelector('p').classList.remove('hidden');
+    }
+
+    /**
+     * Shows the create incident form content and fills the workflows for the current user
+     * @private
+     */
+    _showIncidentWindowContent() {
+      const window = document.querySelector('#csp-vestec-incident-window');
+
+      window.querySelector('form').classList.remove('hidden');
+      window.querySelector('p').classList.add('hidden');
+
+      this._fillIncidentWorkflows();
+    }
+
+    /**
+     * Fills the create incident workflow dropdown with the registered workflows for the current user
+     * Gets automatically called on login
+     * @private
+     */
+    _fillIncidentWorkflows() {
+      this.getWorkflows().then(flows => {
+        if (flows.length === 0) {
+          console.warn('No workflows registered');
+          return;
+        }
+
+        const workflowSelect = document.getElementById('csp-vestec-incident-workflow');
+
+        CosmoScout.gui.clearHtml(workflowSelect);
+
+        flows.forEach(workflow => {
+          const option = document.createElement('option');
+          option.value = workflow;
+          option.text = workflow;
+          workflowSelect.appendChild(option);
+        })
+
+        //CosmoScout.gui.initDropDowns();
+      }).catch(() => {
+        CosmoScout.notifications.print('Missing token', 'User is not logged in.', 'error');
+      })
+    }
+
+    _submitIncident() {
+      this._checkLogin();
+
+      const form = document.querySelector('#csp-vestec-incident-window form');
+      // Submit form
     }
   }
 

@@ -1,0 +1,53 @@
+﻿<div id="csp-vestec-incident-window" class="draggable-window">
+	<div class="window-wrapper">
+		<div class="window-header">
+			<span class="window-title"><i class="material-icons">description</i><span id="viracocha-info">Create Incident</span></span>
+			<a class="btn light-glass" data-action="close" data-toggle="tooltip" title="Close">
+				<i class="material-icons">close</i>
+			</a>
+		</div>
+		<div class="window-content">
+			<p class="text-center mt-3">Please login first</p>
+			<form class="p-4">
+				<div class="form-group">
+					<label for="csp-vestec-incident-workflow">Workflow</label>
+					<select class="form-control simple-value-dropdown" id="csp-vestec-incident-workflow" data-callback="csp-vestec-incident-workflow" required>
+						<option>---</option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="csp-vestec-incident-name">Name of incident</label>
+					<input type="text" class="form-control" id="csp-vestec-incident-name" required>
+				</div>
+
+				<div class="form-group">
+					<label for="csp-vestec-incident-upper-left">Upper left Lat/Long (optional)</label>
+					<div class="input-group mb-3">
+						<input type="text" class="form-control" aria-label="Upper left Lat/Long (optional)" id="csp-vestec-incident-upper-left">
+						<div class="input-group-append">
+							<button class="btn btn-outline-secondary" type="button" id="csp-vestec-incident-select-upper-left" title="Use current observer position"><i class="material-icons">location_searching</i></button>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="csp-vestec-incident-lower-right">Lower right Lat/Long (optional)</label>
+					<div class="input-group mb-3">
+						<input type="text" class="form-control" aria-label="Lower right Lat/Long (optional)" id="csp-vestec-incident-lower-right">
+						<div class="input-group-append">
+							<button class="btn btn-outline-secondary" type="button" id="csp-vestec-incident-select-lower-right" title="Use current observer position"><i class="material-icons">location_searching</i></button>
+						</div>
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<label for="csp-vestec-incident-duration">Duration (optional)</label>
+					<input type="text" class="form-control" id="csp-vestec-incident-duration">
+				</div>
+
+				<button type="submit" class="btn glass w-100" style="height: 30px" id="csp-vestec-incident-submit">Create incident</button>
+			</form>
+		</div>
+	</div>
+</div>
