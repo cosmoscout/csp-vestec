@@ -63,7 +63,7 @@ void Plugin::init() {
 
   // Add the VESTEC tab to the sidebar
   mGuiManager->addPluginTabToSideBarFromHTML(
-      "VESTEC", "whatshot", "../share/resources/gui/vestec_tab.html");
+      "VESTEC", "whatshot", "../share/resources/gui/vestec_settings.html");
 
   mGuiManager->addCssToGui("third-party/css/jquery-ui.min.css");
   mGuiManager->addCssToGui("css/vestec.css");
@@ -73,13 +73,17 @@ void Plugin::init() {
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/d3-node-editor.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/vtk_14.8.1.js");
 
-  auto vestecWindowHtml =
-      cs::utils::filesystem::loadToString("../share/resources/gui/vestecWindow.html");
-  mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecWindowHtml, "body");
+  auto vestecNodeEditorHtml =
+      cs::utils::filesystem::loadToString("../share/resources/gui/vestec_node_editor.html");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecNodeEditorHtml, "body");
+  auto vestecIncidentHtml =
+      cs::utils::filesystem::loadToString("../share/resources/gui/vestec_incident_window.html");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecIncidentHtml, "body");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.initDraggableWindows");
 
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-node-editor.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec.js");
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-incident-node.js");
 
   // Register a callback to toggle the node editor.
   std::string callback = "vestecNodeEditor.toggle";
