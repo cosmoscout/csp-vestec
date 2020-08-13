@@ -82,12 +82,12 @@
     overflow: hidden;
 }
 
-#vestec-logout-row,
-#vestec-status-row {
+#csp-vestec-logout-row,
+#csp-vestec-status-row {
     height: 30px;
 }
 
-#vestec-login-row {
+#csp-vestec-login-row {
     height: 200px;
 }
 
@@ -102,7 +102,7 @@
     margin-bottom: 0 !important; /* eww */
 }
 
-#vestec-status-row .material-icons {
+#csp-vestec-status-row .material-icons {
     animation: spin infinite 3s linear;
 }
 
@@ -111,7 +111,7 @@
         transform: rotate(0deg);
     }
     to {
-        transform: rotate(-360deg);
+        transform: rotate(360deg);
     }
 }
 
