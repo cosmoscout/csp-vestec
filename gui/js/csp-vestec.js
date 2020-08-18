@@ -14,21 +14,10 @@
     _server;
 
     /**
-     * The bearer token from login
+     * @type {Vestec}
+     * @private
      */
-    _token;
-
-    /**
-     * Flag if user is logged in and authorized
-     * @type {boolean}
-     */
-    _authorized = false;
-
-    /**
-     * Id of the checkStatus interval
-     * @see {checkStatus}
-     */
-    _authCheckIntervalId;
+    _vestecApi;
 
     /**
      * @inheritDoc
@@ -52,6 +41,8 @@
       });
 
       document.getElementById('csp-vestec-incident-submit').addEventListener('click', this._submitIncident.bind(this));
+
+      this._vestecApi = new Vestec();
     }
 
     /**
@@ -65,7 +56,7 @@
      */
     setServer(url) {
       try {
-        new URL('/', url);
+        this._vestecApi.server = url;
       } catch (e) {
         CosmoScout.notifications.print('Invalid URL', 'The provided url is not valid.', 'error');
 
@@ -77,59 +68,6 @@
       document.getElementById('csp-vestec-server').innerText = url;
     }
 
-    /**
-     * @see {setServer}
-     * @param url
-     */
-    set server(url) {
-      this.setServer(url);
-    }
-
-    /**
-     * @see {_server}
-     * @returns {string}
-     */
-    get server() {
-      return this._server;
-    }
-
-    /**
-     * @see {_token}
-     * @returns {string}
-     */
-    get token() {
-      return this._token;
-    }
-
-    /**
-     * Not accessible. Throws on access.
-     *
-     * @param token {string}
-     * @throws {Error}
-     */
-    set token(token) {
-      throw new Error('Setting the access token is not permitted');
-    }
-
-    /**
-     * Flag if the user is authorized
-     *
-     * @see {checkStatus}
-     * @returns {boolean} True if the user is logged in and authorized
-     */
-    get authorized() {
-      return this._authorized;
-    }
-
-    /**
-     * Not accessible. Throws on access.
-     *
-     * @param flag {boolean}
-     * @throws {Error}
-     */
-    set authorized(flag) {
-      throw new Error('Setting the auth state is not permitted');
-    }
 
     /**
      * Vestec Api Interfacing Methods
@@ -143,12 +81,6 @@
      * @returns {Promise<void>}
      */
     async login() {
-      if (typeof this._server === 'undefined') {
-        CosmoScout.notifications.print('Server undefined', 'Call \'setServer\' first.', 'error');
-
-        return;
-      }
-
       const username = document.getElementById('csp-vestec-username');
       const password = document.getElementById('csp-vestec-password');
 
@@ -180,90 +112,42 @@
 
       CosmoScout.notifications.print('Login', 'Logging in...', 'play_arrow');
 
-      await fetch(
-        this._buildUrl('login'),
-        this._buildRequestOptions('POST', {
-          body: {
-            username: username.value,
-            password: password.value,
-          },
-        }),
-      )
-        .then((response) => {
-          if (!response.ok) {
-            this._show('login');
+      const response = await this._vestecApi.login(username.value, password.value);
+      const data = await response.json();
 
-            CosmoScout.notifications.print('Login failed', `Error ${response.status}.`, 'error');
+      if (response.status !== 200) {
+        this._show('login');
 
-            console.error(response);
+        setLoginInputValidity(false);
 
-            return;
-          }
+        CosmoScout.notifications.print('Login failed', 'Invalid credentials.', 'warning');
 
-          return response.json();
-        })
-        .then((response) => {
-          if (typeof response.status !== 'undefined' && response.status === 400) {
-            this._show('login');
+        return;
+      }
 
-            setLoginInputValidity(false);
+      if (typeof data.access_token === 'undefined') {
+        CosmoScout.notifications.print('Missing token', 'Could not retrieve access token.', 'error');
+        this._show('login');
 
-            CosmoScout.notifications.print('Login failed', 'Invalid credentials.', 'warning');
+        return;
+      }
 
-            return;
-          }
+      this._token = data.access_token;
 
-          if (typeof response.access_token === 'undefined') {
-            CosmoScout.notifications.print('Missing token', 'Could not retrieve access token.', 'error');
-            this._show('login');
+      CosmoScout.notifications.print('Login successful', 'Successfully logged in.', 'done');
+      document.getElementById('csp-vestec-current-user').innerText = `Logged in as ${username.value}`;
 
-            return;
-          }
+      this._show('logout', 'create-incident');
 
-          this._token = response.access_token;
+      this._vestecApi.authorized().then((response) => {
+        if (response.status === 200) {
+          this._vestecApi.enableAuthIntervalChecks();
+          this._showIncidentWindowContent();
+        }
+      });
 
-          CosmoScout.notifications.print('Login successful', 'Successfully logged in.', 'done');
-          document.getElementById('csp-vestec-current-user').innerText = `Logged in as ${username.value}`;
-
-          this._show('logout', 'create-incident');
-
-          // Check if the user is still logged in each minute
-          this.checkStatus()
-            .then(() => {
-              this._showIncidentWindowContent();
-              this._authCheckIntervalId = setInterval(this.checkStatus.bind(this), 60000);
-            });
-        })
-        .catch(this._defaultCatch.bind(this))
-        .finally(() => {
-          this._hide('status');
-          this._statusText();
-        });
-    }
-
-    /**
-     * Check if user is still logged in and authorized
-     * E.g. is the current session associated with this deemed as active or has it expired.
-     * The authorization status can be accessed through CosmoScout.vestec.authorized
-     * Calls /flask/authorised
-     *
-     * @returns {Promise<void>}
-     */
-    async checkStatus() {
-      await fetch(
-        this._buildUrl('authorised'),
-        this._buildRequestOptions(),
-      )
-        .then((response) => response.json())
-        .then((response) => {
-          if (response.status === 403) {
-            CosmoScout.notifications.print('Session expired', 'Please login again.', 'warning');
-            this._handleLogout();
-          } else if (response.status === 200) {
-            this._authorized = true;
-          }
-        })
-        .catch(this._defaultCatch.bind(this));
+      this._hide('status');
+      this._statusText();
     }
 
     /**
@@ -273,22 +157,7 @@
      * @returns {Promise<void>}
      */
     async logout() {
-      if (typeof this._server === 'undefined') {
-        CosmoScout.notifications.print('Server undefined', 'Call \'setServer\' first.', 'error');
-
-        return;
-      }
-
-      if (typeof this._token === 'undefined') {
-        CosmoScout.notifications.print('Missing token', 'User is not logged in.', 'error');
-
-        return;
-      }
-
-      await fetch(
-        this._buildUrl('logout'),
-        this._buildRequestOptions('DELETE'),
-      )
+      this._vestecApi.logout()
         .then(() => {
           CosmoScout.notifications.print('Logout successful', 'Successfully logged out.', 'done');
           this._handleLogout();
@@ -303,23 +172,16 @@
      * @throws {Error} If user is not logged in
      */
     async getWorkflows() {
-      this._checkLogin();
+      const response = await this._vestecApi.getWorkflows();
+      const data = await response.json();
 
-      return fetch(
-        this._buildUrl('getmyworkflows'),
-        this._buildRequestOptions(),
-      )
-        .then((result) => result.json())
-        .then((data) => {
-          if (data.status !== 200 || typeof data.workflows === 'undefined') {
-            console.error('Workflows field is undefined');
+      if (data.status !== 200 || typeof data.workflows === 'undefined') {
+        console.error('Workflows field is undefined');
 
-            return [];
-          }
+        return [];
+      }
 
-          return JSON.parse(data.workflows);
-        })
-        .catch(this._defaultCatch.bind(this));
+      return JSON.parse(data.workflows);
     }
 
     /**
@@ -342,25 +204,16 @@
      * @throws {Error} If user is not logged in
      */
     async getIncidents() {
-      this._checkLogin();
+      const response = await this._vestecApi.getIncidents('completed');
+      const data = await response.json();
 
-      return fetch(
-        this._buildUrl('getincidents', {
-          completed: true,
-        }),
-        this._buildRequestOptions(),
-      )
-        .then((result) => result.json())
-        .then((data) => {
-          if (data.status !== 200 || typeof data.incidents === 'undefined') {
-            console.error('Incidents field is undefined');
+      if (data.status !== 200 || typeof data.incidents === 'undefined') {
+        console.error('Incidents field is undefined');
 
-            return [];
-          }
+        return [];
+      }
 
-          return JSON.parse(data.incidents);
-        })
-        .catch(this._defaultCatch.bind(this));
+      return JSON.parse(data.incidents);
     }
 
     /**
@@ -373,11 +226,6 @@
       this._show('login');
       document.getElementById('csp-vestec-current-user').innerText = '';
 
-      this._authorized = false;
-      delete this._token;
-
-      clearInterval(this._authCheckIntervalId);
-
       this._hideIncidentWindowContent();
     }
 
@@ -387,65 +235,7 @@
      * @private
      */
     _defaultCatch() {
-      this._handleLogout();
-
       CosmoScout.notifications.print('Connection failed', 'Could not connect to server.', 'error');
-    }
-
-    /**
-     * Builds the vestec url
-     *
-     * @param part {string} The endpoint to access
-     * @param data {Object} Uri params to append
-     * @returns {string} The final url
-     * @private
-     */
-    _buildUrl(part, data = {}) {
-      if (typeof this._server === 'undefined') {
-        throw new Error(`Vestec Server undefined. Call 'CosmoScout.${this.name}.setServer' first.`);
-      }
-
-      const url = new URL(`flask/${part}`, this._server);
-
-      Object.keys(data).forEach((key) => {
-        url.searchParams.append(key, data[key] ?? true);
-      });
-
-      return url.toString();
-    }
-
-    /**
-     * Builds the fetch init object
-     * appends the bearer token if present
-     *
-     * @param method {'GET'|'POST'|'DELETE'|'PUT'} ['GET'] The request method
-     * @param options {Object} Fetch api options
-     * @returns {RequestInit}
-     * @private
-     */
-    _buildRequestOptions(method = 'GET', options = {}) {
-      const base = {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-
-      if (typeof this._token !== 'undefined') {
-        base.headers.Authorization = `Bearer ${this._token}`;
-      }
-
-      if (typeof options.body === 'object') {
-        options.body = JSON.stringify(options.body, (_key, value) => {
-          if (value !== null && String(value).length > 0) {
-            return value;
-          }
-
-          return undefined;
-        });
-      }
-
-      return Object.assign(base, options);
     }
 
     /**
@@ -495,7 +285,7 @@
      * @private
      */
     _checkLogin() {
-      if (!this._authorized) {
+      if (!this._vestecApi.isAuthorized()) {
         CosmoScout.notifications.print('Not logged in', 'You are not logged in.', 'error');
 
         throw new Error('You are not logged in into the vestec system.');
@@ -534,32 +324,28 @@
      *
      * @private
      */
-    _fillIncidentWorkflows() {
-      this.getWorkflows()
-        .then((flows) => {
-          if (flows.length === 0) {
-            CosmoScout.notifications.print('No Workflows', 'There are no workflows registered.', 'warning');
+    async _fillIncidentWorkflows() {
+      const workflows = await this.getWorkflows();
 
-            console.warn('No workflows registered');
-            return;
-          }
+      if (workflows.length === 0) {
+        CosmoScout.notifications.print('No Workflows', 'There are no workflows registered.', 'warning');
 
-          const workflowSelect = document.getElementById('csp-vestec-incident-workflow');
+        console.warn('No workflows registered');
+        return;
+      }
 
-          CosmoScout.gui.clearHtml(workflowSelect);
+      const workflowSelect = document.getElementById('csp-vestec-incident-workflow');
 
-          flows.forEach((workflow) => {
-            const option = document.createElement('option');
-            option.value = workflow;
-            option.text = workflow;
-            workflowSelect.appendChild(option);
-          });
+      CosmoScout.gui.clearHtml(workflowSelect);
 
-          // CosmoScout.gui.initDropDowns();
-        })
-        .catch(() => {
-          CosmoScout.notifications.print('Missing token', 'User is not logged in.', 'error');
-        });
+      workflows.forEach((workflow) => {
+        const option = document.createElement('option');
+        option.value = workflow;
+        option.text = workflow;
+        workflowSelect.appendChild(option);
+      });
+
+      // CosmoScout.gui.initDropDowns();
     }
 
     /**
@@ -585,39 +371,31 @@
         });
       }
 
-      return fetch(
-        this._buildUrl('createincident'),
-        this._buildRequestOptions('POST', {
-          body: {
-            name: form.elements.namedItem('csp-vestec-incident-name').value,
-            kind: form.elements.namedItem('csp-vestec-incident-workflow').value,
-            upperLeftLatlong: form.elements.namedItem('csp-vestec-incident-upper-left').value,
-            lowerRightLatlong: form.elements.namedItem('csp-vestec-incident-lower-right').value,
-            duration: form.elements.namedItem('csp-vestec-incident-duration').value,
-          },
-        }),
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          // TODO Status code currently missing in vestec response
-          if (data.status === 400) {
-            CosmoScout.notifications.print('Creation failed', 'Could not create incident.', 'error');
-            console.error(data.msg);
+      const response = await this._vestecApi.createIncident(
+        form.elements.namedItem('csp-vestec-incident-name').value,
+        form.elements.namedItem('csp-vestec-incident-workflow').value,
+        form.elements.namedItem('csp-vestec-incident-upper-left').value,
+        form.elements.namedItem('csp-vestec-incident-lower-right').value,
+        form.elements.namedItem('csp-vestec-incident-duration').value,
+      );
 
-            return null;
-          } if (data.status === 200) {
-            CosmoScout.notifications.print('Incident created', 'Successfully created incident.', 'done');
+      // TODO Status code currently missing in vestec response
+      if (response.status === 400) {
+        CosmoScout.notifications.print('Creation failed', 'Could not create incident.', 'error');
+        console.error(data.msg);
 
-            form.reset();
+        return null;
+      }
 
-            return data.incidentid;
-          }
+      if (response.status === 200) {
+        CosmoScout.notifications.print('Incident created', 'Successfully created incident.', 'done');
 
-          return null;
-        })
-        .catch((e) => {
-          console.log(e);
-        });
+        form.reset();
+
+        const data = await response.json();
+
+        return data.incidentid;
+      }
     }
   }
 
