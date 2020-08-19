@@ -1,4 +1,4 @@
-/* global IApi, CosmoScout */
+/* global IApi, CosmoScout, Vestec */
 
 (() => {
   class VestecApi extends IApi {
@@ -8,16 +8,16 @@
     name = 'vestec';
 
     /**
-     * The vestec server to connect to
-     * @see {setServer}
-     */
-    _server;
-
-    /**
      * @type {Vestec}
      * @private
      */
     _vestecApi;
+
+    /**
+     * Id of the checkStatus interval
+     * @see {_enableAuthIntervalChecks}
+     */
+    _authCheckIntervalId
 
     /**
      * @inheritDoc
@@ -64,8 +64,7 @@
       }
 
       console.debug(`Set vestec server to ${url}`);
-      this._server = url;
-      document.getElementById('csp-vestec-server').innerText = url;
+      document.getElementById('csp-vestec-server').innerText = this._vestecApi.server;
     }
 
 
@@ -112,7 +111,10 @@
 
       CosmoScout.notifications.print('Login', 'Logging in...', 'play_arrow');
 
-      const response = await this._vestecApi.login(username.value, password.value);
+      const response = await this._vestecApi
+        .login(username.value, password.value)
+        .catch(this._defaultCatch.bind(this));
+
       const data = await response.json();
 
       if (response.status !== 200) {
@@ -132,19 +134,21 @@
         return;
       }
 
-      this._token = data.access_token;
-
       CosmoScout.notifications.print('Login successful', 'Successfully logged in.', 'done');
       document.getElementById('csp-vestec-current-user').innerText = `Logged in as ${username.value}`;
 
       this._show('logout', 'create-incident');
 
-      this._vestecApi.authorized().then((response) => {
-        if (response.status === 200) {
-          this._vestecApi.enableAuthIntervalChecks();
-          this._showIncidentWindowContent();
-        }
-      });
+      this._vestecApi.authorized()
+        .then((authResponse) => {
+          if (authResponse.status === 200) {
+            this._enableAuthIntervalChecks();
+            this._showIncidentWindowContent();
+          } else if (authResponse.status === 403) {
+            CosmoScout.notifications.print('Unauthorized', 'Account not authorized.', 'warning');
+          }
+        })
+        .catch(this._defaultCatch.bind(this));
 
       this._hide('status');
       this._statusText();
@@ -172,10 +176,13 @@
      * @throws {Error} If user is not logged in
      */
     async getWorkflows() {
-      const response = await this._vestecApi.getWorkflows();
+      const response = await this._vestecApi
+        .getWorkflows()
+        .catch(this._defaultCatch.bind(this));
+
       const data = await response.json();
 
-      if (data.status !== 200 || typeof data.workflows === 'undefined') {
+      if (response.status !== 200 || typeof data.workflows === 'undefined') {
         console.error('Workflows field is undefined');
 
         return [];
@@ -204,10 +211,13 @@
      * @throws {Error} If user is not logged in
      */
     async getIncidents() {
-      const response = await this._vestecApi.getIncidents('completed');
+      const response = await this._vestecApi
+        .getIncidents('completed')
+        .catch(this._defaultCatch.bind(this));
+
       const data = await response.json();
 
-      if (data.status !== 200 || typeof data.incidents === 'undefined') {
+      if (response.status !== 200 || typeof data.incidents === 'undefined') {
         console.error('Incidents field is undefined');
 
         return [];
@@ -225,6 +235,8 @@
       this._hide('logout', 'create-incident');
       this._show('login');
       document.getElementById('csp-vestec-current-user').innerText = '';
+
+      this._disableAuthIntervalChecks();
 
       this._hideIncidentWindowContent();
     }
@@ -366,9 +378,7 @@
       if (!form.checkValidity()) {
         form.reportValidity();
 
-        return new Promise(() => {
-
-        });
+        return null;
       }
 
       const response = await this._vestecApi.createIncident(
@@ -382,7 +392,7 @@
       // TODO Status code currently missing in vestec response
       if (response.status === 400) {
         CosmoScout.notifications.print('Creation failed', 'Could not create incident.', 'error');
-        console.error(data.msg);
+        console.error(response.statusText);
 
         return null;
       }
@@ -395,6 +405,30 @@
         const data = await response.json();
 
         return data.incidentid;
+      }
+    }
+
+    /**
+     * Enable checking if the user is authorized each interval seconds
+     *
+     * @param interval {number} Interval in seconds
+     * @private
+     */
+    _enableAuthIntervalChecks(interval = 60) {
+      if (typeof this._authCheckIntervalId !== 'undefined') {
+        this._authCheckIntervalId = setInterval(this.authorized().bind(this), interval * 1000);
+      }
+    }
+
+    /**
+     * Disable the auth check
+     *
+     * @private
+     */
+    _disableAuthIntervalChecks() {
+      if (typeof this._authCheckIntervalId !== 'undefined') {
+        clearInterval(this._authCheckIntervalId);
+        delete this._authCheckIntervalId;
       }
     }
   }
