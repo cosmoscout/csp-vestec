@@ -89,6 +89,7 @@
           password.classList.remove('disabled');
           username.classList.add('is-invalid');
           password.classList.add('is-invalid');
+          this._hide('status');
         } else {
           username.classList.add('disabled');
           password.classList.add('disabled');
@@ -122,7 +123,7 @@
 
         setLoginInputValidity(false);
 
-        CosmoScout.notifications.print('Login failed', 'Invalid credentials.', 'warning');
+        CosmoScout.notifications.print('Login failed', response.statusText, 'warning');
 
         return;
       }
@@ -161,12 +162,16 @@
      * @returns {Promise<void>}
      */
     async logout() {
-      this._vestecApi.logout()
-        .then(() => {
-          CosmoScout.notifications.print('Logout successful', 'Successfully logged out.', 'done');
-          this._handleLogout();
-        })
+      const response = await this._vestecApi
+        .logout()
         .catch(this._defaultCatch.bind(this));
+
+      if (response.status === 200) {
+        CosmoScout.notifications.print('Logout successful', 'Successfully logged out.', 'done');
+        this._handleLogout();
+      } else {
+        CosmoScout.notifications.print('Logout unsuccessful', 'Could not logout.', 'error');
+      }
     }
 
     /**
@@ -397,7 +402,7 @@
         return null;
       }
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         CosmoScout.notifications.print('Incident created', 'Successfully created incident.', 'done');
 
         form.reset();
