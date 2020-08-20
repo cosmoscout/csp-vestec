@@ -135,6 +135,11 @@ class Vestec {
     if (data.status === 200) {
       this._authorized = true;
       this._token = data.access_token;
+
+      if (this._headers.has('Authorization')) {
+        this._headers.delete('Authorization');
+      }
+
       this._headers.append('Authorization', `Bearer ${data.access_token}`);
     }
 
@@ -155,14 +160,11 @@ class Vestec {
       this._buildRequest('logout', undefined, 'DELETE'),
     );
 
-    if (!response.ok) {
-      return response;
-    }
-
     delete this._token;
     this._authorized = false;
+    this._headers.delete('Authorization');
 
-    return Vestec.buildResponse(await response.json());
+    return response;
   }
 
   /**
@@ -282,7 +284,7 @@ class Vestec {
    */
   async getIncidents(...types) {
     types.forEach((type) => {
-      if (typeof this.incidentTypes[type] === 'undefined') {
+      if (!this.incidentTypes.includes(type)) {
         throw new Error(`Incident type '${type}' not in [${this.incidentTypes.concat(', ')}].`);
       }
     });
