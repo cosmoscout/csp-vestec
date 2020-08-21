@@ -1,4 +1,4 @@
-/* global IApi, CosmoScout, Vestec */
+/* global IApi, CosmoScout, CosmoScout.vestecNE, Vestec */
 
 (() => {
   class VestecApi extends IApi {
@@ -114,7 +114,10 @@
 
       const response = await this._vestecApi
         .login(username.value, password.value)
-        .catch(this._defaultCatch.bind(this));
+        .catch(() => {
+          this._handleLogout();
+          this._defaultCatch();
+        });
 
       const data = await response.json();
 
@@ -145,6 +148,7 @@
           if (authResponse.status === 200) {
             this._enableAuthIntervalChecks();
             this._showIncidentWindowContent();
+            CosmoScout.vestecNE.updateEditor();
           } else if (authResponse.status === 403) {
             CosmoScout.notifications.print('Unauthorized', 'Account not authorized.', 'warning');
           }
@@ -232,12 +236,21 @@
     }
 
     /**
+     * Wrapper for Vestec.isAuthorized
+     * @see {Vestec.isAuthorized}
+     * @return {boolean}
+     */
+    isAuthorized() {
+      return this._vestecApi.isAuthorized();
+    }
+
+    /**
      * Things to handle on logout
      *
      * @private
      */
     _handleLogout() {
-      this._hide('logout', 'create-incident');
+      this._hide('logout', 'create-incident', 'status');
       this._show('login');
       document.getElementById('csp-vestec-current-user').innerText = '';
 
@@ -253,6 +266,7 @@
      */
     _defaultCatch() {
       CosmoScout.notifications.print('Connection failed', 'Could not connect to server.', 'error');
+      throw new Error('Connection timed out.');
     }
 
     /**
