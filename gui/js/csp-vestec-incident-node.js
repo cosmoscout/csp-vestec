@@ -2,63 +2,54 @@
 
 class IncidentNode {
   /**
-   * Builder function
-   * Creates the case name dropdown
-   * Creates the timestep slider
-   * Puts input content under node.data.caseName and node.data.timeStep
-   * Adds output with data {caseName: string, timeStep: string}
    * @param node
    * @returns {*}
    */
   builder(node) {
-    //   const output = new D3NE.Output("CINEMA_DB", CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const output = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets.CINEMA_DB);
 
     const incidentControl = new D3NE.Control(
-      `<select id="incidents_${node.id}" class="combobox"><option>none</option></select>`,
+      `<select id="incident_node_select_${node.id}" class="combobox"><option>none</option></select>`,
       (element, control) => {
-        CosmoScout.vestec.getIncidents().then((incidents) => {
-          CosmoScout.gui.clearHtml(element);
+        const loaded = IncidentNode.loadIncidents(element);
 
-          incidents.forEach((incident) => {
-            const option = document.createElement('option');
-            option.text = incident.name;
-            option.value = incident.uuid;
+        control.putData('incidentsSelect', element);
+        control.putData('incidentsLoaded', loaded);
 
-            element.appendChild(option);
-          });
-
-          $(element).selectpicker();
-        });
-
-        /*
-          control.putData('caseName', 'none');
-          control.putData('converted', null);
-
-          element.addEventListener('change', (event) => {
-            control.putData('caseName', event.target.value);
-
-            CosmoScout.vestecNE.updateEditor();
-          }); */
+        if (!loaded) {
+          element.classList.add('hidden');
+        }
       },
     );
 
+    if (!node.data.incidentsLoaded) {
+      node.addControl(new D3NE.Control(`<strong id="incident_node_message_${node.id}">Please login first</strong>`, (element, control) => {
+        control.putData('info', element);
+      }));
+    }
 
     node.addControl(incidentControl);
 
-    //    node.addOutput(output);
+    node.addOutput(output);
 
     return node;
   }
 
   /**
-   * Worker function
-   * Calls window.convertFile for current case name + time step combination -> CS writes JS vtk file
-   *
    * @param node
    * @param _inputs
    * @param outputs
    */
   worker(node, _inputs, outputs) {
+    if (!node.data.incidentsLoaded) {
+      const loaded = IncidentNode.loadIncidents(node.data.incidentsSelect);
+      node.data.incidentsLoaded = loaded;
+
+      if (loaded) {
+        node.data.info.parentElement.parentElement.removeChild(node.data.info.parentElement);
+        node.data.incidentsSelect.classList.remove('hidden');
+      }
+    }
     /*    if (node.data.caseName === undefined || node.data.timeStep === undefined) {
       return;
     }
@@ -87,6 +78,35 @@ class IncidentNode {
       builder: this.builder.bind(this),
       worker: this.worker.bind(this),
     });
+  }
+
+  /**
+   * Load vestec incidents into the select control
+   *
+   * @param element {HTMLSelectElement}
+   * @returns true on success
+   */
+  static loadIncidents(element) {
+    if (!CosmoScout.vestec.isAuthorized()) {
+      console.warn('User not authorized, aborting.');
+      return false;
+    }
+
+    CosmoScout.vestec.getIncidents().then((incidents) => {
+      CosmoScout.gui.clearHtml(element);
+
+      incidents.forEach((incident) => {
+        const option = document.createElement('option');
+        option.text = incident.name;
+        option.value = incident.uuid;
+
+        element.appendChild(option);
+      });
+
+      $(element).selectpicker();
+    });
+
+    return true;
   }
 }
 
