@@ -13,12 +13,27 @@ class IncidentNode {
       (element, control) => {
         const loaded = IncidentNode.loadIncidents(element);
 
-        control.putData('incidentsSelect', element);
+        control.putData('incidentSelect', element);
         control.putData('incidentsLoaded', loaded);
 
         if (!loaded) {
           element.classList.add('hidden');
         }
+
+        element.addEventListener('change', (event) => {
+          node.data.incidentDatasetLoaded = IncidentNode.loadIncidentDatasets(
+            node.data.incidentDatasetSelect,
+            event.target.value,
+          );
+        });
+      },
+    );
+
+    const incidentDatasetControl = new D3NE.Control(
+      `<select id="incident_dataset_node_select_${node.id}" class="combobox"><option>none</option></select>`,
+      (element, control) => {
+        control.putData('incidentDatasetSelect', element);
+        element.classList.add('hidden');
       },
     );
 
@@ -29,6 +44,7 @@ class IncidentNode {
     }
 
     node.addControl(incidentControl);
+    node.addControl(incidentDatasetControl);
 
     node.addOutput(output);
 
@@ -42,31 +58,43 @@ class IncidentNode {
    */
   worker(node, _inputs, outputs) {
     if (!node.data.incidentsLoaded) {
-      const loaded = IncidentNode.loadIncidents(node.data.incidentsSelect);
+      const loaded = IncidentNode.loadIncidents(node.data.incidentSelect);
       node.data.incidentsLoaded = loaded;
 
       if (loaded) {
-        node.data.info.parentElement.parentElement.removeChild(node.data.info.parentElement);
-        node.data.incidentsSelect.classList.remove('hidden');
+        node.data.info.parentElement.classList.add('hidden');
+        node.data.incidentSelect.classList.remove('hidden');
+      }
+    } else {
+      node.data.info.parentElement.classList.add('hidden');
+
+      if (!node.data.incidentDatasetLoaded) {
+        node.data.incidentDatasetLoaded = IncidentNode.loadIncidentDatasets(
+          node.data.incidentDatasetSelect,
+          node.data.incidentSelect.value,
+        );
       }
     }
-    /*    if (node.data.caseName === undefined || node.data.timeStep === undefined) {
-      return;
+
+    if (CosmoScout.vestec.isAuthorized()) {
+      node.data.incidentSelect.parentElement.classList.remove('hidden');
+      node.data.incidentDatasetSelect.parentElement.classList.remove('hidden');
+      node.data.info.parentElement.classList.add('hidden');
+    } else {
+      node.data.incidentSelect.parentElement.classList.add('hidden');
+      node.data.incidentDatasetSelect.parentElement.classList.add('hidden');
+      node.data.info.parentElement.classList.remove('hidden');
+
+      node.data.incidentsLoaded = false;
+      node.data.incidentDatasetLoaded = false;
     }
 
-    const fileName = `${node.data.caseName}_${node.data.timeStep}`;
-
-    if (node.data.converted !== fileName) {
-      console.debug(`[CinemaDB Node #${node.id}] Converting ${fileName}.`);
-
-      window.callNative('convertFile', node.data.caseName, node.data.timeStep);
-      node.data.converted = fileName;
+    if (typeof node.data.incidentSelect !== 'undefined') {
+      outputs[0] = {
+        incidentId: node.data.incidentSelect.value,
+        datasetId: node.data.incidentDatasetSelect.value,
+      };
     }
-
-    outputs[0] = {
-      caseName: node.data.caseName,
-      timeStep: node.data.timeStep,
-    }; */
   }
 
   /**
@@ -99,6 +127,36 @@ class IncidentNode {
         const option = document.createElement('option');
         option.text = incident.name;
         option.value = incident.uuid;
+
+        element.appendChild(option);
+      });
+
+      $(element).selectpicker();
+    });
+
+    return true;
+  }
+
+  /**
+   * Load vestec incidents into the select control
+   *
+   * @param element {HTMLSelectElement}
+   * @param id {string} Unique incident UUID
+   * @returns true on success
+   */
+  static loadIncidentDatasets(element, id) {
+    if (!CosmoScout.vestec.isAuthorized()) {
+      console.warn('User not authorized, aborting.');
+      return false;
+    }
+
+    CosmoScout.vestec.getIncidentDatasets(id).then((dataSets) => {
+      CosmoScout.gui.clearHtml(element);
+
+      dataSets.forEach((dataset) => {
+        const option = document.createElement('option');
+        option.text = dataset.name;
+        option.value = dataset.uuid;
 
         element.appendChild(option);
       });
