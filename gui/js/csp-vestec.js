@@ -202,26 +202,10 @@
 
     /**
      * Retrieves a summary list of completed incidents
-     *
-     * @returns {Promise<{
-     * uuid: string,
-     * kind: string,
-     * name: string,
-     * status: string,
-     * comment: string,
-     * creator: string,
-     * date_started: string,
-     * date_completed: string,
-     * upper_left_latlong: string,
-     * lower_right_latlong,
-     * duration: string,
-     * incident_date: string
-     * }[]>}
-     * @throws {Error} If user is not logged in
      */
     async getIncidents() {
       const response = await this._vestecApi
-        .getIncidents('completed')
+        .getIncidents('completed', 'pending')
         .catch(this._defaultCatch.bind(this));
 
       const data = await response.json();
@@ -233,6 +217,25 @@
       }
 
       return JSON.parse(data.incidents);
+    }
+
+    /**
+     * Retrieves a summary list of completed incidents
+     */
+    async getIncidentDatasets(incidentId) {
+      const response = await this._vestecApi
+        .getIncident(incidentId)
+        .catch(this._defaultCatch.bind(this));
+
+      const data = await response.json();
+
+      if (response.status !== 200 || typeof data.data_sets === 'undefined') {
+        console.error('Incidents field is undefined');
+
+        return [];
+      }
+
+      return JSON.parse(data.data_sets);
     }
 
     /**
