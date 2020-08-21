@@ -260,6 +260,8 @@
       this._disableAuthIntervalChecks();
 
       this._hideIncidentWindowContent();
+
+      CosmoScout.vestecNE.updateEditor();
     }
 
     /**

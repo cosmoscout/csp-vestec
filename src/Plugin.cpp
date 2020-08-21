@@ -82,6 +82,7 @@ void Plugin::init() {
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.initDraggableWindows");
 
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-node-editor.js");
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/vestec.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-incident-node.js");
 
@@ -114,6 +115,7 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("CINEMA_DB");
   m_pNodeEditor->RegisterSocketType("POINT_ARRAY");
   m_pNodeEditor->RegisterSocketType("TEXTURES");
+  m_pNodeEditor->RegisterSocketType("INCIDENT");
 
   // Register our node types for the flow editor
   m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",

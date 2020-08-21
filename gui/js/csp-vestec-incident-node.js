@@ -6,7 +6,7 @@ class IncidentNode {
    * @returns {*}
    */
   builder(node) {
-    const output = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const output = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets.INCIDENT);
 
     const incidentControl = new D3NE.Control(
       `<select id="incident_node_select_${node.id}" class="combobox"><option>none</option></select>`,
@@ -87,6 +87,8 @@ class IncidentNode {
 
       node.data.incidentsLoaded = false;
       node.data.incidentDatasetLoaded = false;
+
+      outputs[0] = {};
     }
 
     if (typeof node.data.incidentSelect !== 'undefined') {
@@ -173,7 +175,6 @@ class IncidentNode {
 
   CosmoScout.vestecNE.addNode('IncidentNode', incidentNode.getComponent());
   CosmoScout.vestecNE.addComponent('IncidentNode');
-  CosmoScout.vestecNE.addContextMenuCategory('Test');
-  CosmoScout.vestecNE.addContextMenuContent('Test', 'IncidentNode');
+  CosmoScout.vestecNE.addContextMenuContent('Sources', 'IncidentNode');
   CosmoScout.vestecNE.initContextMenu();
 })();
