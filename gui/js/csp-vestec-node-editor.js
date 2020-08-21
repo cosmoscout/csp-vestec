@@ -55,14 +55,15 @@
     menu = {};
 
     _contextMenuData = {};
-    _version         = '@0.0.1';
+
+    _version = '@0.0.1';
 
 
     /**
      * @inheritDoc
      */
     init() {
-      console.log("Init VESTEC plugin in javascript done");
+      console.log('Init VESTEC plugin in javascript done');
     }
 
     /**
@@ -72,9 +73,10 @@
       this.container = document.getElementById('d3-node-editor');
 
       this.editor = new D3NE.NodeEditor(
-          this.name + 'NodeEditor' + this._version, this.container, this.components, this.menu);
+        `${this.name}NodeEditor${this._version}`, this.container, this.components, this.menu,
+      );
 
-      this.engine = new D3NE.Engine(this.name + 'NodeEditor' + this._version, this.components);
+      this.engine = new D3NE.Engine(`${this.name}NodeEditor${this._version}`, this.components);
 
       this._addEventListener();
 
@@ -115,7 +117,7 @@
      * @param type Socket type, defaults to 'data'
      */
     addSocket(name, hint, type) {
-        this.sockets[name] = new D3NE.Socket(type ?? 'data', name, hint ?? '');
+      this.sockets[name] = new D3NE.Socket(type ?? 'data', name, hint ?? '');
     }
 
     /**
@@ -146,7 +148,7 @@
     addContextMenuContent(categoryName, node) {
       if (!this._contextMenuData.hasOwnProperty(categoryName)) {
         console.error(`Context menu does not contain a category named ${
-            categoryName}, call 'addContextMenuCategory' first.`);
+          categoryName}, call 'addContextMenuCategory' first.`);
         return;
       }
 
@@ -162,43 +164,43 @@
     _addEventListener() {
       this.editor.eventListener.on('nodecreate', (node, persistent) => {
         try {
-          window.callNative("AddNewNode", parseInt(node.id), node.title);
+          window.callNative('AddNewNode', parseInt(node.id), node.title);
         } catch (e) { console.error(`Error: AddNewNode #${node.id} (${node.title})`, e); }
       });
 
       this.editor.eventListener.on('noderemove', (node, persistent) => {
         try {
-          window.callNative("DeleteNode", parseInt(node.id), node.title);
+          window.callNative('DeleteNode', parseInt(node.id), node.title);
         } catch (e) { console.error(`Error: DeleteNode #${node.id} (${node.title})`, e); }
       });
 
       this.editor.eventListener.on('connectioncreate', (connection, persistent) => {
         try {
-          window.callNative("AddConnection", parseInt(connection.output.node.id),
-              parseInt(connection.input.node.id),
-              connection.output.node.outputs.findIndex(output => output === connection.output),
-              connection.input.node.inputs.findIndex(input => input === connection.input));
+          window.callNative('AddConnection', parseInt(connection.output.node.id),
+            parseInt(connection.input.node.id),
+            connection.output.node.outputs.findIndex((output) => output === connection.output),
+            connection.input.node.inputs.findIndex((input) => input === connection.input));
         } catch (e) {
           console.error(`Error: AddConnection In #${connection.input.node.id} Out #${
-                            connection.output.node.id}`,
-              e);
+            connection.output.node.id}`,
+          e);
         }
       });
 
       this.editor.eventListener.on('connectionremove', (connection, persistent) => {
         try {
-          window.callNative("DeleteConnection", parseInt(connection.output.node.id),
-              parseInt(connection.input.node.id),
-              connection.output.node.outputs.findIndex(output => output === connection.output),
-              connection.input.node.inputs.findIndex(input => input === connection.input));
+          window.callNative('DeleteConnection', parseInt(connection.output.node.id),
+            parseInt(connection.input.node.id),
+            connection.output.node.outputs.findIndex((output) => output === connection.output),
+            connection.input.node.inputs.findIndex((input) => input === connection.input));
         } catch (e) {
           console.error(`Error: DeleteConnection In #${connection.input.node.id} Out #${
-                            connection.output.node.id}`,
-              e);
+            connection.output.node.id}`,
+          e);
         }
       });
 
-      this.editor.eventListener.on("change", async () => {
+      this.editor.eventListener.on('change', async () => {
         await this.engine.abort();
         await this.engine.process(this.editor.toJSON());
       });
@@ -213,7 +215,8 @@
     _nodeExists(node) {
       if (!this.nodes.hasOwnProperty(node)) {
         console.error(
-            `No node with name ${node} is registered on the node editor. Call 'addNode' first.`)
+          `No node with name ${node} is registered on the node editor. Call 'addNode' first.`,
+        );
         return false;
       }
 
