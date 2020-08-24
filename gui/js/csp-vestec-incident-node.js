@@ -9,7 +9,7 @@ class IncidentNode {
     const output = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets.INCIDENT);
 
     const incidentControl = new D3NE.Control(
-      `<select id="incident_node_select_${node.id}" class="combobox"><option>none</option></select>`,
+      `<select id="incident_node_select_${node.id}" class="combobox"></select>`,
       (element, control) => {
         $(element).selectpicker();
         const loaded = IncidentNode.loadIncidents(element);
@@ -31,7 +31,7 @@ class IncidentNode {
     );
 
     const incidentDatasetControl = new D3NE.Control(
-      `<select id="incident_dataset_node_select_${node.id}" class="combobox"><option>none</option></select>`,
+      `<select id="incident_dataset_node_select_${node.id}" class="combobox"></select>`,
       (element, control) => {
         $(element).selectpicker();
         control.putData('incidentDatasetSelect', element);
@@ -158,6 +158,10 @@ class IncidentNode {
   static loadIncidentDatasets(element, id) {
     if (!CosmoScout.vestec.isAuthorized()) {
       console.warn('User not authorized, aborting.');
+      return false;
+    }
+
+    if (typeof id === 'undefined' || id.length === 0) {
       return false;
     }
 

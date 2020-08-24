@@ -238,7 +238,7 @@
       const data = await response.json();
 
       if (response.status !== 200 || typeof data.data_sets === 'undefined') {
-        console.error('Incident data_sets key is missing.');
+        console.error('Error retrieving datasets.');
 
         return [];
       }
