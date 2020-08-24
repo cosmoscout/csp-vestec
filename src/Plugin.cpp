@@ -21,6 +21,7 @@
 #include "VestecNodes/CriticalPointsNode.hpp"
 #include "VestecNodes/DiseasesSensorInputNode.hpp"
 #include "VestecNodes/DiseasesSimulationNode.hpp"
+#include "VestecNodes/IncidentNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
 #include "VestecNodes/UncertaintyRenderNode.hpp"
@@ -84,7 +85,6 @@ void Plugin::init() {
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-node-editor.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/vestec.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec.js");
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-incident-node.js");
 
   // Register a callback to toggle the node editor.
   std::string callback = "vestecNodeEditor.toggle";
@@ -140,6 +140,10 @@ void Plugin::init() {
       },
       [](VNE::NodeEditor* editor) { DiseasesSimulation::Init(editor); });
 
+  m_pNodeEditor->RegisterNodeType(IncidentNode::GetName(), "Sources",
+      [](cs::gui::GuiItem* webView, int id) { return new IncidentNode(webView, id); },
+      [](VNE::NodeEditor* editor) { IncidentNode::Init(editor); });
+
   m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
       [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
       [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
@@ -168,7 +172,8 @@ void Plugin::init() {
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
 
-  mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setServer", mPluginSettings.mVestecServer);
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.vestec.setServer", mPluginSettings.mVestecServer);
 
   logger().info("[CSP::VESTEC::Initialize] Done");
 }

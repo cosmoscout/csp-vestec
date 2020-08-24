@@ -11,13 +11,14 @@ class IncidentNode {
     const incidentControl = new D3NE.Control(
       `<select id="incident_node_select_${node.id}" class="combobox"><option>none</option></select>`,
       (element, control) => {
+        $(element).selectpicker();
         const loaded = IncidentNode.loadIncidents(element);
 
         control.putData('incidentSelect', element);
         control.putData('incidentsLoaded', loaded);
 
         if (!loaded) {
-          element.classList.add('hidden');
+          element.parentElement.parentElement.classList.add('hidden');
         }
 
         element.addEventListener('change', (event) => {
@@ -32,17 +33,27 @@ class IncidentNode {
     const incidentDatasetControl = new D3NE.Control(
       `<select id="incident_dataset_node_select_${node.id}" class="combobox"><option>none</option></select>`,
       (element, control) => {
+        $(element).selectpicker();
         control.putData('incidentDatasetSelect', element);
-        element.classList.add('hidden');
+
+        $(element).selectpicker();
+
+        element.parentElement.parentElement.classList.add('hidden');
       },
     );
 
-    if (!node.data.incidentsLoaded) {
-      node.addControl(new D3NE.Control(`<strong id="incident_node_message_${node.id}">Please login first</strong>`, (element, control) => {
+    const loginMessageControl = new D3NE.Control(
+      `<strong id="incident_node_message_${node.id}">Please login first</strong>`,
+      (element, control) => {
         control.putData('info', element);
-      }));
-    }
 
+        if (node.data.incidentsLoaded) {
+          element.parentElement.classList.add('hidden');
+        }
+      },
+    );
+
+    node.addControl(loginMessageControl);
     node.addControl(incidentControl);
     node.addControl(incidentDatasetControl);
 
@@ -57,44 +68,41 @@ class IncidentNode {
    * @param outputs
    */
   worker(node, _inputs, outputs) {
-    if (!node.data.incidentsLoaded) {
-      const loaded = IncidentNode.loadIncidents(node.data.incidentSelect);
-      node.data.incidentsLoaded = loaded;
-
-      if (loaded) {
-        node.data.info.parentElement.classList.add('hidden');
-        node.data.incidentSelect.classList.remove('hidden');
-      }
-    } else {
-      node.data.info.parentElement.classList.add('hidden');
-
-      if (!node.data.incidentDatasetLoaded) {
-        node.data.incidentDatasetLoaded = IncidentNode.loadIncidentDatasets(
-          node.data.incidentDatasetSelect,
-          node.data.incidentSelect.value,
-        );
-      }
-    }
-
-    if (CosmoScout.vestec.isAuthorized()) {
-      node.data.incidentSelect.parentElement.classList.remove('hidden');
-      node.data.incidentDatasetSelect.parentElement.classList.remove('hidden');
-      node.data.info.parentElement.classList.add('hidden');
-    } else {
-      node.data.incidentSelect.parentElement.classList.add('hidden');
-      node.data.incidentDatasetSelect.parentElement.classList.add('hidden');
+    if (!CosmoScout.vestec.isAuthorized()) {
+      node.data.incidentSelect.parentElement.parentElement.classList.add('hidden');
+      node.data.incidentDatasetSelect.parentElement.parentElement.classList.add('hidden');
       node.data.info.parentElement.classList.remove('hidden');
 
       node.data.incidentsLoaded = false;
       node.data.incidentDatasetLoaded = false;
 
-      outputs[0] = {};
+      outputs[0] = {
+        incidentId: undefined,
+        datasetId: undefined,
+      };
+
+      return;
+    }
+
+    node.data.incidentSelect.parentElement.parentElement.classList.remove('hidden');
+    node.data.incidentDatasetSelect.parentElement.parentElement.classList.remove('hidden');
+    node.data.info.parentElement.classList.add('hidden');
+
+    if (!node.data.incidentsLoaded) {
+      node.data.incidentsLoaded = IncidentNode.loadIncidents(node.data.incidentSelect);
+    } else if (!node.data.incidentDatasetLoaded) {
+      node.data.incidentDatasetLoaded = IncidentNode.loadIncidentDatasets(
+        node.data.incidentDatasetSelect,
+        node.data.incidentSelect.value,
+      );
     }
 
     if (typeof node.data.incidentSelect !== 'undefined') {
       outputs[0] = {
         incidentId: node.data.incidentSelect.value,
-        datasetId: node.data.incidentDatasetSelect.value,
+        datasetId: node.data.incidentDatasetSelect.value.length > 0
+          ? node.data.incidentDatasetSelect.value
+          : undefined,
       };
     }
   }
@@ -123,6 +131,7 @@ class IncidentNode {
     }
 
     CosmoScout.vestec.getIncidents().then((incidents) => {
+      $(element).selectpicker('destroy');
       CosmoScout.gui.clearHtml(element);
 
       incidents.forEach((incident) => {
@@ -153,6 +162,7 @@ class IncidentNode {
     }
 
     CosmoScout.vestec.getIncidentDatasets(id).then((dataSets) => {
+      $(element).selectpicker('destroy');
       CosmoScout.gui.clearHtml(element);
 
       dataSets.forEach((dataset) => {
@@ -174,7 +184,4 @@ class IncidentNode {
   const incidentNode = new IncidentNode();
 
   CosmoScout.vestecNE.addNode('IncidentNode', incidentNode.getComponent());
-  CosmoScout.vestecNE.addComponent('IncidentNode');
-  CosmoScout.vestecNE.addContextMenuContent('Sources', 'IncidentNode');
-  CosmoScout.vestecNE.initContextMenu();
 })();
