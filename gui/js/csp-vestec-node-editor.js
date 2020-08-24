@@ -1,4 +1,4 @@
-/* global IApi, CosmoScout, $ */
+/* global IApi, CosmoScout, D3NE */
 
 (() => {
   class VestecNodeEditorApi extends IApi {
@@ -58,12 +58,10 @@
 
     _version = '@0.0.1';
 
-
     /**
      * @inheritDoc
      */
     init() {
-      console.log('Init VESTEC plugin in javascript done');
     }
 
     /**
@@ -73,7 +71,10 @@
       this.container = document.getElementById('d3-node-editor');
 
       this.editor = new D3NE.NodeEditor(
-        `${this.name}NodeEditor${this._version}`, this.container, this.components, this.menu,
+        `${this.name}NodeEditor${this._version}`,
+        this.container,
+        this.components,
+        this.menu,
       );
 
       this.engine = new D3NE.Engine(`${this.name}NodeEditor${this._version}`, this.components);
@@ -135,7 +136,7 @@
      * @param categoryName The category name
      */
     addContextMenuCategory(categoryName) {
-      if (!this._contextMenuData.hasOwnProperty(categoryName)) {
+      if (!Object.prototype.hasOwnProperty.call(this._contextMenuData, categoryName)) {
         this._contextMenuData[categoryName] = {};
       }
     }
@@ -146,7 +147,7 @@
      * @param node
      */
     addContextMenuContent(categoryName, node) {
-      if (!this._contextMenuData.hasOwnProperty(categoryName)) {
+      if (!Object.prototype.hasOwnProperty.call(this._contextMenuData, categoryName)) {
         console.error(`Context menu does not contain a category named ${
           categoryName}, call 'addContextMenuCategory' first.`);
         return;
@@ -164,20 +165,20 @@
     _addEventListener() {
       this.editor.eventListener.on('nodecreate', (node, persistent) => {
         try {
-          window.callNative('AddNewNode', parseInt(node.id), node.title);
+          window.callNative('AddNewNode', parseInt(node.id, 10), node.title);
         } catch (e) { console.error(`Error: AddNewNode #${node.id} (${node.title})`, e); }
       });
 
       this.editor.eventListener.on('noderemove', (node, persistent) => {
         try {
-          window.callNative('DeleteNode', parseInt(node.id), node.title);
+          window.callNative('DeleteNode', parseInt(node.id, 10), node.title);
         } catch (e) { console.error(`Error: DeleteNode #${node.id} (${node.title})`, e); }
       });
 
       this.editor.eventListener.on('connectioncreate', (connection, persistent) => {
         try {
-          window.callNative('AddConnection', parseInt(connection.output.node.id),
-            parseInt(connection.input.node.id),
+          window.callNative('AddConnection', parseInt(connection.output.node.id, 10),
+            parseInt(connection.input.node.id, 10),
             connection.output.node.outputs.findIndex((output) => output === connection.output),
             connection.input.node.inputs.findIndex((input) => input === connection.input));
         } catch (e) {
@@ -189,8 +190,8 @@
 
       this.editor.eventListener.on('connectionremove', (connection, persistent) => {
         try {
-          window.callNative('DeleteConnection', parseInt(connection.output.node.id),
-            parseInt(connection.input.node.id),
+          window.callNative('DeleteConnection', parseInt(connection.output.node.id, 10),
+            parseInt(connection.input.node.id, 10),
             connection.output.node.outputs.findIndex((output) => output === connection.output),
             connection.input.node.inputs.findIndex((input) => input === connection.input));
         } catch (e) {
@@ -213,7 +214,7 @@
      * @private
      */
     _nodeExists(node) {
-      if (!this.nodes.hasOwnProperty(node)) {
+      if (!Object.prototype.hasOwnProperty.call(this.nodes, node)) {
         console.error(
           `No node with name ${node} is registered on the node editor. Call 'addNode' first.`,
         );

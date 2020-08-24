@@ -1,4 +1,4 @@
-/* global IApi, CosmoScout, CosmoScout.vestecNE, Vestec */
+/* global IApi, CosmoScout, Vestec */
 
 (() => {
   class VestecApi extends IApi {
@@ -23,24 +23,31 @@
      * @inheritDoc
      */
     init() {
-      document.getElementById('csp-vestec-login-btn').addEventListener('click', this.login.bind(this));
-      document.getElementById('csp-vestec-logout-btn').addEventListener('click', this.logout.bind(this));
+      document.getElementById('csp-vestec-login-btn')
+        .addEventListener('click', this.login.bind(this));
 
-      const formattedPos = () => CosmoScout.utils.formatLongitude(CosmoScout.state.observerLngLatHeight[0]) + CosmoScout.utils.formatLatitude(CosmoScout.state.observerLngLatHeight[1]);
+      document.getElementById('csp-vestec-logout-btn')
+        .addEventListener('click', this.logout.bind(this));
 
-      document.getElementById('csp-vestec-incident-select-upper-left').addEventListener('click', () => {
-        document.getElementById('csp-vestec-incident-upper-left').value = formattedPos(); // TODO
-      });
+      const formattedPos = () => CosmoScout.utils.formatLongitude(CosmoScout.state.observerLngLatHeight[0])
+          + CosmoScout.utils.formatLatitude(CosmoScout.state.observerLngLatHeight[1]);
 
-      document.getElementById('csp-vestec-incident-select-lower-right').addEventListener('click', () => {
-        document.getElementById('csp-vestec-incident-lower-right').value = formattedPos(); // TODO
-      });
+      document.getElementById('csp-vestec-incident-select-upper-left')
+        .addEventListener('click', () => {
+          document.getElementById('csp-vestec-incident-upper-left').value = formattedPos(); // TODO
+        });
+
+      document.getElementById('csp-vestec-incident-select-lower-right')
+        .addEventListener('click', () => {
+          document.getElementById('csp-vestec-incident-lower-right').value = formattedPos(); // TODO
+        });
 
       document.getElementById('csp-vestec-create-incident-btn').addEventListener('click', () => {
         document.getElementById('csp-vestec-incident-window').classList.toggle('visible');
       });
 
-      document.getElementById('csp-vestec-incident-submit').addEventListener('click', this._submitIncident.bind(this));
+      document.getElementById('csp-vestec-incident-submit')
+        .addEventListener('click', this._submitIncident.bind(this));
 
       this._vestecApi = new Vestec();
     }
@@ -66,7 +73,6 @@
       console.debug(`Set vestec server to ${url}`);
       document.getElementById('csp-vestec-server').innerText = this._vestecApi.server;
     }
-
 
     /**
      * Vestec Api Interfacing Methods
@@ -132,7 +138,9 @@
       }
 
       if (typeof data.access_token === 'undefined') {
-        CosmoScout.notifications.print('Missing token', 'Could not retrieve access token.', 'error');
+        CosmoScout.notifications.print(
+          'Missing token', 'Could not retrieve access token.', 'error',
+        );
         this._show('login');
 
         return;
@@ -191,13 +199,13 @@
 
       const data = await response.json();
 
-      if (response.status !== 200 || typeof data.workflows === 'undefined') {
-        console.error('Workflows field is undefined');
+      if (response.status !== 200) {
+        console.error('Error retrieving workflows.');
 
         return [];
       }
 
-      return JSON.parse(data.workflows);
+      return data;
     }
 
     /**
@@ -210,13 +218,13 @@
 
       const data = await response.json();
 
-      if (response.status !== 200 || typeof data.incidents === 'undefined') {
-        console.error('Incidents field is undefined');
+      if (response.status !== 200) {
+        console.error('Error retrieving incidents.');
 
         return [];
       }
 
-      return JSON.parse(data.incidents);
+      return data;
     }
 
     /**
@@ -230,12 +238,12 @@
       const data = await response.json();
 
       if (response.status !== 200 || typeof data.data_sets === 'undefined') {
-        console.error('Incidents field is undefined');
+        console.error('Incident data_sets key is missing.');
 
         return [];
       }
 
-      return JSON.parse(data.data_sets);
+      return data.data_sets;
     }
 
     /**
@@ -355,8 +363,8 @@
     }
 
     /**
-     * Fills the create incident workflow dropdown with the registered workflows for the current user
-     * Gets automatically called on login
+     * Fills the create incident workflow dropdown with the registered workflows for the current
+     * user Gets automatically called on login
      *
      * @private
      */
@@ -364,7 +372,9 @@
       const workflows = await this.getWorkflows();
 
       if (workflows.length === 0) {
-        CosmoScout.notifications.print('No Workflows', 'There are no workflows registered.', 'warning');
+        CosmoScout.notifications.print(
+          'No Workflows', 'There are no workflows registered.', 'warning',
+        );
 
         console.warn('No workflows registered');
         return;
@@ -413,23 +423,23 @@
         form.elements.namedItem('csp-vestec-incident-duration').value,
       );
 
-      // TODO Status code currently missing in vestec response
-      if (response.status === 400) {
-        CosmoScout.notifications.print('Creation failed', 'Could not create incident.', 'error');
-        console.error(response.statusText);
-
-        return null;
-      }
-
       if (response.status === 201) {
-        CosmoScout.notifications.print('Incident created', 'Successfully created incident.', 'done');
+        CosmoScout.notifications.print(
+          'Incident created', 'Successfully created incident.', 'done',
+        );
 
         form.reset();
 
-        const data = await response.json();
-
-        return data.incidentid;
+        // Incident id is in body text
+        return response.text();
       }
+
+      // TODO Status code currently missing in vestec response
+      if (response.status === 400) {
+        CosmoScout.notifications.print('Creation failed', response.statusText, 'error');
+      }
+
+      return null;
     }
 
     /**
