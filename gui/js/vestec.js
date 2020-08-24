@@ -204,7 +204,7 @@ class Vestec {
    * // Success
    * Status: 200
    * Body: {
-   *   access_level: Access level (0 is user, 1 is administrator)
+   *   Access level (0 is user, 1 is administrator)
    * }
    *
    * // Failure
@@ -217,7 +217,7 @@ class Vestec {
       this._buildRequest('user_type'),
     );
 
-    return Vestec.buildResponse(response);
+    return Vestec.buildResponse(response, 'access_level');
   }
 
   /**
@@ -258,7 +258,7 @@ class Vestec {
    * // Success
    * Status: 200
    * Body: {
-   *   incidents: [{
+   *   [{
    *    uuid: Incident unique identifier,
    *    kind: Incident type kind,
    *    name: This incident name,
@@ -295,7 +295,7 @@ class Vestec {
       }),
     );
 
-    return Vestec.buildResponse(response);
+    return Vestec.buildResponse(response, 'incidents');
   }
 
   /**
@@ -308,7 +308,7 @@ class Vestec {
    * Status: 200
    * StatusText: Incident successfully created
    * Body: {
-   *   incidentid: Unique identifier of the incident
+   *   Unique identifier of the incident
    * }
    *
    * // Failure
@@ -317,11 +317,14 @@ class Vestec {
    *
    * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#create-incident
    *
-   * @param name {string}
-   * @param kind {string}
+   * Access the response data as response.text() instead of response.json()
+   * Trying to parse the UUID as json results in an error
+   *
+   * @param name {string} Name of the incident
+   * @param kind {string} Incident type, corresponds to a registered workflow
    * @param upperLeftLatlong {string|undefined} Optional
    * @param lowerRightLatlong {string|undefined} Optional
-   * @param duration {string|undefined} Optional
+   * @param duration {number|undefined} Optional
    * @returns {Promise<Response>}
    */
   async createIncident(
@@ -341,7 +344,7 @@ class Vestec {
       }),
     );
 
-    return Vestec.buildResponse(response);
+    return Vestec.buildResponse(response, 'incidentid');
   }
 
   /**
@@ -350,42 +353,40 @@ class Vestec {
    * // Success
    * Status: 200
    * Body: {
-   *   incident: {
-   *    uuid: Incident unique identifier,
-   *    kind: Incident type kind,
-   *    name: This incident name,
-   *    status: Status of the incident (e.g. pending, active, completed etc),
-   *    comment: Optional incident comment,
-   *    creator: User who created the incident,
-   *    date_started: Date that the incident was started if incident has started,
-   *    date_completed: Date that the incident was completed if incident has completed,
-   *    upper_left_latlong: Lat/long of the upper right corner of the area of interest,
-   *    lower_right_latlong: Lat/long of the lower left corner of the area of interest,
-   *    duration: Duration of the simulation,
-   *    incident_date: Date incident was created,
-   *    digraph: Digraph of workflow execution status,
-   *    data_queue_name: The name of the EDI endpoint to use when adding data manually, empty means that the incident does not support this feature,
-   *    data_sets: {
-   *      uuid: UUID of the data-set,
-   *      name: Name of this specific data-set,
-   *      type: The type or kind of data-set (note this is NOT the file-type, but instead the provided type/kind of the data),
-   *      comments: Any comments associated with the data-set,
-   *      date_created: Timestamp when the data-set was created,
-   *    },
-   *    simulations: {
-   *      uuid: UUID of the data-set,
-   *      jobID: Machine assigned job ID (e.g. from the queue system),
-   *      status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED, CANCELLED, ERROR),
-   *      status_updated: Timestamp when the job status was last updated,
-   *      status_message: Any message associated with the status (e.g. a failure message in the event of error),
-   *      created: Timestamp when the simulation was created,
-   *      walltime: Execution walltime (either entire walltime if completed, or walltime to date if running),
-   *      kind: The kind of simulation (a brief description),
-   *      num_nodes: Number of nodes requested,
-   *      requested_walltime: The requested walltime,
-   *      machine: Name of the machine running this simulation,
-   *    },
-   *  }
+   *   uuid: Incident unique identifier,
+   *   kind: Incident type kind,
+   *   name: This incident name,
+   *   status: Status of the incident (e.g. pending, active, completed etc),
+   *   comment: Optional incident comment,
+   *   creator: User who created the incident,
+   *   date_started: Date that the incident was started if incident has started,
+   *   date_completed: Date that the incident was completed if incident has completed,
+   *   upper_left_latlong: Lat/long of the upper right corner of the area of interest,
+   *   lower_right_latlong: Lat/long of the lower left corner of the area of interest,
+   *   duration: Duration of the simulation,
+   *   incident_date: Date incident was created,
+   *   digraph: Digraph of workflow execution status,
+   *   data_queue_name: The name of the EDI endpoint to use when adding data manually, empty means that the incident does not support this feature,
+   *   data_sets: {
+   *     uuid: UUID of the data-set,
+   *     name: Name of this specific data-set,
+   *     type: The type or kind of data-set (note this is NOT the file-type, but instead the provided type/kind of the data),
+   *     comments: Any comments associated with the data-set,
+   *     date_created: Timestamp when the data-set was created,
+   *   },
+   *   simulations: {
+   *     uuid: UUID of the data-set,
+   *     jobID: Machine assigned job ID (e.g. from the queue system),
+   *     status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED, CANCELLED, ERROR),
+   *     status_updated: Timestamp when the job status was last updated,
+   *     status_message: Any message associated with the status (e.g. a failure message in the event of error),
+   *     created: Timestamp when the simulation was created,
+   *     walltime: Execution walltime (either entire walltime if completed, or walltime to date if running),
+   *     kind: The kind of simulation (a brief description),
+   *     num_nodes: Number of nodes requested,
+   *     requested_walltime: The requested walltime,
+   *     machine: Name of the machine running this simulation,
+   *   }
    * }
    *
    * // Failure
@@ -402,7 +403,7 @@ class Vestec {
       this._buildRequest(`incident/${uuid}`),
     );
 
-    return Vestec.buildResponse(response);
+    return Vestec.buildResponse(response, 'incident');
   }
 
   /**
@@ -663,19 +664,17 @@ class Vestec {
    * // Success
    * Status: 200
    * Body: {
-   *     simulation: {
-   *      uuid: UUID of the data-set,
-   *      jobID: Machine assigned job ID (e.g. from the queue system),
-   *      status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED, CANCELLED, ERROR),
-   *      status_updated: Timestamp when the job status was last updated,
-   *      status_message: Any message associated with the status (e.g. a failure message in the event of error),
-   *      created: Timestamp when the simulation was created,
-   *      walltime: Execution walltime (either entire walltime if completed, or walltime to date if running),
-   *      kind: The kind of simulation (a brief description),
-   *      num_nodes: Number of nodes requested,
-   *      requested_walltime: The requested walltime,
-   *      machine: Name of the machine running this simulation,
-   *     }
+   *   uuid: UUID of the data-set,
+   *   jobID: Machine assigned job ID (e.g. from the queue system),
+   *   status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED, CANCELLED, ERROR),
+   *   status_updated: Timestamp when the job status was last updated,
+   *   status_message: Any message associated with the status (e.g. a failure message in the event of error),
+   *   created: Timestamp when the simulation was created,
+   *   walltime: Execution walltime (either entire walltime if completed, or walltime to date if running),
+   *   kind: The kind of simulation (a brief description),
+   *   num_nodes: Number of nodes requested,
+   *   requested_walltime: The requested walltime,
+   *   machine: Name of the machine running this simulation,
    * }
    *
    * // Failure
@@ -689,10 +688,10 @@ class Vestec {
     const response = await fetch(
       this._buildRequest('refreshsimulation', {
         sim_uuid: simulationId,
-      }, 'POST'),
+      }),
     );
 
-    return Vestec.buildResponse(response);
+    return Vestec.buildResponse(response, 'simulation');
   }
 
   /**
@@ -724,6 +723,19 @@ class Vestec {
    * Returns the available workflows for the current user
    * Requires a logged in user
    *
+   * // Success
+   * Status: 200
+   * Body: {
+   *   [
+   *     "Workflows",
+   *     ...
+   *   ]
+   * }
+   *
+   * // Failure
+   *
+   * See: https://github.com/EPCCed/vestec-wp5/wiki/ TODO
+   *
    * @returns {Promise<Response>}
    */
   async getWorkflows() {
@@ -731,17 +743,18 @@ class Vestec {
       this._buildRequest('getmyworkflows'),
     );
 
-    return Vestec.buildResponse(response);
+    return Vestec.buildResponse(response, 'workflows');
   }
 
   /**
    * Creates a response object from a vestec response or fetch response
    *
    * @param data {Response|{status: Number, msg: string|undefined, any:any}}
+   * @param responseDataKey {string|undefined} Optional. Vestec body data to use in the response
    * @returns {Response}
    * @private
    */
-  static async buildResponse(data) {
+  static async buildResponse(data, responseDataKey = undefined) {
     if (data instanceof Response) {
       if (!data.ok) {
         return data;
@@ -757,6 +770,7 @@ class Vestec {
       }
     }
 
+    /** @type ResponseInit */
     const init = {
       status: data.status,
       statusText: typeof data.msg !== 'undefined' ? data.msg : '',
@@ -765,7 +779,14 @@ class Vestec {
     delete data.status;
     delete data.msg;
 
-    const body = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const body = new Blob(
+      [
+        typeof responseDataKey !== 'undefined' && typeof data[responseDataKey] !== 'undefined'
+          ? data[responseDataKey]
+          : JSON.stringify(data, null, 2),
+      ],
+      { type: 'application/json' },
+    );
 
     return new Response(body, init);
   }
