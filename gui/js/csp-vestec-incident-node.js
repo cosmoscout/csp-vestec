@@ -1,8 +1,8 @@
-/* global CosmoScout, CosmoScout.vestec, $, D3NE */
+/* global CosmoScout, $, D3NE */
 
 class IncidentNode {
   /**
-   * @param node
+   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
    * @returns {*}
    */
   builder(node) {
@@ -109,9 +109,13 @@ class IncidentNode {
 
   /**
    * Component accessor
+   *
    * @returns {D3NE.Component}
+   * @throws {Error}
    */
   getComponent() {
+    this._checkD3NE();
+
     return new D3NE.Component('IncidentNode', {
       builder: this.builder.bind(this),
       worker: this.worker.bind(this),
@@ -181,6 +185,18 @@ class IncidentNode {
     });
 
     return true;
+  }
+
+  /**
+   * Check if D3NE is available
+   *
+   * @throws {Error}
+   * @private
+   */
+  _checkD3NE() {
+    if (typeof D3NE === 'undefined') {
+      throw new Error('D3NE is not defined.');
+    }
   }
 }
 

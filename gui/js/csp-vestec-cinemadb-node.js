@@ -1,4 +1,4 @@
-/* global CosmoScout.vestec, $, noUiSlider */
+/* global CosmoScout, $, noUiSlider, D3NE */
 
 class CinemaDBNode {
   /**
@@ -7,34 +7,37 @@ class CinemaDBNode {
    * Creates the timestep slider
    * Puts input content under node.data.caseName and node.data.timeStep
    * Adds output with data {caseName: string, timeStep: string}
-   * @param node
+   *
+   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number}}
    * @returns {*}
    */
   builder(node) {
-    const output = new D3NE.Output("CINEMA_DB", CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const output = new D3NE.Output('CINEMA_DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
 
     const caseNames = new D3NE.Control(
-        `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
-        (element, control) => {
-          window.callNative('readCaseNames', node.id, '');
-          const select = $(`#case_names_${node.id}`);
+      `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
+      (element, control) => {
+        window.callNative('readCaseNames', node.id, '');
+        const select = $(`#case_names_${node.id}`);
 
-          select.selectpicker();
+        select.selectpicker();
 
-          control.putData('caseName', 'none');
-          control.putData('converted', null);
+        control.putData('caseName', 'none');
+        control.putData('converted', null);
 
-          element.addEventListener('change', (event) => {
-            control.putData('caseName', event.target.value);
+        element.addEventListener('change', (event) => {
+          control.putData('caseName', event.target.value);
 
-            CosmoScout.vestecNE.updateEditor();
-          });
+          CosmoScout.vestecNE.updateEditor();
         });
+      },
+    );
 
     const timeSteps = new D3NE.Control(
-        `<div id="time_slider_${node.id}" class="slider"></div>`, (element, control) => {
-          window.callNative('getTimeSteps', node.id, '');
-        });
+      `<div id="time_slider_${node.id}" class="slider"></div>`, (_element, _control) => {
+        window.callNative('getTimeSteps', node.id, '');
+      },
+    );
 
     node.addControl(caseNames);
     node.addControl(timeSteps);
@@ -47,7 +50,7 @@ class CinemaDBNode {
    * Worker function
    * Calls window.convertFile for current case name + time step combination -> CS writes JS vtk file
    *
-   * @param node
+   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number}}
    * @param _inputs
    * @param outputs
    */
@@ -73,9 +76,13 @@ class CinemaDBNode {
 
   /**
    * Component accessor
+   *
    * @returns {D3NE.Component}
+   * @throws {Error}
    */
   getComponent() {
+    this._checkD3NE();
+
     return new D3NE.Component('CinemaDBNode', {
       builder: this.builder.bind(this),
       worker: this.worker.bind(this),
@@ -84,6 +91,7 @@ class CinemaDBNode {
 
   /**
    * Creates a noUiSlider for given time step args
+   *
    * @param id {string|number} Node id
    * @param args {string} JSON args
    */
@@ -95,15 +103,15 @@ class CinemaDBNode {
 
     const rangers = {};
 
-    rangers['min'] = [min];
+    rangers.min = [min];
     for (let i = 2; i < json.length; ++i) {
       const percent = (json[i] - min) / (max - min) * 100;
 
       if (i < json.length - 1) {
-        rangers[percent + '%'] = [json[i], json[i + 1] - json[i]]
+        rangers[`${percent}%`] = [json[i], json[i + 1] - json[i]];
       }
     }
-    rangers['max'] = [max];
+    rangers.max = [max];
 
     // Initialize slider
     const slider = document.getElementById(`time_slider_${id}`);
@@ -124,16 +132,16 @@ class CinemaDBNode {
     });
 
     slider.noUiSlider.on('update', (values) => {
-      const node = CosmoScout.vestecNE.editor.nodes.find(node => node.id === id);
+      const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
 
       if (typeof node !== 'undefined') {
-        node.data.timeStep = Number(values[0]).toFixed(0)
+        node.data.timeStep = Number(values[0]).toFixed(0);
       } else {
-        console.error(`Node with id ${id} not found.`)
+        console.error(`Node with id ${id} not found.`);
       }
     });
 
-    slider.noUiSlider.on('set', (values) => {
+    slider.noUiSlider.on('set', (_values) => {
       CosmoScout.vestecNE.updateEditor();
     });
 
@@ -143,12 +151,13 @@ class CinemaDBNode {
 
   /**
    * Adds content to the case name dropdown
+   *
    * @param id {string|number} Node id
    * @param caseNames {string} JSON Array of case names
    */
   static fillCaseNames(id, caseNames) {
-    const json        = JSON.parse(caseNames);
-    let liSimulations = "";
+    const json = JSON.parse(caseNames);
+    let liSimulations = '';
 
     for (let i = 0; i < json.length; i++) {
       liSimulations += `<option>${json[i]}</option>`;
@@ -159,12 +168,24 @@ class CinemaDBNode {
     select.html(liSimulations);
     select.selectpicker('refresh');
 
-    const node = CosmoScout.vestecNE.editor.nodes.find(node => node.id === id);
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
 
     if (typeof node !== 'undefined') {
       node.data.caseName = select.val();
     } else {
-      console.error(`Node with id ${id} not found.`)
+      console.error(`Node with id ${id} not found.`);
+    }
+  }
+
+  /**
+   * Check if D3NE is available
+   *
+   * @throws {Error}
+   * @private
+   */
+  _checkD3NE() {
+    if (typeof D3NE === 'undefined') {
+      throw new Error('D3NE is not defined.');
     }
   }
 }

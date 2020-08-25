@@ -1,37 +1,38 @@
-/* global D3NE, vtk, Selection */
+/* global D3NE, $, CosmoScout */
 
 /**
  * Node for reading and selecting the wildfire simulation data
  */
 class DiseasesSensorInput {
-
   /**
    * Node Editor Component builder
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function}}
+   *
+   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
    * @returns {*}
    * @private
    */
-  _builder(node) {
+  builder(node) {
     // Combobox for file selection
-    const simulation_file = new D3NE.Control(
-        `<select id="sensor_file_${node.id}" class="combobox"><option>none</option></select>`,
-        (element, control) => {
-          const select = $(element);
-          select.selectpicker();
+    const simulationFile = new D3NE.Control(
+      `<select id="sensor_file_${node.id}" class="combobox"><option>none</option></select>`,
+      (element, control) => {
+        const select = $(element);
+        select.selectpicker();
 
-          select.on("change", function() {
-            // Forward file to output
-            control.putData('sensorFile', $(this).val());
+        select.on('change', () => {
+          // Forward file to output
+          control.putData('sensorFile', $(this).val());
 
-            CosmoScout.vestecNE.updateEditor();
-          });
-
-          // Now, since simulation mode changed, read the files for that simulation mode
-          window.callNative("readSensorFileNames", parseInt(node.id));
+          CosmoScout.vestecNE.updateEditor();
         });
 
+        // Now, since simulation mode changed, read the files for that simulation mode
+        window.callNative('readSensorFileNames', parseInt(node.id, 10));
+      },
+    );
+
     // Add control elements
-    node.addControl(simulation_file);
+    node.addControl(simulationFile);
 
     // Define the output type
     const output = new D3NE.Output('TEXTURE', CosmoScout.vestecNE.sockets.TEXTURES);
@@ -42,15 +43,15 @@ class DiseasesSensorInput {
   /**
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
-   * @param node {{id: number, data: {canvas: HTMLCanvasElement, context:
-   * CanvasRenderingContext2D}}}
+   *
+   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
    * @param inputs {any[][]}
    * @param outputs {any[][]}
    * @private
    */
-  _worker(node, inputs, outputs) {
+  worker(node, inputs, outputs) {
     /** @type {DiseasesSensorInput} */
-    if (node.data.sensorFile != undefined) {
+    if (typeof node.data.sensorFile !== 'undefined') {
       const files = [];
       files.push(node.data.sensorFile);
       outputs[0] = files;
@@ -59,6 +60,7 @@ class DiseasesSensorInput {
 
   /**
    * Node Editor Component
+   *
    * @returns {D3NE.Component}
    * @throws {Error}
    */
@@ -66,13 +68,14 @@ class DiseasesSensorInput {
     this._checkD3NE();
 
     return new D3NE.Component('DiseasesSensorInput', {
-      builder: this._builder.bind(this),
-      worker: this._worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 
   /**
    * Check if D3NE is available
+   *
    * @throws {Error}
    * @private
    */
@@ -82,21 +85,28 @@ class DiseasesSensorInput {
     }
   }
 
-  // Fill the combobox with the different sensor source files
+  /**
+   * Fill the combobox with the different sensor source files
+   *
+   * @param id {number|string} #sensor_file_ID
+   * @param simOutputs
+   */
   static fillWithSensorFiles(id, simOutputs) {
     console.log(simOutputs);
-    var json      = JSON.parse(simOutputs);
-    var liOutputs = "";
+    const json = JSON.parse(simOutputs);
+    let liOutputs = '';
 
-    for (var i = 0; i < json.length; i++) {
-      var obj      = json[i];
-      var modeName = obj.split("/").pop();
-      liOutputs += "<option value='" + obj + "'>" + modeName + "</option>";
+    for (let i = 0; i < json.length; i++) {
+      const obj = json[i];
+      const modeName = obj.split('/').pop();
+      liOutputs += `<option value='${obj}'>${modeName}</option>`;
     }
 
-    $("body").find("#sensor_file_" + id).html(liOutputs);
-    $("body").find("#sensor_file_" + id).selectpicker('refresh');
-    $("body").find("#sensor_file_" + id).trigger('change');
+    const body = $('body');
+
+    body.find(`#sensor_file_${id}`).html(liOutputs);
+    body.find(`#sensor_file_${id}`).selectpicker('refresh');
+    body.find(`#sensor_file_${id}`).trigger('change');
   }
 }
 
