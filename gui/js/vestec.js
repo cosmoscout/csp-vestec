@@ -557,7 +557,7 @@ class Vestec {
       }),
     );
 
-    return Vestec.buildResponse(response);
+    return Vestec.buildResponse(response, 'metadata');
   }
 
   /**
@@ -782,7 +782,7 @@ class Vestec {
     const body = new Blob(
       [
         typeof responseDataKey !== 'undefined' && typeof data[responseDataKey] !== 'undefined'
-          ? data[responseDataKey]
+          ? typeof data[responseDataKey] === 'string' ? data[responseDataKey] : JSON.stringify(data[responseDataKey], null, 2)
           : JSON.stringify(data, null, 2),
       ],
       { type: 'application/json' },
@@ -819,10 +819,13 @@ class Vestec {
       // Append search params to the url in the form of url?key=value
       if (typeof data.uriParams !== 'undefined') {
         Object.keys(data.uriParams).forEach((key) => {
-          url.searchParams.append(key, init[key] ?? true);
-
-          delete data.uriParams;
+          url.searchParams.append(
+            key,
+            data.uriParams[key],
+          );
         });
+
+        delete data.uriParams;
       }
 
       // Add all remaining data json encoded to the request body
