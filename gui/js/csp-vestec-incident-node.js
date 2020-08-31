@@ -6,7 +6,9 @@ class IncidentNode {
    * @returns {*}
    */
   builder(node) {
-    const output = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets.INCIDENT);
+    const textureOutput = new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
+    const cinemaDBOutput = new D3NE.Output('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const pointsOutput = new D3NE.Output('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
 
     const incidentControl = new D3NE.Control(
       `<select id="incident_node_select_${node.id}" class="combobox"></select>`,
@@ -33,12 +35,18 @@ class IncidentNode {
     const incidentDatasetControl = new D3NE.Control(
       `<select id="incident_dataset_node_select_${node.id}" class="combobox"></select>`,
       (element, control) => {
-        $(element).selectpicker();
         control.putData('incidentDatasetSelect', element);
 
-        $(element).selectpicker();
-
-        element.parentElement.parentElement.classList.add('hidden');
+        if (node.data.incidentsLoaded) {
+          node.data.incidentDatasetLoaded = IncidentNode.loadIncidentDatasets(
+            element,
+            node.data.incidentSelect.value,
+          );
+        } else {
+          control.putData('incidentDatasetSelect', element);
+          $(element).selectpicker();
+          element.parentElement.parentElement.classList.add('hidden');
+        }
       },
     );
 
@@ -53,11 +61,17 @@ class IncidentNode {
       },
     );
 
+    node.data.updateOutputs = (type) => {
+      console.log(type);
+    };
+
     node.addControl(loginMessageControl);
     node.addControl(incidentControl);
     node.addControl(incidentDatasetControl);
 
-    node.addOutput(output);
+    node.addOutput(textureOutput);
+    node.addOutput(cinemaDBOutput);
+    node.addOutput(pointsOutput);
 
     return node;
   }
@@ -91,10 +105,34 @@ class IncidentNode {
     if (!node.data.incidentsLoaded) {
       node.data.incidentsLoaded = IncidentNode.loadIncidents(node.data.incidentSelect);
     } else if (!node.data.incidentDatasetLoaded) {
+      node.outputs.forEach((output) => {
+        console.log(output.el);
+        // output.el.classList.add('hidden');
+      });
+
       node.data.incidentDatasetLoaded = IncidentNode.loadIncidentDatasets(
         node.data.incidentDatasetSelect,
         node.data.incidentSelect.value,
       );
+    }
+
+    if (node.data.incidentDatasetLoaded) {
+      const incidentId = node.data.incidentSelect.value;
+      const datasetId = node.data.incidentDatasetSelect.value;
+
+      if (typeof incidentId === 'undefined'
+          || typeof datasetId === 'undefined'
+          || incidentId === null
+          || datasetId === null
+          || incidentId.length === 0
+          || datasetId.length === 0
+      ) {
+        return;
+      }
+
+      CosmoScout.vestec.getIncidentDatasetMetadata(datasetId, incidentId).then((data) => {
+        node.data.updateOutputs(data.type);
+      });
     }
 
     if (typeof node.data.incidentSelect !== 'undefined') {

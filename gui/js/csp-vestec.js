@@ -213,7 +213,7 @@
      */
     async getIncidents() {
       const response = await this._vestecApi
-        .getIncidents('completed', 'pending')
+        .getIncidents('active', 'completed')
         .catch(this._defaultCatch.bind(this));
 
       const data = await response.json();
@@ -244,6 +244,25 @@
       }
 
       return data.data_sets;
+    }
+
+    async getIncidentDatasetMetadata(datasetId, incidentId) {
+      const response = await this._vestecApi
+        .getIncidentDatasetMetadata(datasetId, incidentId)
+        .catch(this._defaultCatch.bind(this));
+
+      const data = await response.json();
+
+      console.log('DATA');
+      console.log(data);
+
+      if (response.status !== 200) {
+        console.error('Error retrieving dataset metadata.');
+
+        return [];
+      }
+
+      return data;
     }
 
     /**
