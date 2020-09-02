@@ -159,6 +159,23 @@
     }
 
     /**
+     * Removes all connections for a given node
+     * @param node {Node}
+     */
+    removeConnections(node) {
+      if (typeof node.id === 'undefined') {
+        console.error('Node has no ID property');
+        return;
+      }
+
+      this.editor.paths.forEach((path) => {
+        if (typeof path.connection.output.node !== 'undefined' && path.connection.output.node.id === node.id) {
+          this.editor.removeConnection(path.connection);
+        }
+      });
+    }
+
+    /**
      * Node editor event listener
      * @private
      */
