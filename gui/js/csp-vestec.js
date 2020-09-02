@@ -1,4 +1,4 @@
-/* global IApi, CosmoScout, Vestec */
+/* global IApi, CosmoScout, Vestec, $ */
 
 (() => {
   class VestecApi extends IApi {
@@ -253,9 +253,6 @@
 
       const data = await response.json();
 
-      console.log('DATA');
-      console.log(data);
-
       if (response.status !== 200) {
         console.error('Error retrieving dataset metadata.');
 
@@ -401,6 +398,7 @@
 
       const workflowSelect = document.getElementById('csp-vestec-incident-workflow');
 
+      $(workflowSelect).selectpicker('destroy');
       CosmoScout.gui.clearHtml(workflowSelect);
 
       workflows.forEach((workflow) => {
@@ -410,7 +408,7 @@
         workflowSelect.appendChild(option);
       });
 
-      // CosmoScout.gui.initDropDowns();
+      $(workflowSelect).selectpicker();
     }
 
     /**
