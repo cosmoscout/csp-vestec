@@ -354,7 +354,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                     if(layer > 0)
                     {
                         float prevValue = texture(uSimBuffer, vec3(newCoords, layer - 1)).r;
-                        variance      += pow(abs(prevValue - texValue) - position[5], 2);
+                        variance      += pow(abs(prevValue - texValue) - position[5], 2); //Difference - Durchschnitt zum quadrat
                         absDifference += abs(prevValue - texValue);
                     }
                 }
