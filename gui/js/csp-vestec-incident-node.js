@@ -1,36 +1,69 @@
 /* global CosmoScout, $, D3NE */
 
+/**
+ * Incident Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(Number|String)} id
+ * @property {{
+ *   incidentsLoaded: Boolean,
+ *   incidentDatasetLoaded: Boolean,
+ *   incidentSelect: HTMLSelectElement,
+ *   incidentDatasetSelect: HTMLSelectElement,
+ *   incidentSelectContainer: HTMLDivElement,
+ *   incidentDatasetSelectContainer: HTMLDivElement,
+ *
+ *   info: HTMLDivElement,
+ *
+ *   loadedDataHash: String|null,
+ *   currentMetadata: Object,
+ *   activeOutputType: String|null,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
 class IncidentNode {
+  /**
+   * Supported output types
+   *
+   * @type {[string, string, string]}
+   */
   static outputTypes = [
     'TEXTURES',
     'CINEMA_DB',
     'POINT_ARRAY',
   ];
 
+  /**
+   * Output type mappings
+   * Key: Vestec dataset 'type' parameter from dataset metadata
+   * Value: Type of output
+   *
+   * @type {{CINEMA_DB: string, POINT_ARRAY: string, "2D_FIRE": string}}
+   */
   static typeMappings = {
     '2D_FIRE': IncidentNode.outputTypes[0],
     CINEMA_DB: IncidentNode.outputTypes[1],
     POINT_ARRAY: IncidentNode.outputTypes[2],
   }
 
+  /**
+   * Freezes outputTypes and mappings
+   */
   constructor() {
     Object.freeze(IncidentNode.outputTypes);
     Object.freeze(IncidentNode.typeMappings);
   }
 
   /**
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @returns {*}
+   * Builder method creating incident and dataset select
+   *
+   * @param {Node} node
+   * @returns {Node}
    */
   builder(node) {
-    const textureOutput = new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
-    const cinemaDBOutput = new D3NE.Output('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
-    const pointsOutput = new D3NE.Output('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
-
-    node.data.TEXTURES = textureOutput;
-    node.data.CINEMA_DB = cinemaDBOutput;
-    node.data.POINT_ARRAY = pointsOutput;
-
     const incidentControl = new D3NE.Control(
       `<select id="incident_node_select_${node.id}" class="combobox"></select>`,
       (element, control) => {
@@ -64,6 +97,12 @@ class IncidentNode {
         control.putData('incidentDatasetLoaded', false);
 
         element.parentElement.parentElement.classList.add('hidden');
+
+
+        element.addEventListener('change', () => {
+          // Calls the worker and updates the outputs
+          CosmoScout.vestecNE.updateEditor();
+        });
       },
     );
 
@@ -80,9 +119,7 @@ class IncidentNode {
     node.addControl(incidentControl);
     node.addControl(incidentDatasetControl);
 
-    node.addOutput(textureOutput);
-    node.addOutput(cinemaDBOutput);
-    node.addOutput(pointsOutput);
+    IncidentNode.addOutputs(node);
 
     node.data.firstWorkerRound = true;
     CosmoScout.vestecNE.updateEditor();
@@ -90,31 +127,17 @@ class IncidentNode {
     return node;
   }
 
-  static handleUnauthorized(node) {
-    node.data.incidentSelectContainer.classList.add('hidden');
-    node.data.incidentDatasetSelectContainer.classList.add('hidden');
-    node.data.info.classList.remove('hidden');
-
-    node.data.incidentsLoaded = false;
-    node.data.incidentDatasetLoaded = false;
-    IncidentNode.unsetNodeValues(node);
-  }
-
-  static handleAuthorized(node) {
-    node.data.incidentSelectContainer.classList.remove('hidden');
-    node.data.incidentDatasetSelectContainer.classList.remove('hidden');
-    node.data.info.classList.add('hidden');
-  }
-
   /**
-   * @param node
-   * @param _inputs
-   * @param outputs
+   * @param {Node} node
+   * @param {Array} _inputs - Unused
+   * @param {Array} outputs
    */
   async worker(node, _inputs, outputs) {
+    // First worker round = node was just created
+    // Hide all outputs until the type is determined
     if (node.data.firstWorkerRound) {
-      node.data.firstWorkerRound = false;
       IncidentNode.showOutputType(node, 'none', false);
+      node.data.firstWorkerRound = false;
     }
 
     if (!CosmoScout.vestec.isAuthorized()) {
@@ -136,30 +159,119 @@ class IncidentNode {
       );
     }
 
-    if (node.data.incidentsLoaded && node.data.incidentDatasetLoaded) {
-      const incidentId = node.data.incidentSelect.value;
-      const datasetId = node.data.incidentDatasetSelect.value;
+    if (!node.data.incidentsLoaded || !node.data.incidentDatasetLoaded) {
+      return;
+    }
 
-      if (incidentId.length === 0 || datasetId.length === 0) {
+    const incidentId = node.data.incidentSelect.value;
+    const datasetId = node.data.incidentDatasetSelect.value;
+
+    if (incidentId.length === 0 || datasetId.length === 0) {
+      return;
+    }
+
+    try {
+      await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
+    } catch (e) {
+      console.error(`Error loading metadata for dataset '${datasetId}'. Incident: '${incidentId}. Message: ${e}`);
+      return;
+    }
+
+    const outputIndex = IncidentNode.outputTypes.indexOf(node.data.activeOutputType);
+
+    outputs[outputIndex] = node.data.currentMetadata;
+  }
+
+  /**
+   * Component accessor
+   *
+   * @returns {D3NE.Component}
+   * @throws {Error}
+   */
+  getComponent() {
+    this._checkD3NE();
+
+    return new D3NE.Component('IncidentNode', {
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
+    });
+  }
+
+  /**
+   * Check if D3NE is available
+   *
+   * @throws {Error}
+   * @private
+   */
+  _checkD3NE() {
+    if (typeof D3NE === 'undefined') {
+      throw new Error('D3NE is not defined.');
+    }
+  }
+
+  /**
+   * Adds all defined outputTypes as outputs to the argument node
+   * Output types need to be defined on the vestecNE instance
+   *
+   * @see {outputTypes}
+   * @see {CosmoScout.vestecNE.sockets}
+   * @param {Node} node - The node to add outputs to
+   */
+  static addOutputs(node) {
+    IncidentNode.outputTypes.forEach((outputType) => {
+      if (typeof CosmoScout.vestecNE.sockets[outputType] === 'undefined') {
+        console.error(`Output type ${outputType} not found in CosmoScout.vestecNE.sockets`);
         return;
       }
 
-      const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
+      const name = outputType.charAt(0).toUpperCase() + outputType.toLowerCase().slice(1);
 
-      node.data.loadedDataHash = datasetId + incidentId;
-      node.data.currentMetadata = metadata;
-    }
+      const output = new D3NE.Output(name, CosmoScout.vestecNE.sockets[outputType]);
 
-    /*    if (typeof node.data.incidentSelect !== 'undefined') {
-      outputs[0] = {
-        incidentId: node.data.incidentSelect.value,
-        datasetId: node.data.incidentDatasetSelect.value.length > 0
-          ? node.data.incidentDatasetSelect.value
-          : undefined,
-      };
-    } */
+      node.data[outputType] = output;
+
+      node.addOutput(output);
+    });
   }
 
+  /**
+   * Shows all relevant controls if user is authorized
+   *
+   * @param {Node} node
+   */
+  static handleAuthorized(node) {
+    node.data.incidentSelectContainer.classList.remove('hidden');
+    node.data.incidentDatasetSelectContainer.classList.remove('hidden');
+    node.data.info.classList.add('hidden');
+  }
+
+  /**
+   * Hides all controls if user is unauthorized
+   *
+   * @param {Node} node
+   */
+  static handleUnauthorized(node) {
+    node.data.incidentSelectContainer.classList.add('hidden');
+    node.data.incidentDatasetSelectContainer.classList.add('hidden');
+    node.data.info.classList.remove('hidden');
+
+    node.data.incidentsLoaded = false;
+    node.data.incidentDatasetLoaded = false;
+    IncidentNode.unsetNodeValues(node);
+  }
+
+  /**
+   * Loads metadata for a given incident / dataset combination
+   *
+   * The current dataset / incident id combination is cached to remove unnecessary loading
+   * @see {node.data.currentMetadata}
+   *
+   * @param {Node} node - Shows the relevant output for the dataset
+   * @param {string} datasetId
+   * @param {string} incidentId
+   * @see {CosmoScout.vestec.getIncidentDatasetMetadata}
+   * @return {Promise<T|{type: null}|undefined|null>}
+   */
   static async loadIncidentDatasetMetadata(node, datasetId, incidentId) {
     if (incidentId === null
         || datasetId === null
@@ -182,6 +294,9 @@ class IncidentNode {
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
       IncidentNode.showOutputType(node, IncidentNode.typeMappings[metadata.type], true);
 
+      node.data.loadedDataHash = datasetId + incidentId;
+      node.data.currentMetadata = metadata;
+
       return metadata;
     }
 
@@ -189,24 +304,9 @@ class IncidentNode {
   }
 
   /**
-   * Component accessor
-   *
-   * @returns {D3NE.Component}
-   * @throws {Error}
-   */
-  getComponent() {
-    this._checkD3NE();
-
-    return new D3NE.Component('IncidentNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
-    });
-  }
-
-  /**
    * Load vestec incidents into the select control
    *
-   * @param element {HTMLSelectElement}
+   * @param {HTMLSelectElement} element
    * @returns true on success
    */
   static async loadIncidents(element) {
@@ -236,8 +336,8 @@ class IncidentNode {
   /**
    * Load vestec incidents into the select control
    *
-   * @param element {HTMLSelectElement}
-   * @param id {string} Unique incident UUID
+   * @param {HTMLSelectElement} element
+   * @param {string} id - Unique incident UUID
    * @returns true on success
    */
   static async loadIncidentDatasets(element, id) {
@@ -265,11 +365,20 @@ class IncidentNode {
 
     $(element).selectpicker();
 
-    CosmoScout.vestecNE.updateEditor(); // Fucking hack
-
     return true;
   }
 
+  /**
+   * Hides all outputs but the relevant one on the given node
+   * If removeConnections is set to true all connections from this node to others are removed
+   *
+   * @see {outputTypes}
+   * @see {typeMappings}
+   *
+   * @param {Node} node - The node to operate on
+   * @param {string} outputType - Type of output (value from typeMappings)
+   * @param {boolean} removeConnections - True to remove all active connections from/to this node
+   */
   static showOutputType(node, outputType, removeConnections = true) {
     if (node.data.activeOutputType === outputType) {
       return;
@@ -303,22 +412,15 @@ class IncidentNode {
     }
   }
 
+  /**
+   * Unsets data that is used to cache the current state
+   *
+   * @param {Node} node
+   */
   static unsetNodeValues(node) {
     node.data.activeOutputType = null;
     node.data.loadedDataHash = null;
     node.data.currentMetadata = null;
-  }
-
-  /**
-   * Check if D3NE is available
-   *
-   * @throws {Error}
-   * @private
-   */
-  _checkD3NE() {
-    if (typeof D3NE === 'undefined') {
-      throw new Error('D3NE is not defined.');
-    }
   }
 }
 
