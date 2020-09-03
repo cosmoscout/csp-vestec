@@ -1,4 +1,4 @@
-/* global D3NE, nodeEditor, vtk, Selection */
+/* global D3NE, CosmoScout.vestec, vtk, Selection */
 
 /**
  * Node drawing a persistence diagram for a given vtk file
@@ -21,25 +21,25 @@ class PersistenceNode {
           const color = 'rgb(221, 221, 255)';
 
           const renderer = new PersistenceRenderer(element, node.id, {
-            strokeStyle : color,
-            axesTextColor : color,
-            axesColor : color,
-            axesTickColor : color,
-            padding : {
-              left : 40,
-              top : 20,
-              right : 20,
-              bottom : 40,
+            strokeStyle: color,
+            axesTextColor: color,
+            axesColor: color,
+            axesTickColor: color,
+            padding: {
+              left: 40,
+              top: 20,
+              right: 20,
+              bottom: 40,
             },
-            waitTime : 1,
-            enablePersistenceFilter : true,
-            enableSelectionFilter : true,
-            selectionStopPropagation : true
+            waitTime: 1,
+            enablePersistenceFilter: true,
+            enableSelectionFilter: true,
+            selectionStopPropagation: true
           });
 
           // Update graph processing on selection changes
           renderer.container.addEventListener('pointsdrawn', (event /* CustomEvent */) => {
-            nodeEditor.engine.process(nodeEditor.editor.toJSON());
+            CosmoScout.vestec.updateEditor();
           });
 
           const canvas = renderer.renderer.getCanvas();
@@ -48,7 +48,7 @@ class PersistenceNode {
           control.putData('renderer', renderer);
           control.putData('canvas', canvas);
 
-          nodeEditor.engine.process(nodeEditor.editor.toJSON());
+          CosmoScout.vestec.updateEditor();
         });
 
     node.addControl(renderer);
@@ -57,16 +57,16 @@ class PersistenceNode {
         '<button data-minimized="false" class="hidden"><i class="material-icons minimize">picture_in_picture</i></button>',
         (element, control) => {
           Object.assign(element.style, {
-            border : 0,
-            background : 'none',
-            position : 'absolute',
-            top : 0,
-            right : 0,
-            zIndex : 1,
+            border: 0,
+            background: 'none',
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            zIndex: 1,
           });
 
           Object.assign(element.parentNode.style, {
-            padding : 0,
+            padding: 0,
           });
 
           const canvas = control.getData('canvas');
@@ -75,11 +75,9 @@ class PersistenceNode {
             e.stopPropagation();
 
             if (element.dataset.minimized === 'true') {
-              console.log(element.dataset.minimized, 'ismini');
               canvas.classList.remove('hidden');
               element.dataset.minimized = 'false';
             } else {
-              console.log(element.dataset.minimized, 'isnot');
               canvas.classList.add('hidden');
               element.dataset.minimized = 'true';
             }
@@ -90,25 +88,27 @@ class PersistenceNode {
 
     node.addControl(minimizeButton);
 
-    const resetSelection = new D3NE.Control(`<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>`, (element, control) => {
-      element.classList.add('hidden');
+    const resetSelection = new D3NE.Control(
+        `<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>`,
+        (element, control) => {
+          element.classList.add('hidden');
 
-      element.addEventListener('click', () => {
-        node.data.renderer.setActiveSelectionBounds(undefined);
-      });
+          element.addEventListener('click', () => {
+            node.data.renderer.setActiveSelectionBounds(undefined);
+          });
 
-      control.putData('resetBtn', element);
-    });
+          control.putData('resetBtn', element);
+        });
 
     node.addControl(resetSelection);
 
     node.data.activeFile = null;
 
-    const input = new D3NE.Input('CinemaDB', nodeEditor.sockets.CINEMA_DB);
+    const input = new D3NE.Input('CinemaDB', CosmoScout.vestec.sockets.CINEMA_DB);
 
     node.addInput(input);
 
-    const output = new D3NE.Output('Points', nodeEditor.sockets.POINT_ARRAY);
+    const output = new D3NE.Output('Points', CosmoScout.vestec.sockets.POINT_ARRAY);
 
     node.addOutput(output);
 
@@ -169,8 +169,8 @@ class PersistenceNode {
     this._checkD3NE();
 
     return new D3NE.Component('PersistenceNode', {
-      builder : this._builder.bind(this),
-      worker : this._worker.bind(this),
+      builder: this._builder.bind(this),
+      worker: this._worker.bind(this),
     });
   }
 
@@ -197,5 +197,5 @@ class PersistenceNode {
 (() => {
   const persistenceNode = new PersistenceNode();
 
-  nodeEditor.nodes.PersistenceNode = persistenceNode.getComponent();
+  CosmoScout.vestec.addNode('PersistenceNode', persistenceNode.getComponent());
 })();
