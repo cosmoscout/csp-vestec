@@ -1,4 +1,4 @@
-/* global D3NE, nodeEditor, vtk, Selection */
+/* global D3NE, vtk, Selection */
 
 /**
  * Node for rendering texture input. Only takes the first file
@@ -31,11 +31,11 @@ class TextureRenderNode {
       // Initialize HTML elements
       var sliderQuery = "#slider_opacity" + node.id;
       const slider    = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, {start : 1, animate : false, range : {'min' : 0, 'max' : 1}});
+      noUiSlider.create(slider, {start: 1, animate: false, range: {'min': 0, 'max': 1}});
 
       // Read the files for the given simulation mode and fill combobox when mode is changed
       slider.noUiSlider.on('slide', function(values, handle) {
-        window.call_native("setOpacityTexture", node.id, parseFloat(values[handle]))
+        window.callNative("setOpacityTexture", node.id, parseFloat(values[handle]))
       });
     });
 
@@ -61,15 +61,15 @@ class TextureRenderNode {
       // Initialize HTML elements
       var sliderQuery = "#slider_time" + node.id;
       const slider    = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, {start : 6, animate : false, range : {'min' : 0, 'max' : 6}});
+      noUiSlider.create(slider, {start: 6, animate: false, range: {'min': 0, 'max': 6}});
 
       $(element).find("#set_enable_time" + node.id).on("click", function() {
-        window.call_native("set_enable_time", node.id, $(this).is(":checked"));
+        window.callNative("set_enable_time", node.id, $(this).is(":checked"));
       });
 
       // Set the time value for the renderer
       slider.noUiSlider.on('slide', function(values, handle) {
-        window.call_native("setTime", node.id, parseFloat(values[handle]))
+        window.callNative("setTime", node.id, parseFloat(values[handle]))
       });
     });
 
@@ -78,7 +78,7 @@ class TextureRenderNode {
     node.addControl(time_control);
 
     // Define the input type
-    const input = new D3NE.Input('TEXTURE(S)', nodeEditor.sockets.TEXTURES);
+    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestec.sockets.TEXTURES);
     node.addInput(input);
     return node;
   }
@@ -98,7 +98,7 @@ class TextureRenderNode {
     // input[0][0] = the first array on input port 0
     // input[0][0][0] = the first entry in the array (filename)
     if (inputs[0] != undefined && inputs[0][0][0].toString() != this.lastFile) {
-      window.call_native("readSimulationResults", node.id, inputs[0][0][0].toString());
+      window.callNative("readSimulationResults", node.id, inputs[0][0][0].toString());
       this.lastFile = inputs[0][0][0].toString();
     }
   }
@@ -112,8 +112,8 @@ class TextureRenderNode {
     this._checkD3NE();
 
     return new D3NE.Component('TextureRenderNode', {
-      builder : this._builder.bind(this),
-      worker : this._worker.bind(this),
+      builder: this._builder.bind(this),
+      worker: this._worker.bind(this),
     });
   }
 
@@ -130,6 +130,6 @@ class TextureRenderNode {
 }
 
 (() => {
-  const texRenderNode                = new TextureRenderNode();
-  nodeEditor.nodes.TextureRenderNode = texRenderNode.getComponent();
+  const texRenderNode = new TextureRenderNode();
+  CosmoScout.vestec.addNode('TextureRenderNode', texRenderNode.getComponent());
 })();

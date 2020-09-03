@@ -1,44 +1,19 @@
-﻿<!DOCTYPE html>
-<html>
-
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta charset="utf-8">
-
-	<!-- Styles-->
-	<link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
-    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap-select.min.css" />
-	<link type="text/css" rel="stylesheet" href="third-party/css/jquery-ui.min.css"/>
-	<link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css"/>
-	<link type="text/css" rel="stylesheet" href="css/vestec.css" />
-	<link type="text/css" rel="stylesheet" href="css/gui.css" />
-
-	
-    <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
-	<script type="text/javascript" src="third-party/js/alight.min.js"></script>
-	<script type="text/javascript" src="third-party/js/d3.min.js"></script>
-	<script type="text/javascript" src="third-party/js/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="third-party/js/d3-node-editor.js"></script>
-
-	<script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
-	<script type="text/javascript" src="third-party/js/bootstrap-select.min.js"></script>
-	<script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
-	<script type="text/javascript" src="third-party/js/vtk_14.8.1.js"></script>
-
-	<script src="js/vestec.js"></script>
-</head>
-
-<body>
-	<div id="floweditor-resizeable" class="ui-widget-content grey-text text-darken-4 resizeable">
-		<div id="vestec-container" class="vestec-container">
+﻿<div id="csp-vestec-node-editor" class="draggable-window resizable-window">
+	<div class="window-wrapper">
+		<div class="window-header">
+			<span class="window-title"><i class="material-icons">account_tree</i><span id="viracocha-info">Node Editor</span></span>
 			<!-- Navigation header -->
 			<nav>
 				<div class="row nav nav-tabs" id="vestec-tabs" role="tablist">
 					<a class="nav-item nav-link active" id="nav-vestec-portal-tab" data-toggle="tab" href="#nav-vestec-portal" role="tab" aria-controls="nav-vestec-portal" aria-selected="active">VESTEC Portal</a>
 					<a class="nav-item nav-link" id="nav-node-editor-tab" data-toggle="tab" href="#nav-node-editor" role="tab" aria-controls="nav-node-editor" aria-selected="">VESTEC Data Analysis</a>
 				</div>
-				<i id="minimize" class="material-icons minimize">picture_in_picture</i>
 			</nav>
+			<a class="btn light-glass" data-action="close" data-toggle="tooltip" title="Close">
+				<i class="material-icons">close</i>
+			</a>
+		</div>
+		<div class="window-content">
 			<!-- Tabs content -->
 			<div class="vestec-tabs row" id="nav-tabContents">
 				<!-- VESTEC Portal Tab -->
@@ -50,10 +25,8 @@
 				<!-- Data Analytics Tab -->
 				<div class="tab-pane vestec-tab-content fade" id="nav-node-editor" role="tabpanel" aria-labelledby="nav-node-editor-tab">
 					<div id="d3-node-editor" class="node-editor"></div>
-				</div>			
+				</div>
 			</div>
 		</div>
 	</div>
-</body>
-
-</html>
+</div>
