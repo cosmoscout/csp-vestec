@@ -75,6 +75,16 @@
     }
 
     /**
+     * Passthrough method
+     *
+     * @see {Vestec.token}
+     * @return {string}
+     */
+    getToken() {
+      return this._vestecApi.token;
+    }
+
+    /**
      * Vestec Api Interfacing Methods
      */
 
