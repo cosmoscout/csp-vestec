@@ -98,7 +98,6 @@ class IncidentNode {
 
         element.parentElement.parentElement.classList.add('hidden');
 
-
         element.addEventListener('change', () => {
           // Calls the worker and updates the outputs
           CosmoScout.vestecNE.updateEditor();
@@ -258,6 +257,7 @@ class IncidentNode {
     node.data.incidentsLoaded = false;
     node.data.incidentDatasetLoaded = false;
     IncidentNode.unsetNodeValues(node);
+    IncidentNode.showOutputType(node, 'none', true);
   }
 
   /**
