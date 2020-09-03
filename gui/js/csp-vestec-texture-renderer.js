@@ -94,7 +94,9 @@ class TextureRenderNode {
     // input[0] = first input port
     // input[0][0] = the first array on input port 0
     // input[0][0][0] = the first entry in the array (filename)
-    if (typeof inputs[0] !== 'undefined' && inputs[0][0][0].toString() !== this.lastFile) {
+    if (typeof inputs[0] !== 'undefined'
+        && inputs[0].length > 0
+        && inputs[0][0][0].toString() !== this.lastFile) {
       window.callNative('readSimulationResults', node.id, inputs[0][0][0].toString());
       this.lastFile = inputs[0][0][0].toString();
     }
