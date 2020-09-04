@@ -8,6 +8,7 @@
 #define CSP_VESTEC_PLUGIN_HPP
 
 #include "../../../src/cs-core/PluginBase.hpp"
+#include "../../../src/cs-core/tools/Mark.hpp"
 #include "../../../src/cs-gui/GuiItem.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-utils/Property.hpp"
@@ -45,6 +46,8 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
  private:
   Settings                                        mPluginSettings;
   std::shared_ptr<cs::scene::CelestialAnchorNode> mVestecTransform;
+  std::shared_ptr<cs::core::tools::Mark>          mMarkStart;
+  std::shared_ptr<cs::core::tools::Mark>          mMarkEnd;
 
   // Node editor for VESTEC
   VNE::NodeEditor* m_pNodeEditor;

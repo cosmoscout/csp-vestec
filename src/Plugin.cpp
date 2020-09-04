@@ -8,6 +8,7 @@
 
 #include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
+#include "../../../src/cs-core/InputManager.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-utils/convert.hpp"
@@ -96,6 +97,78 @@ void Plugin::init() {
 
   // Add a timeline button to toggle the node editor.
   mGuiManager->addTimelineButton("Toggle Vestec Node Editor", "dashboard", callback);
+
+  auto makeMark = std::function([this]() -> std::shared_ptr<cs::core::tools::Mark> {
+    auto intersection = mInputManager->pHoveredObject.get().mObject;
+
+    if (!intersection) {
+      return nullptr;
+    }
+
+    auto body = std::dynamic_pointer_cast<cs::scene::CelestialBody>(intersection);
+
+    if (!body || body->getCenterName() != "Earth") {
+      return nullptr;
+    }
+
+    auto radii = body->getRadii();
+
+    auto tool = std::make_shared<cs::core::tools::Mark>(mInputManager, mSolarSystem, mAllSettings,
+        mTimeControl, body->getCenterName(), body->getFrameName());
+    tool->pLngLat =
+        cs::utils::convert::cartesianToLngLat(mInputManager->pHoveredObject.get().mPosition, radii);
+
+    return tool;
+  });
+
+  mGuiManager->getGui()->registerCallback(
+      "vestec.addStartMark", "", std::function([this, makeMark]() {
+        if (mMarkStart != nullptr) {
+          return;
+        }
+
+        auto mark = makeMark();
+
+        if (mark == nullptr) {
+          return;
+        }
+
+        mMarkStart = mark;
+        mark->pLngLat.connect([this](glm::vec2 latlong) {
+          std::string data = std::to_string(latlong[0]) + " " + std::to_string(latlong[1]);
+          mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setStartLatLong", data);
+        });
+      }));
+
+  mGuiManager->getGui()->registerCallback(
+      "vestec.addEndMark", "", std::function([this, makeMark]() {
+        if (mMarkEnd != nullptr) {
+          return;
+        }
+
+        auto mark = makeMark();
+
+        if (mark == nullptr) {
+          return;
+        }
+
+        mMarkEnd = mark;
+        mark->pLngLat.connect([this](glm::vec2 latlong) {
+          std::string data = std::to_string(latlong[0]) + " " + std::to_string(latlong[1]);
+          mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setEndLatLong", data);
+        });
+      }));
+
+  mGuiManager->getGui()->registerCallback("vestec.removeMarks", "", std::function([this]() {
+    if (mMarkStart != nullptr) {
+      mMarkStart.reset();
+      delete mMarkStart.get();
+    }
+    if (mMarkEnd != nullptr) {
+      mMarkEnd.reset();
+      delete mMarkEnd.get();
+    }
+  }));
 
   // Read the plugin settings from the scene config
   mPluginSettings = mAllSettings->mPlugins.at("csp-vestec");
@@ -193,6 +266,21 @@ void Plugin::update() {
   float timeOfDay =
       cs::utils::convert::time::toPosix(simTime).time_of_day().total_milliseconds() / 1000.0;
   // Update plugin per frame
+
+  if (mMarkStart != nullptr) {
+    if (mMarkStart->pShouldDelete.get()) {
+      mMarkStart.reset();
+    } else {
+      mMarkStart->update();
+    }
+  }
+  if (mMarkEnd != nullptr) {
+    if (mMarkEnd->pShouldDelete.get()) {
+      mMarkEnd.reset();
+    } else {
+      mMarkEnd->update();
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

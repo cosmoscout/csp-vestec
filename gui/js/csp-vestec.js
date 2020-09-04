@@ -29,17 +29,16 @@
       document.getElementById('csp-vestec-logout-btn')
         .addEventListener('click', this.logout.bind(this));
 
-      const formattedPos = () => CosmoScout.utils.formatLongitude(CosmoScout.state.observerLngLatHeight[0])
-          + CosmoScout.utils.formatLatitude(CosmoScout.state.observerLngLatHeight[1]);
-
       document.getElementById('csp-vestec-incident-select-upper-left')
         .addEventListener('click', () => {
-          document.getElementById('csp-vestec-incident-upper-left').value = formattedPos(); // TODO
+          CosmoScout.notifications.print('Set Start Region', 'Move the mark.', 'add_circle_outline');
+          window.callNative('vestec.addStartMark');
         });
 
       document.getElementById('csp-vestec-incident-select-lower-right')
         .addEventListener('click', () => {
-          document.getElementById('csp-vestec-incident-lower-right').value = formattedPos(); // TODO
+          CosmoScout.notifications.print('Set End Region', 'Move the mark.', 'add_circle_outline');
+          window.callNative('vestec.addEndMark');
         });
 
       document.getElementById('csp-vestec-create-incident-btn').addEventListener('click', () => {
@@ -50,6 +49,16 @@
         .addEventListener('click', this._submitIncident.bind(this));
 
       this._vestecApi = new Vestec();
+    }
+
+    setStartLatLong(data) {
+      // Todo format according to vestec
+      document.getElementById('csp-vestec-incident-upper-left').value = data;
+    }
+
+    setEndLatLong(data) {
+      // Todo format according to vestec
+      document.getElementById('csp-vestec-incident-lower-right').value = data;
     }
 
     /**
@@ -455,7 +464,9 @@
           'Incident created', 'Successfully created incident.', 'done',
         );
 
+        form.parentElement.classList.toggle('visible');
         form.reset();
+        window.callNative('vestec.removeMarks');
 
         // Incident id is in body text
         return response.text();
