@@ -19,7 +19,7 @@ class DiseasesSensorInput {
         const select = $(element);
         select.selectpicker();
 
-        select.on('change', () => {
+        select.on('change', function () {
           // Forward file to output
           control.putData('sensorFile', $(this).val());
 
@@ -92,7 +92,6 @@ class DiseasesSensorInput {
    * @param simOutputs
    */
   static fillWithSensorFiles(id, simOutputs) {
-    console.log(simOutputs);
     const json = JSON.parse(simOutputs);
     let liOutputs = '';
 

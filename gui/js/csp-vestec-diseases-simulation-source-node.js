@@ -76,7 +76,7 @@ class DiseasesSimulation {
       });
 
       // When combo box changes update the files and number of ensemble info
-      select.on('change', () => {
+      select.on('change', function () {
         console.log('Change combo box');
 
         // Update the number of enseble members
@@ -104,7 +104,7 @@ class DiseasesSimulation {
       const playButton = $(element).find(`#play_mode_${node.id}`);
       console.log(`Button: ${playButton}`);
 
-      playButton.click(() => {
+      playButton.click(function () {
         if (this.animate === false) {
           $(element).find(`#play_mode_${node.id}`).text('Pause');
           this.animate = true;

@@ -27,7 +27,7 @@ void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
 
   // Load JavaScipt content from file
   std::string code = cs::utils::filesystem::loadToString(
-      "../share/resources/gui/js/csp-vestec-disaeses-sensor-source-node.js");
+      "../share/resources/gui/js/csp-vestec-diseases-sensor-source-node.js");
 
   pEditor->GetGuiItem()->executeJavascript(code);
 
