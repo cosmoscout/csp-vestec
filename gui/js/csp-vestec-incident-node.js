@@ -170,7 +170,8 @@ class IncidentNode {
     }
 
     try {
-      await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
+      const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
+      window.callNative('downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
     } catch (e) {
       console.error(`Error loading metadata for dataset '${datasetId}'. Incident: '${incidentId}. Message: ${e}`);
       return;
@@ -178,7 +179,8 @@ class IncidentNode {
 
     const outputIndex = IncidentNode.outputTypes.indexOf(node.data.activeOutputType);
 
-    outputs[outputIndex] = node.data.currentMetadata;
+    // outputs[outputIndex] = node.data.currentMetadata;
+    outputs[outputIndex] = [`../share/vestec/download/${node.data.currentMetadata.uuid}`];
   }
 
   /**
