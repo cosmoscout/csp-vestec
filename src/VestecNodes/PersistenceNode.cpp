@@ -21,6 +21,9 @@ std::string PersistenceNode::GetName() {
 void PersistenceNode::Init(VNE::NodeEditor* pEditor) {
   csp::vestec::logger().debug("[" + GetName() + "] Init");
 
+  const std::string vtkJs = cs::utils::filesystem::loadToString("../share/resources/gui/third-party/js/vtk_14.8.1.js");
+  pEditor->GetGuiItem()->executeJavascript(vtkJs);
+
   const std::string renderer = cs::utils::filesystem::loadToString(
       "../share/resources/gui/third-party/js/PersistenceRenderer.js");
   pEditor->GetGuiItem()->executeJavascript(renderer);
