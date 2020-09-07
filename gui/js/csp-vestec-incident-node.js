@@ -53,8 +53,10 @@ class IncidentNode {
    * Freezes outputTypes and mappings
    */
   constructor() {
+    // IncidentNode.outputTypes = CosmoScout.vestecNE.sockets;
+
     Object.freeze(IncidentNode.outputTypes);
-    Object.freeze(IncidentNode.typeMappings);
+    // Object.freeze(IncidentNode.typeMappings);
   }
 
   /**
@@ -233,6 +235,22 @@ class IncidentNode {
 
       node.addOutput(output);
     });
+  }
+
+  /**
+   * Maps a vestec dataset 'type' parameter to an output socket type
+   * Socket types are loaded from CosmoScout.vestecNE.sockets
+   *
+   * @param {string} from Dataset 'type' parameter
+   * @param {string} to Target socket type
+   */
+  static addTypeMapping(from, to) {
+    if (typeof IncidentNode.outputTypes[to] === 'undefined') {
+      console.error(`Output type ${to} does not exist on CosmoScout.vestecNE.sockets.`);
+      return;
+    }
+
+    IncidentNode.typeMappings[from] = to;
   }
 
   /**
