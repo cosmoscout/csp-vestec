@@ -8,7 +8,6 @@
 #include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
-#include "../logger.hpp"
 
 #include <curlpp/Easy.hpp>
 #include <curlpp/Info.hpp>
@@ -33,44 +32,39 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
       cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-incident-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);
 
-  pEditor->GetGuiItem()->registerCallback("downloadDataSet", "Downlads a given Dataset",
-      std::function([pEditor](std::string uuid, std::string token) {
+  pEditor->GetGuiItem()->registerCallback("downloadDataSet", "Downloads a given Dataset",
+      std::function([](std::string uuid, std::string token) {
+        // TODO make configurable
         std::string   dl("../share/vestec/download/" + uuid);
-        std::ofstream out;
 
-        std::ifstream test(dl);
-        if (test.good()) { // lol
-          test.close();
+        if (cs::utils::filesystem::fileExists(dl)) {
           return;
         }
 
-        std::cout << "Download dir: " << dl << " | UUID: " << uuid << " | Token: " << token << "\n";
+        std::ofstream out;
 
         out.open(dl, std::ofstream::out | std::ofstream::binary);
 
         if (!out) {
-          std::cout << "Failed to download tile data: Cannot open '{}' for writing!"
-                    << "\n";
+          csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
           return;
-          /*logger().error(
-              "Failed to download tile data: Cannot open '{}' for writing!", cacheFile.str());*/
         }
 
         std::list<std::string> header;
         header.push_back("Authorization: Bearer " + token);
 
-        auto utl = "http://192.168.0.19/flask/data/" + uuid;
+        auto url = csp::vestec::Plugin::vestecServer + "/flask/data/" + uuid;
+
+        csp::vestec::logger().debug("Downloading '{}' to '{}'", url, dl);
 
         curlpp::Easy request;
         request.setOpt(curlpp::options::HttpHeader(header));
-        request.setOpt(curlpp::options::Url(utl));
+        request.setOpt(curlpp::options::Url(url));
         request.setOpt(curlpp::options::WriteStream(&out));
         request.setOpt(curlpp::options::NoSignal(true));
 
         request.perform();
-        /*
-                                                                    fail =
-           curlpp::Info<CURLINFO_CONTENT_TYPE, std::string>::get(request).substr(0, 11) ==
-                                                                           "application";*/
+
+        out.close();
       }));
 }
