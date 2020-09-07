@@ -44,6 +44,7 @@ EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
 
 // Init data dir
 std::string csp::vestec::Plugin::dataDir;
+std::string csp::vestec::Plugin::vestecServer;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +74,6 @@ void Plugin::init() {
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/alight.min.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/jquery-ui.min.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/d3-node-editor.js");
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/vtk_14.8.1.js");
 
   auto vestecNodeEditorHtml =
       cs::utils::filesystem::loadToString("../share/resources/gui/vestec_node_editor.html");
@@ -98,6 +98,7 @@ void Plugin::init() {
   // Add a timeline button to toggle the node editor.
   mGuiManager->addTimelineButton("Toggle Vestec Node Editor", "dashboard", callback);
 
+  // Creates a movable mark to select upper / lower incident bounds
   auto makeMark = std::function([this]() -> std::shared_ptr<cs::core::tools::Mark> {
     auto intersection = mInputManager->pHoveredObject.get().mObject;
 
@@ -164,6 +165,7 @@ void Plugin::init() {
       mMarkStart.reset();
       delete mMarkStart.get();
     }
+
     if (mMarkEnd != nullptr) {
       mMarkEnd.reset();
       delete mMarkEnd.get();
@@ -180,6 +182,7 @@ void Plugin::init() {
 
   // Set the data dir which is used by other classes
   Plugin::dataDir = mPluginSettings.mVestecDataDir;
+  Plugin::vestecServer = mPluginSettings.mVestecServer;
 
   // Initialize vestec flow editor
   m_pNodeEditor = new VNE::NodeEditor(mGuiManager->getGui());

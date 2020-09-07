@@ -26,6 +26,7 @@ namespace csp::vestec {
 class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
  public:
   static std::string dataDir; ///< Directory where simulation data is stored
+  static std::string vestecServer; ///< Vestec Server
 
   struct Settings {
     std::string mVestecDataDir; ///< Directory where cinemaDB is stored
