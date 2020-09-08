@@ -171,9 +171,25 @@ class IncidentNode {
       return;
     }
 
+    let output;
+
     try {
       const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
       window.callNative('downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+
+      output = [`../share/vestec/download/${node.data.currentMetadata.uuid}`];
+
+      if (metadata.type === 'CINEMA_DB') {
+        window.callNative('extractDataSet', metadata.uuid);
+
+        const [caseName, timeStep] = metadata.comment.split('_');
+
+        output = {
+          caseName,
+          timeStep,
+          uuid: datasetId,
+        };
+      }
     } catch (e) {
       console.error(`Error loading metadata for dataset '${datasetId}'. Incident: '${incidentId}. Message: ${e}`);
       return;
@@ -182,7 +198,7 @@ class IncidentNode {
     const outputIndex = IncidentNode.outputTypes.indexOf(node.data.activeOutputType);
 
     // outputs[outputIndex] = node.data.currentMetadata;
-    outputs[outputIndex] = [`../share/vestec/download/${node.data.currentMetadata.uuid}`];
+    outputs[outputIndex] = output;
   }
 
   /**
@@ -290,7 +306,7 @@ class IncidentNode {
    * @param {string} datasetId
    * @param {string} incidentId
    * @see {CosmoScout.vestec.getIncidentDatasetMetadata}
-   * @return {Promise<T|{type: null}|undefined|null>}
+   * @return {Promise<T|{type: null|string}|undefined|null>}
    */
   static async loadIncidentDatasetMetadata(node, datasetId, incidentId) {
     if (incidentId === null

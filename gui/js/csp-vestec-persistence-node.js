@@ -156,7 +156,14 @@ class PersistenceNode {
     }
 
     const modPath = PersistenceNode.pathDIR.substr(3, PersistenceNode.pathDIR.length - 3);
-    renderer.load(`/${modPath}/export/${fileName}`).then(() => {
+
+    let path = `/${modPath}/export/${fileName}`;
+
+    if (typeof inputs[0][0].uuid !== 'undefined') {
+      path = `/${modPath}/../../extracted/${inputs[0][0].uuid}/${fileName}`;
+    }
+
+    renderer.load(path).then(() => {
       node.data.activeFile = fileName;
       renderer.update();
     });
