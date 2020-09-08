@@ -87,7 +87,8 @@ target_link_libraries(csp-vestec
 		cs-scene
         Boost::program_options
         ttk::vtk::ttkAll
-		    GDAL::GDAL
+		GDAL::GDAL
+        ${COSMOSCOUT_EXTERNALS_DIR}/lib/Zipper.lib
 )
 
 # Define include direcories

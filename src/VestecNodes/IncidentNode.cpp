@@ -14,6 +14,8 @@
 #include <curlpp/Infos.hpp>
 #include <curlpp/Options.hpp>
 
+#include <zipper/unzipper.h>
+
 IncidentNode::IncidentNode(cs::gui::GuiItem* pItem, int id)
     : VNE::Node(pItem, id) {
 }
@@ -64,7 +66,35 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
         request.setOpt(curlpp::options::NoSignal(true));
 
         request.perform();
+        request.reset();
 
         out.close();
+      }));
+
+  pEditor->GetGuiItem()->registerCallback("extractDataSet", "Extracts a given Dataset",
+      std::function([](std::string uuid) {
+        // TODO make configurable
+        std::string zip("../share/vestec/download/" + uuid);
+        std::string extract("../share/vestec/extracted/" + uuid);
+
+        if (!cs::utils::filesystem::fileExists(zip)) {
+          csp::vestec::logger().debug("File {} does not exist on {}.", uuid, "../share/vestec/download/");
+          return;
+        }
+
+        if (boost::filesystem::exists(extract)) {
+          csp::vestec::logger().debug("File {} already extracted in {}.", uuid, extract);
+          return;
+        }
+
+        cs::utils::filesystem::createDirectoryRecursively(extract);
+
+        // TODO what happens if file isn't a zip
+        zipper::Unzipper unzipper(zip);
+
+        csp::vestec::logger().debug("Extracting {} files to {}.", unzipper.entries().size(), extract);
+
+        unzipper.extract(extract);
+        unzipper.close();
       }));
 }
