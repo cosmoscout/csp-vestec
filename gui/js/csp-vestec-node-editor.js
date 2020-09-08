@@ -79,6 +79,10 @@
 
       this.engine = new D3NE.Engine(`${this.name}NodeEditor${this._version}`, this.components);
 
+      this.engine.onError = (msg, obj) => {
+        console.error(`Node Editor Error: ${msg}`, obj);
+      };
+
       this._addEventListener();
 
       this.editor.view.zoomAt(this.editor.nodes);
