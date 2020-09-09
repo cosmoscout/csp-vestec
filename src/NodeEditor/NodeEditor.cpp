@@ -162,16 +162,16 @@ void NodeEditor::InitNodeEditor() {
       "Adds a new Node connection",
       std::function(
           [this](double outputNode, double inputNode, double outputPort, double inputPort) {
-            this->AddConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
-                static_cast<int>(outputPort), static_cast<int>(inputPort));
+/*            this->AddConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
+                static_cast<int>(outputPort), static_cast<int>(inputPort));*/
           }));
 
   m_pWebView->registerCallback<double, double, double, double>("DeleteConnection",
       "Deletes a Node connection",
       std::function(
           [this](double outputNode, double inputNode, double outputPort, double inputPort) {
-            this->DeleteConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
-                static_cast<int>(outputPort), static_cast<int>(inputPort));
+/*            this->DeleteConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
+                static_cast<int>(outputPort), static_cast<int>(inputPort));*/
           }));
 }
 } // namespace VNE
