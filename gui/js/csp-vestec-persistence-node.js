@@ -43,12 +43,10 @@ class PersistenceNode {
       });
 
       const canvas = persistenceRenderer.renderer.getCanvas();
-      canvas.classList.add('hidden');
+      canvas.parentElement.classList.add('hidden');
 
       control.putData('renderer', persistenceRenderer);
       control.putData('canvas', canvas);
-
-      CosmoScout.vestecNE.updateEditor();
     });
 
     node.addControl(renderer);
@@ -92,7 +90,7 @@ class PersistenceNode {
     const resetSelection = new D3NE.Control(
       '<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>',
       (element, control) => {
-        element.classList.add('hidden');
+        element.parentElement.classList.add('hidden');
 
         element.addEventListener('click', () => {
           node.data.renderer.setActiveSelectionBounds(undefined);
@@ -132,7 +130,8 @@ class PersistenceNode {
 
     if (inputs[0].length === 0) {
       console.debug(`[Persistence Node #${node.id}] Input Empty`);
-      node.data.canvas.classList.add('hidden');
+      node.data.canvas.parentElement.classList.add('hidden');
+      node.data.resetBtn.parentElement.classList.add('hidden');
       return;
     }
 
@@ -143,10 +142,11 @@ class PersistenceNode {
 
     if (node.data.button.dataset.minimized !== 'true') {
       node.data.canvas.classList.remove('hidden');
+      node.data.canvas.parentElement.classList.remove('hidden');
     }
 
     node.data.button.classList.remove('hidden');
-    node.data.resetBtn.classList.remove('hidden');
+    node.data.resetBtn.parentElement.classList.remove('hidden');
 
     const fileName = `${inputs[0][0].caseName}_${inputs[0][0].timeStep}`;
 
