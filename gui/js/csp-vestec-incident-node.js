@@ -12,6 +12,7 @@
  *   incidentDatasetSelect: HTMLSelectElement,
  *   incidentSelectContainer: HTMLDivElement,
  *   incidentDatasetSelectContainer: HTMLDivElement,
+ *   incidentDatasetSelectValue: string,
  *
  *   info: HTMLDivElement,
  *
@@ -45,6 +46,7 @@ class IncidentNode {
    */
   static typeMappings = {
     '2D_FIRE': IncidentNode.outputTypes[0],
+    DISEASES_TEXTURE: IncidentNode.outputTypes[0],
     CINEMA_DB: IncidentNode.outputTypes[1],
     POINT_ARRAY: IncidentNode.outputTypes[2],
   }
@@ -77,14 +79,18 @@ class IncidentNode {
 
         element.parentElement.parentElement.classList.add('hidden');
 
-        element.addEventListener('change', (event) => {
+        element.addEventListener('change', async (event) => {
           IncidentNode.unsetNodeValues(node);
           IncidentNode.showOutputType(node, 'none', true);
 
-          node.data.incidentDatasetLoaded = IncidentNode.loadIncidentDatasets(
+          node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
             node.data.incidentDatasetSelect,
             event.target.value,
+            node,
           );
+
+          // Displays output type
+          CosmoScout.vestecNE.updateEditor();
         });
       },
     );
@@ -100,7 +106,8 @@ class IncidentNode {
 
         element.parentElement.parentElement.classList.add('hidden');
 
-        element.addEventListener('change', () => {
+        element.addEventListener('change', (event) => {
+          node.data.incidentDatasetSelectValue = event.target.value;
           // Calls the worker and updates the outputs
           CosmoScout.vestecNE.updateEditor();
         });
@@ -157,6 +164,7 @@ class IncidentNode {
       node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
         node.data.incidentDatasetSelect,
         node.data.incidentSelect.value,
+        node,
       );
     }
 
@@ -165,7 +173,8 @@ class IncidentNode {
     }
 
     const incidentId = node.data.incidentSelect.value;
-    const datasetId = node.data.incidentDatasetSelect.value;
+    // const datasetId = node.data.incidentDatasetSelect.value;
+    const datasetId = node.data.incidentDatasetSelectValue;
 
     if (incidentId.length === 0 || datasetId.length === 0) {
       return;
@@ -175,12 +184,12 @@ class IncidentNode {
 
     try {
       const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
-      window.callNative('downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+      window.callNative('incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
 
       output = [`${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`];
 
       if (metadata.type === 'CINEMA_DB') {
-        window.callNative('extractDataSet', metadata.uuid);
+        window.callNative('incidentNode.extractDataSet', metadata.uuid);
 
         const [caseName, timeStep] = metadata.comment.split('_');
 
@@ -196,6 +205,10 @@ class IncidentNode {
     }
 
     const outputIndex = IncidentNode.outputTypes.indexOf(node.data.activeOutputType);
+
+    outputs.filter((_, index) => index !== outputIndex).forEach((value, index) => {
+      delete outputs[index];
+    });
 
     outputs[outputIndex] = output;
   }
@@ -316,7 +329,7 @@ class IncidentNode {
       throw Error('Required ids missing');
     }
 
-    if (node.data.loadedDataHash === datasetId + incidentId) {
+    if (node.data.loadedDataHash !== null && node.data.loadedDataHash === datasetId + incidentId) {
       return node.data.currentMetadata;
     }
 
@@ -375,7 +388,7 @@ class IncidentNode {
    * @param {string} id - Unique incident UUID
    * @returns true on success
    */
-  static async loadIncidentDatasets(element, id) {
+  static async loadIncidentDatasets(element, id, node) {
     if (!CosmoScout.vestec.isAuthorized()) {
       console.warn('User not authorized, aborting.');
       return false;
@@ -399,6 +412,9 @@ class IncidentNode {
     });
 
     $(element).selectpicker();
+
+
+    node.data.incidentDatasetSelectValue = element.value;
 
     return true;
   }
@@ -456,6 +472,7 @@ class IncidentNode {
     node.data.activeOutputType = null;
     node.data.loadedDataHash = null;
     node.data.currentMetadata = null;
+    node.data.incidentDatasetSelectValue = '';
   }
 }
 
