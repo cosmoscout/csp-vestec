@@ -187,6 +187,11 @@ void Plugin::init() {
   Plugin::vestecServer      = mPluginSettings.mVestecServer;
   Plugin::vestecDownloadDir = mPluginSettings.mVestecDownloadDir;
 
+  if (!boost::filesystem::exists(mPluginSettings.mVestecDownloadDir)) {
+    cs::utils::filesystem::createDirectoryRecursively(mPluginSettings.mVestecDownloadDir);
+    cs::utils::filesystem::createDirectoryRecursively(mPluginSettings.mVestecDownloadDir + "/extracted");
+  }
+
   // Initialize vestec flow editor
   m_pNodeEditor = new VNE::NodeEditor(mGuiManager->getGui());
 
@@ -282,6 +287,7 @@ void Plugin::update() {
       mMarkStart->update();
     }
   }
+
   if (mMarkEnd != nullptr) {
     if (mMarkEnd->pShouldDelete.get()) {
       mMarkEnd.reset();
