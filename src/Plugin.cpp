@@ -45,6 +45,7 @@ EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
 // Init data dir
 std::string csp::vestec::Plugin::dataDir;
 std::string csp::vestec::Plugin::vestecServer;
+std::string csp::vestec::Plugin::vestecDownloadDir;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +58,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
   cs::core::Settings::deserialize(j, "vestec-fire-dir", o.mFireDir);
   cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
   cs::core::Settings::deserialize(j, "vestec-server", o.mVestecServer);
+  cs::core::Settings::deserialize(j, "vestec-download-dir", o.mVestecDownloadDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,8 +183,9 @@ void Plugin::init() {
   mSolarSystem->registerAnchor(mVestecTransform);
 
   // Set the data dir which is used by other classes
-  Plugin::dataDir = mPluginSettings.mVestecDataDir;
-  Plugin::vestecServer = mPluginSettings.mVestecServer;
+  Plugin::dataDir           = mPluginSettings.mVestecDataDir;
+  Plugin::vestecServer      = mPluginSettings.mVestecServer;
+  Plugin::vestecDownloadDir = mPluginSettings.mVestecDownloadDir;
 
   // Initialize vestec flow editor
   m_pNodeEditor = new VNE::NodeEditor(mGuiManager->getGui());
@@ -250,6 +253,8 @@ void Plugin::init() {
 
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.vestec.setServer", mPluginSettings.mVestecServer);
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.vestec.setDownloadDir", mPluginSettings.mVestecDownloadDir);
 
   logger().info("[CSP::VESTEC::Initialize] Done");
 }
