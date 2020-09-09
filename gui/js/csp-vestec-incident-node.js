@@ -177,7 +177,7 @@ class IncidentNode {
       const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
       window.callNative('downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
 
-      output = [`../share/vestec/download/${node.data.currentMetadata.uuid}`];
+      output = [`${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`];
 
       if (metadata.type === 'CINEMA_DB') {
         window.callNative('extractDataSet', metadata.uuid);
@@ -197,7 +197,6 @@ class IncidentNode {
 
     const outputIndex = IncidentNode.outputTypes.indexOf(node.data.activeOutputType);
 
-    // outputs[outputIndex] = node.data.currentMetadata;
     outputs[outputIndex] = output;
   }
 

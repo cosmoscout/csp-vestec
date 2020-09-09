@@ -15,9 +15,18 @@
 
     /**
      * Id of the checkStatus interval
+     *
      * @see {_enableAuthIntervalChecks}
+     * @private
      */
     _authCheckIntervalId
+
+    /**
+     * Base path of downloaded vestec datasets
+     *
+     * @private
+     */
+    _downloadDir = null;
 
     /**
      * @inheritDoc
@@ -81,6 +90,27 @@
 
       console.debug(`Set vestec server to ${url}`);
       document.getElementById('csp-vestec-server').innerText = this._vestecApi.server;
+    }
+
+    /**
+     * Sets the base path of downlaoded vestec data
+     *
+     * @param {string} path
+     */
+    setDownloadDir(path) {
+      this._downloadDir = path;
+    }
+
+    /**
+     * @throws {Error} If downloadDir is null
+     * @return {string}
+     */
+    get downloadDir() {
+      if (this._downloadDir === null) {
+        throw new Error("Vestec download dir is not set. Call 'CosmoScout.vestec.setDownloadDir(PATH)' first.");
+      }
+
+      return this._downloadDir;
     }
 
     /**

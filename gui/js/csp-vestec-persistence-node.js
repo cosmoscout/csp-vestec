@@ -160,7 +160,7 @@ class PersistenceNode {
     let path = `/${modPath}/export/${fileName}`;
 
     if (typeof inputs[0][0].uuid !== 'undefined') {
-      path = `/${modPath}/../../extracted/${inputs[0][0].uuid}/${fileName}`;
+      path = `/${CosmoScout.vestec.downloadDir}/extracted/${inputs[0][0].uuid}/${fileName}`;
     }
 
     renderer.load(path).then(() => {
