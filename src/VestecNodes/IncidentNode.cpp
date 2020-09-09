@@ -36,16 +36,15 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->registerCallback("downloadDataSet", "Downloads a given Dataset",
       std::function([](std::string uuid, std::string token) {
-        // TODO make configurable
-        std::string   dl("../share/vestec/download/" + uuid);
+        std::string downloadPath(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
 
-        if (cs::utils::filesystem::fileExists(dl)) {
+        if (boost::filesystem::exists(downloadPath)) {
           return;
         }
 
         std::ofstream out;
 
-        out.open(dl, std::ofstream::out | std::ofstream::binary);
+        out.open(downloadPath, std::ofstream::out | std::ofstream::binary);
 
         if (!out) {
           csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
@@ -57,7 +56,7 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
 
         auto url = csp::vestec::Plugin::vestecServer + "/flask/data/" + uuid;
 
-        csp::vestec::logger().debug("Downloading '{}' to '{}'", url, dl);
+        csp::vestec::logger().debug("Downloading '{}' to '{}'.", url, downloadPath);
 
         curlpp::Easy request;
         request.setOpt(curlpp::options::HttpHeader(header));
@@ -71,19 +70,19 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
         out.close();
       }));
 
-  pEditor->GetGuiItem()->registerCallback("extractDataSet", "Extracts a given Dataset",
-      std::function([](std::string uuid) {
-        // TODO make configurable
-        std::string zip("../share/vestec/download/" + uuid);
-        std::string extract("../share/vestec/extracted/" + uuid);
+  pEditor->GetGuiItem()->registerCallback(
+      "extractDataSet", "Extracts a given Dataset", std::function([](std::string uuid) {
+        std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
+        std::string extract(csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid);
 
-        if (!cs::utils::filesystem::fileExists(zip)) {
-          csp::vestec::logger().debug("File {} does not exist on {}.", uuid, "../share/vestec/download/");
+        if (!boost::filesystem::exists(zip)) {
+          csp::vestec::logger().debug(
+              "File '{}' does not exist on '{}'.", uuid, csp::vestec::Plugin::vestecDownloadDir);
           return;
         }
 
         if (boost::filesystem::exists(extract)) {
-          csp::vestec::logger().debug("File {} already extracted in {}.", uuid, extract);
+          csp::vestec::logger().debug("File '{}' already extracted in '{}'.", uuid, extract);
           return;
         }
 
@@ -92,7 +91,14 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
         // TODO what happens if file isn't a zip
         zipper::Unzipper unzipper(zip);
 
-        csp::vestec::logger().debug("Extracting {} files to {}.", unzipper.entries().size(), extract);
+        if (unzipper.entries().empty()) {
+          csp::vestec::logger().debug("Zip file '{}' seems to be empty.", uuid);
+          unzipper.close();
+          return;
+        }
+
+        csp::vestec::logger().debug(
+            "Extracting {} files to '{}'.", unzipper.entries().size(), extract);
 
         unzipper.extract(extract);
         unzipper.close();
