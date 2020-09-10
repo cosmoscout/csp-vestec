@@ -22,10 +22,12 @@
  * Prefix unused arguments with '_', e.g. if you don't use the inputs argument in the worker method rename it to '_inputs'
  * Write control html ids as 'class_name_type_node_id', e.g. for an input element: 'template_node_text_input_ID'
  * Each node should have a corresponding C++ file located at 'src/VestecNodes'
+ *
  * Write variable names in camelCase
  * Use constants where possible
  * Prefer let over var
  * Use single quotes where possible
+ * Prefix unused arguments with '_'
  */
 class TemplateNode {
   /**
@@ -109,6 +111,11 @@ class TemplateNode {
   }
 }
 
+/**
+ * This iife (immediately invoked function expression) creates a lexical scope
+ * It protects against polluting the global environment which means that the created
+ * const 'templateNode' is not accessible outside the scope and wont pollute the 'window' object
+ */
 (() => {
   const templateNode = new TemplateNode();
 
