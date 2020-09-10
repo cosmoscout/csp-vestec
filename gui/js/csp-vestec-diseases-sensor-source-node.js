@@ -1,14 +1,27 @@
 /* global D3NE, $, CosmoScout */
 
 /**
+ * Diseases Sensor Input Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   sensorFile: string,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
+/**
  * Node for reading and selecting the wildfire simulation data
  */
-class DiseasesSensorInput {
+class DiseasesSensorInputNode {
   /**
    * Node Editor Component builder
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @returns {*}
+   * @param {Node} node
+   * @returns {Node} D3NE Node
    * @private
    */
   builder(node) {
@@ -44,13 +57,12 @@ class DiseasesSensorInput {
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @param inputs {any[][]}
-   * @param outputs {any[][]}
-   * @private
+   * @param {Node} node
+   * @param {Array} _inputs - unused
+   * @param {Array} outputs - Texture
    */
-  worker(node, inputs, outputs) {
-    /** @type {DiseasesSensorInput} */
+  worker(node, _inputs, outputs) {
+    /** @type {DiseasesSensorInputNode} */
     if (typeof node.data.sensorFile !== 'undefined') {
       const files = [];
       files.push(node.data.sensorFile);
@@ -88,7 +100,7 @@ class DiseasesSensorInput {
   /**
    * Fill the combobox with the different sensor source files
    *
-   * @param id {number|string} #sensor_file_ID
+   * @param {number|string} id - #sensor_file_ID
    * @param simOutputs
    */
   static fillWithSensorFiles(id, simOutputs) {
@@ -110,6 +122,6 @@ class DiseasesSensorInput {
 }
 
 (() => {
-  const diseasesInput = new DiseasesSensorInput();
+  const diseasesInput = new DiseasesSensorInputNode();
   CosmoScout.vestecNE.addNode('DiseasesSensorInput', diseasesInput.getComponent());
 })();

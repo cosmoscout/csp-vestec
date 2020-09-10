@@ -1,14 +1,27 @@
 /* global D3NE, nodeEditor, CosmoScout, $ */
 
 /**
+ * Wildfire Source Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   simulationFile: string|null,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
+/**
  * Node for reading and selecting the wildfire simulation data
  */
 class WildFireSourceNode {
   /**
    * Node Editor Component builder
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @returns {*}
+   * @param {Node} node
+   * @returns {Node} D3NE Node
    */
   builder(node) {
     // Combobox for simulation mode selection
@@ -61,11 +74,11 @@ class WildFireSourceNode {
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @param inputs {any[][]}
-   * @param outputs {any[][]}
+   * @param {Node} node
+   * @param {Array} _inputs - unused
+   * @param {Array} outputs - Texture
    */
-  worker(node, inputs, outputs) {
+  worker(node, _inputs, outputs) {
     if (typeof node.data.simulationFile !== 'undefined') {
       const files = [];
       files.push(node.data.simulationFile);
@@ -75,6 +88,7 @@ class WildFireSourceNode {
 
   /**
    * Node Editor Component
+   *
    * @returns {D3NE.Component}
    * @throws {Error}
    */
@@ -89,6 +103,7 @@ class WildFireSourceNode {
 
   /**
    * Check if D3NE is available
+   *
    * @throws {Error}
    * @private
    */

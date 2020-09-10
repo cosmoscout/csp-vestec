@@ -1,5 +1,20 @@
 /* global CosmoScout, $, noUiSlider, D3NE */
 
+/**
+ * CinemaDB Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   caseName: string,
+ *   converted: string|null,
+ *   timeStep: string|number,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
 class CinemaDBNode {
   /**
    * Builder function
@@ -8,8 +23,8 @@ class CinemaDBNode {
    * Puts input content under node.data.caseName and node.data.timeStep
    * Adds output with data {caseName: string, timeStep: string}
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number}}
-   * @returns {*}
+   * @param {Node} node
+   * @returns {Node}
    */
   builder(node) {
     const output = new D3NE.Output('CINEMA_DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
@@ -50,9 +65,9 @@ class CinemaDBNode {
    * Worker function
    * Calls window.convertFile for current case name + time step combination -> CS writes JS vtk file
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number}}
-   * @param _inputs
-   * @param outputs
+   * @param {Node} node
+   * @param {Array} _inputs - Unused
+   * @param {Array} outputs - CinemaDB
    */
   worker(node, _inputs, outputs) {
     if (node.data.caseName === undefined || node.data.timeStep === undefined) {
@@ -92,8 +107,8 @@ class CinemaDBNode {
   /**
    * Creates a noUiSlider for given time step args
    *
-   * @param id {string|number} Node id
-   * @param args {string} JSON args
+   * @param {string|number} id - Node id
+   * @param {string} args - JSON args
    */
   static createSlider(id, args) {
     const json = JSON.parse(args);
@@ -152,8 +167,8 @@ class CinemaDBNode {
   /**
    * Adds content to the case name dropdown
    *
-   * @param id {string|number} Node id
-   * @param caseNames {string} JSON Array of case names
+   * @param {string|number} id - Node id
+   * @param {string} caseNames - JSON Array of case names
    */
   static fillCaseNames(id, caseNames) {
     const json = JSON.parse(caseNames);

@@ -4,10 +4,10 @@
  * Incident Node definition
  *
  * @typedef {Object} Node
- * @property {(Number|String)} id
+ * @property {(number|string)} id
  * @property {{
- *   incidentsLoaded: Boolean,
- *   incidentDatasetLoaded: Boolean,
+ *   incidentsLoaded: boolean,
+ *   incidentDatasetLoaded: boolean,
  *   incidentSelect: HTMLSelectElement,
  *   incidentDatasetSelect: HTMLSelectElement,
  *   incidentSelectContainer: HTMLDivElement,
@@ -16,9 +16,9 @@
  *
  *   info: HTMLDivElement,
  *
- *   loadedDataHash: String|null,
+ *   loadedDataHash: string|null,
  *   currentMetadata: Object,
- *   activeOutputType: String|null,
+ *   activeOutputType: string|null,
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -138,7 +138,7 @@ class IncidentNode {
   /**
    * @param {Node} node
    * @param {Array} _inputs - Unused
-   * @param {Array} outputs
+   * @param {Array} outputs - Texture / CinemaDB / PointArray
    */
   async worker(node, _inputs, outputs) {
     // First worker round = node was just created
@@ -386,6 +386,7 @@ class IncidentNode {
    *
    * @param {HTMLSelectElement} element
    * @param {string} id - Unique incident UUID
+   * @param {Node} node
    * @returns true on success
    */
   static async loadIncidentDatasets(element, id, node) {

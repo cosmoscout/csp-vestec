@@ -1,6 +1,23 @@
 /* global D3NE, CosmoScout, PersistenceRenderer */
 
 /**
+ * Persistence Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   renderer: PersistenceRenderer,
+ *   canvas: HTMLCanvasElement,
+ *   button: HTMLButtonElement,
+ *   resetBtn: HTMLButtonElement,
+ *   activeFile: string|null,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
+/**
  * Node drawing a persistence diagram for a given vtk file
  * VTK File containing an array of points
  */
@@ -13,8 +30,8 @@ class PersistenceNode {
    * Adds CINEMA_DB Input
    * Adds FILTER Output
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @returns {*}
+   * @param {Node} node
+   * @returns {Node} D3NE Node
    */
   builder(node) {
     const renderer = new D3NE.Control(`<div id="render_control_${node.id}"></div>`, (element, control) => {
@@ -119,10 +136,9 @@ class PersistenceNode {
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
    *
-   * @param node {{id: number, data: {canvas: HTMLCanvasElement, context:
-   * CanvasRenderingContext2D}}}
-   * @param inputs {any[][]}
-   * @param outputs {any[][]}
+   * @param {Node} node
+   * @param {Array} inputs - CinemaDB
+   * @param {Array} outputs - PointArray
    */
   worker(node, inputs, outputs) {
     /** @type {PersistenceRenderer} */
@@ -171,6 +187,7 @@ class PersistenceNode {
 
   /**
    * Node Editor Component
+   *
    * @returns {D3NE.Component}
    * @throws {Error}
    */
@@ -185,6 +202,7 @@ class PersistenceNode {
 
   /**
    * Check if D3NE is available
+   *
    * @throws {Error}
    * @private
    */
@@ -196,7 +214,8 @@ class PersistenceNode {
 
   /**
    * Set path to load data
-   * @param {string} myPath Path to the exported persistence diagram in vtk js format
+   *
+   * @param {string} myPath - Path to the exported persistence diagram in vtk js format
    */
   static setPath(myPath) {
     this.pathDIR = myPath.toString();

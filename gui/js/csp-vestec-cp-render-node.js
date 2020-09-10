@@ -1,6 +1,19 @@
 /* global D3NE, $, noUiSlider, CosmoScout */
 
 /**
+ * CriticalPoints Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   activeFile: string|null,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
+/**
  * HTML code for the node editor and the Critical Point render node.
  * It gets points stored in a JSON object as input
  */
@@ -10,8 +23,8 @@ class CriticalPointsNode {
   /**
    * Component builder
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number}}
-   * @return {*}
+   * @param {Node} node
+   * @returns {Node} D3NE Node
    */
   builder(node) {
     const renderModeHtml = `<div class="row">
@@ -99,9 +112,9 @@ class CriticalPointsNode {
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
    *
-   * @param node {{data: {canvas: HTMLCanvasElement, context: CanvasRenderingContext2D}, addControl: Function, addOutput: Function, addInput: Function, id: number}}
-   * @param inputs {any[][]}
-   * @param _outputs {any[][]}
+   * @param {Node} node
+   * @param {Array} inputs - Point Array
+   * @param {Array} _outputs - unused
    * @private
    */
   worker(node, inputs, _outputs) {

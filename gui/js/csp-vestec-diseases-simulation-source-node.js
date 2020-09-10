@@ -1,9 +1,22 @@
 /* global D3NE, CosmoScout, noUiSlider, $ */
 
 /**
+ * Template Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   fileList: Array,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
+/**
  * Node for reading and selecting the wildfire simulation data
  */
-class DiseasesSimulation {
+class DiseasesSimulationNode {
   constructor() {
     this.animate = false;
   }
@@ -18,7 +31,7 @@ class DiseasesSimulation {
 
     if (self.animate === true) {
       setTimeout(() => {
-        DiseasesSimulation.startAnimation(self, slider);
+        DiseasesSimulationNode.startAnimation(self, slider);
       }, 60);
     }
   }
@@ -28,9 +41,10 @@ class DiseasesSimulation {
    * Creates the simulation mode dropdown
    * Creates the info text for number of ensemble members
    * Create a slider to browse the days a year
-   * Puts input content under node.data.fileNames
+   * Puts input content under node.data.fileList
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
+   * @param {Node} node
+   * @returns {Node} D3NE Node
    */
   builder(node) {
     // Define HTML elements
@@ -109,7 +123,7 @@ class DiseasesSimulation {
           $(element).find(`#play_mode_${node.id}`).text('Pause');
           this.animate = true;
           const slider = element.querySelector(`#slider_day${node.id}`);
-          DiseasesSimulation.startAnimation(this, slider);
+          DiseasesSimulationNode.startAnimation(this, slider);
         } else {
           $(element).find(`#play_mode_${node.id}`).text('Play');
           this.animate = false;
@@ -126,6 +140,7 @@ class DiseasesSimulation {
     // Define the output type
     const output = new D3NE.Output('TEXTURE(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
+
     return node;
   }
 
@@ -133,13 +148,11 @@ class DiseasesSimulation {
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
    *
-   * @param node {{id: number, data: empty}}
-   * @param inputs {any[][]}
-   * @param outputs {any[][]}
-   * @private
+   * @param {Node} node
+   * @param {Array} _inputs - unused
+   * @param {Array} outputs - Texture
    */
-  worker(node, inputs, outputs) {
-    /** @type {DiseasesSimulation} */
+  worker(node, _inputs, outputs) {
     outputs[0] = node.data.fileList;
   }
 
@@ -212,6 +225,6 @@ class DiseasesSimulation {
 }
 
 (() => {
-  const diseasesSim = new DiseasesSimulation();
+  const diseasesSim = new DiseasesSimulationNode();
   CosmoScout.vestecNE.addNode('DiseasesSimulation', diseasesSim.getComponent());
 })();

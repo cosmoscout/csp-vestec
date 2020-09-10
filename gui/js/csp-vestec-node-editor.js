@@ -9,22 +9,29 @@
 
     /**
      * Container element holding the node editor
+     *
+     * @type {HTMLElement}
      */
     container;
 
     /**
      * The node editor instance
+     *
+     * @type {D3NE.NodeEditor}
      */
     editor;
 
     /**
      * The node editor engine
+     *
+     * @type {D3NE.Engine}
      */
     engine;
 
     /**
      * Object of available sockets
      * Add new sockets by calling 'addSocket'
+     *
      * @see {addSocket}
      * @type {{}}
      */
@@ -33,6 +40,7 @@
     /**
      * Object of available nodes
      * Add new nodes by calling 'addNode'
+     *
      * @see {addNode}
      * @type {{}}
      */
@@ -40,6 +48,7 @@
 
     /**
      * Array of available components
+     *
      * @see {addComponent}
      * @type {*[]}
      */
@@ -47,6 +56,7 @@
 
     /**
      * Editor context menu
+     *
      * Buildable through:
      * @see {addContextMenuCategory}
      * @see {addContextMenuContent}
@@ -108,8 +118,9 @@
 
     /**
      * Adds a new node to the node editor
-     * @param name Node name
-     * @param component D3NE.Component
+     *
+     * @param {string} name - Node name
+     * @param {D3NE.Component} component - D3NE.Component
      */
     addNode(name, component) {
       this.nodes[name] = component;
@@ -117,9 +128,10 @@
 
     /**
      * Adds a new socket type to the node editor
-     * @param name Name of the socket
-     * @param hint Hint, defaults to ''
-     * @param type Socket type, defaults to 'data'
+     *
+     * @param {string} name - Name of the socket
+     * @param {string} hint - Hint, defaults to ''
+     * @param {string} type - Socket type, defaults to 'data'
      */
     addSocket(name, hint, type) {
       this.sockets[name] = new D3NE.Socket(type ?? 'data', name, hint ?? '');
@@ -127,7 +139,8 @@
 
     /**
      * Adds a new component to the components array
-     * @param component
+     *
+     * @param {string} component - Node name
      */
     addComponent(component) {
       if (this._nodeExists(component)) {
@@ -137,7 +150,8 @@
 
     /**
      * Adds a category to the context menu if it does not exist
-     * @param categoryName The category name
+     *
+     * @param {string} categoryName - The category name
      */
     addContextMenuCategory(categoryName) {
       if (!Object.prototype.hasOwnProperty.call(this._contextMenuData, categoryName)) {
@@ -147,8 +161,9 @@
 
     /**
      * Adds a menu entry to a given category
-     * @param categoryName The category to place the new entry into
-     * @param node
+     *
+     * @param {string} categoryName - The category to place the new entry into
+     * @param {string} node - The node name
      */
     addContextMenuContent(categoryName, node) {
       if (!Object.prototype.hasOwnProperty.call(this._contextMenuData, categoryName)) {
@@ -164,7 +179,8 @@
 
     /**
      * Removes all connections for a given node
-     * @param node {Node}
+     *
+     * @param {Node} node
      */
     removeConnections(node) {
       if (typeof node.id === 'undefined') {
@@ -181,6 +197,7 @@
 
     /**
      * Node editor event listener
+     *
      * @private
      */
     _addEventListener() {
@@ -230,7 +247,8 @@
 
     /**
      * Checks if a node is registered on the nodes object
-     * @param node The node to check
+     *
+     * @param {string} node - The node to check
      * @returns {boolean}
      * @private
      */

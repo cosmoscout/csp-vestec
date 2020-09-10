@@ -1,6 +1,21 @@
 /* global CosmoScout, $, D3NE */
 
 /**
+ * Template Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   exampleKey: string,
+ *   secondDataKey: string|null,
+ *   dataFunction: Function
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
+/**
  * Example node
  * Use this file as a template for new nodes
  *
@@ -17,8 +32,8 @@ class TemplateNode {
    * Node creation method
    * Gets called once on creation
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @returns {*} D3NE Node
+   * @param {Node} node
+   * @returns {Node} D3NE Node
    */
   builder(node) {
     // Socket types get registered in Plugin::init()
@@ -52,9 +67,9 @@ class TemplateNode {
   /**
    * Worker method, gets called on every editor update
    *
-   * @param node {{data: {}, id: number}}
-   * @param inputs {[]} Array if inputs defined in builder
-   * @param outputs {[]} Array of outputs defined in builder
+   * @param {Node} node
+   * @param {Array} inputs - Array if inputs defined in builder
+   * @param {Array} outputs - Array of outputs defined in builder
    */
   worker(node, inputs, outputs) {
     // HTMLSelect element from builder

@@ -1,6 +1,17 @@
 /* global D3NE, CosmoScout, noUiSlider, $ */
 
 /**
+ * Texture Render Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{}} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
+
+/**
  * Node for rendering texture input. Only takes the first file
  * from the array as input
  */
@@ -12,8 +23,8 @@ class TextureRenderNode {
   /**
    * Node Editor Component builder
    *
-   * @param node {{data: {}, addControl: Function, addOutput: Function, addInput: Function, id: number|string}}
-   * @returns {*}
+   * @param {Node} node
+   * @returns {Node} D3NE Node
    */
   builder(node) {
     // Define HTML elements for the opacity slider
@@ -83,13 +94,12 @@ class TextureRenderNode {
 
   /**
    * Node Editor Worker function
-   * Loads the vtk file from input and draws the canvas
-   * @param node {{id: number, data: {canvas: HTMLCanvasElement, context:
-   * CanvasRenderingContext2D}}}
-   * @param inputs {any[][]}
-   * @param outputs {any[][]}
+   *
+   * @param {Node} node
+   * @param {Array} inputs - Texture
+   * @param {Array} _outputs - unused
    */
-  worker(node, inputs, outputs) {
+  worker(node, inputs, _outputs) {
     /** @type {TextureRenderNode} */
     // input[0] = first input port
     // input[0][0] = the first array on input port 0
@@ -104,6 +114,7 @@ class TextureRenderNode {
 
   /**
    * Node Editor Component
+   *
    * @returns {D3NE.Component}
    * @throws {Error}
    */
