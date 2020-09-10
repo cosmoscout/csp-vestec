@@ -28,15 +28,78 @@
      */
     _downloadDir = null;
 
+
+    /**
+     * HTML Elements with selectors used more than once / in callbacks
+     */
+
+    /**
+     * Sidebar status text, shows 'Logging in...' / 'Logged in as...'
+     *
+     * @type {HTMLSpanElement}
+     * @private
+     */
+    _statusTextElement;
+
+    /**
+     * Sidebar username input
+     *
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _usernameInput;
+
+    /**
+     * Sidebar password input
+     *
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _passwordInput;
+
+    /**
+     * Create incident window
+     *
+     * @type {HTMLElement}
+     * @private
+     */
+    _incidentWindow;
+
+    /**
+     * Create incident upper left lat long input
+     *
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _incidentUpperLeftInput;
+
+    /**
+     * Create incident lower right lat long input
+     *
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _incidentLowerRightInput;
+
     /**
      * @inheritDoc
      */
     init() {
-      document.getElementById('csp-vestec-login-btn')
-        .addEventListener('click', this.login.bind(this));
+      this._statusTextElement = /** @type {HTMLSpanElement} */document.getElementById('csp-vestec-status-text');
+      this._usernameInput = /** @type {HTMLInputElement} */document.getElementById('csp-vestec-username');
+      this._passwordInput = /** @type {HTMLInputElement} */document.getElementById('csp-vestec-password');
+      this._incidentWindow = document.getElementById('csp-vestec-incident-window');
+      this._incidentUpperLeftInput = /** @type {HTMLInputElement} */document.getElementById('csp-vestec-incident-upper-left');
+      this._incidentLowerRightInput = /** @type {HTMLInputElement} */document.getElementById('csp-vestec-incident-lower-right');
 
-      document.getElementById('csp-vestec-logout-btn')
-        .addEventListener('click', this.logout.bind(this));
+      document.getElementById('csp-vestec-login-btn').addEventListener('click', () => {
+        this.login(
+          this._usernameInput.value,
+          this._passwordInput.value,
+        );
+      });
+
+      document.getElementById('csp-vestec-logout-btn').addEventListener('click', this.logout.bind(this));
 
       document.getElementById('csp-vestec-incident-select-upper-left')
         .addEventListener('click', () => {
@@ -51,7 +114,7 @@
         });
 
       document.getElementById('csp-vestec-create-incident-btn').addEventListener('click', () => {
-        document.getElementById('csp-vestec-incident-window').classList.toggle('visible');
+        this._incidentWindow.classList.toggle('visible');
       });
 
       document.getElementById('csp-vestec-incident-submit')
@@ -60,14 +123,26 @@
       this._vestecApi = new Vestec();
     }
 
+    /**
+     * Callback used by the vestec plugin to set the upper left incident lat long
+     * Position is set through a movable mark
+     *
+     * @param {string} data
+     */
     setStartLatLong(data) {
       // Todo format according to vestec
-      document.getElementById('csp-vestec-incident-upper-left').value = data;
+      this._incidentUpperLeftInput.value = data;
     }
 
+    /**
+     * Callback used by the vestec plugin to set the lower right incident lat long
+     * Position is set through a movable mark
+     *
+     * @param {string} data
+     */
     setEndLatLong(data) {
       // Todo format according to vestec
-      document.getElementById('csp-vestec-incident-lower-right').value = data;
+      this._incidentLowerRightInput.value = data;
     }
 
     /**
@@ -77,7 +152,7 @@
     /**
      * Sets the vestec server url
      *
-     * @param url {string}
+     * @param {string} url - The vestec server url/ip including 'http(s)://'
      */
     setServer(url) {
       try {
@@ -93,9 +168,9 @@
     }
 
     /**
-     * Sets the base path of downlaoded vestec data
+     * Sets the base path of downloaded vestec data
      *
-     * @param {string} path
+     * @param {string} path - Path where vestec data gets downloaded to, config key 'vestec-download-dir'
      */
     setDownloadDir(path) {
       this._downloadDir = path;
@@ -103,21 +178,21 @@
 
     /**
      * @throws {Error} If downloadDir is null
-     * @return {string}
+     * @returns {string}
      */
     get downloadDir() {
       if (this._downloadDir === null) {
         throw new Error("Vestec download dir is not set. Call 'CosmoScout.vestec.setDownloadDir(PATH)' first.");
       }
 
-      return this._downloadDir;
+      return /** @type {string} */this._downloadDir;
     }
 
     /**
      * Passthrough method
      *
      * @see {Vestec.token}
-     * @return {string}
+     * @returns {string} Auth token
      */
     getToken() {
       return this._vestecApi.token;
@@ -132,34 +207,18 @@
      * which is then used for subsequent calls to uniquely identify this user within that session.
      * Calls /flask/login
      *
-     * @returns {Promise<void>}
+     * @param {string} username
+     * @param {string} password
+     * @returns {Promise<boolean>} True on success
      */
-    async login() {
-      const username = document.getElementById('csp-vestec-username');
-      const password = document.getElementById('csp-vestec-password');
+    async login(username, password) {
+      if (username.length === 0 || password.length === 0) {
+        this._setLoginInputValidity(false);
 
-      const setLoginInputValidity = (valid) => {
-        if (!valid) {
-          username.classList.remove('disabled');
-          password.classList.remove('disabled');
-          username.classList.add('is-invalid');
-          password.classList.add('is-invalid');
-          this._hide('status');
-        } else {
-          username.classList.add('disabled');
-          password.classList.add('disabled');
-          username.classList.remove('is-invalid');
-          password.classList.remove('is-invalid');
-        }
-      };
-
-      if (username.value.length === 0 || password.value.length === 0) {
-        setLoginInputValidity(false);
-
-        return;
+        return false;
       }
 
-      setLoginInputValidity(true);
+      this._setLoginInputValidity(true);
 
       this._hide('login');
       this._show('status');
@@ -168,7 +227,7 @@
       CosmoScout.notifications.print('Login', 'Logging in...', 'play_arrow');
 
       const response = await this._vestecApi
-        .login(username.value, password.value)
+        .login(username, password)
         .catch(() => {
           this._handleLogout();
           this._defaultCatch();
@@ -179,11 +238,11 @@
       if (response.status !== 200) {
         this._show('login');
 
-        setLoginInputValidity(false);
+        this._setLoginInputValidity(false);
 
         CosmoScout.notifications.print('Login failed', response.statusText, 'warning');
 
-        return;
+        return false;
       }
 
       if (typeof data.access_token === 'undefined') {
@@ -192,28 +251,35 @@
         );
         this._show('login');
 
-        return;
+        return false;
       }
 
       CosmoScout.notifications.print('Login successful', 'Successfully logged in.', 'done');
-      document.getElementById('csp-vestec-current-user').innerText = `Logged in as ${username.value}`;
+      document.getElementById('csp-vestec-current-user').innerText = `Logged in as ${username}`;
 
       this._show('logout', 'create-incident');
 
-      this._vestecApi.authorized()
+      const authorized = await this._vestecApi.authorized()
         .then((authResponse) => {
           if (authResponse.status === 200) {
             this._enableAuthIntervalChecks();
             this._showIncidentWindowContent();
             CosmoScout.vestecNE.updateEditor();
-          } else if (authResponse.status === 403) {
+            return true;
+          }
+
+          if (authResponse.status === 403) {
             CosmoScout.notifications.print('Unauthorized', 'Account not authorized.', 'warning');
           }
+
+          return false;
         })
         .catch(this._defaultCatch.bind(this));
 
       this._hide('status');
       this._statusText();
+
+      return authorized;
     }
 
     /**
@@ -295,6 +361,13 @@
       return data.data_sets;
     }
 
+    /**
+     * Retrieves metadata of a singular dataset
+     *
+     * @param {string} datasetId - UUID of the dataset
+     * @param {string} incidentId - UUID of the incident the dataset is registered on
+     * @returns {Promise<*[]|*>}
+     */
     async getIncidentDatasetMetadata(datasetId, incidentId) {
       const response = await this._vestecApi
         .getIncidentDatasetMetadata(datasetId, incidentId)
@@ -313,8 +386,9 @@
 
     /**
      * Wrapper for Vestec.isAuthorized
+     *
      * @see {Vestec.isAuthorized}
-     * @return {boolean}
+     * @returns {boolean}
      */
     isAuthorized() {
       return this._vestecApi.isAuthorized();
@@ -351,35 +425,22 @@
      * Sets the innerText of 'vestec-status-text'
      * Text gets cleared if argument is missing or null
      *
-     * @param text {string|null}
+     * @param {string|null} text - Text to show in the status element
      * @private
      */
     _statusText(text = null) {
       if (text === null) {
-        document.getElementById('csp-vestec-status-text').innerText = '';
+        this._statusTextElement.innerText = '';
       } else {
-        document.getElementById('csp-vestec-status-text').innerText = text;
+        this._statusTextElement.innerText = text;
       }
-    }
-
-    /**
-     * Adds the 'invisible' class from the provided element names
-     * Elements ids are searched as 'vestec-ELEMENT-row'
-     *
-     * @param elements {string}
-     * @private
-     */
-    _hide(...elements) {
-      elements.forEach((el) => {
-        document.getElementById(`csp-vestec-${el}-row`).classList.add('invisible');
-      });
     }
 
     /**
      * Removes the 'invisible' class from the provided element names
      * Elements ids are searched as 'vestec-ELEMENT-row'
      *
-     * @param elements {string}
+     * @param {string} elements - Element(s) to show
      * @private
      */
     _show(...elements) {
@@ -389,8 +450,22 @@
     }
 
     /**
+     * Adds the 'invisible' class from the provided element names
+     * Elements ids are searched as 'vestec-ELEMENT-row'
+     *
+     * @param {string} elements - Element(s) to hide
+     * @private
+     */
+    _hide(...elements) {
+      elements.forEach((el) => {
+        document.getElementById(`csp-vestec-${el}-row`).classList.add('invisible');
+      });
+    }
+
+    /**
      * Throws an error if user is not logged in
      *
+     * @throws {Error} If user is not logged in
      * @private
      */
     _checkLogin() {
@@ -513,7 +588,7 @@
     /**
      * Enable checking if the user is authorized each interval seconds
      *
-     * @param interval {number} Interval in seconds
+     * @param {number} interval - Interval in seconds
      * @private
      */
     _enableAuthIntervalChecks(interval = 60) {
@@ -531,6 +606,29 @@
       if (typeof this._authCheckIntervalId !== 'undefined') {
         clearInterval(this._authCheckIntervalId);
         delete this._authCheckIntervalId;
+      }
+    }
+
+    /**
+     * Sets the login inputs to invalid / valid based on argument state
+     *
+     * @see {_usernameInput}
+     * @see {_passwordInput}
+     * @param {boolean} valid
+     * @private
+     */
+    _setLoginInputValidity(valid) {
+      if (valid) {
+        this._usernameInput.classList.add('disabled');
+        this._passwordInput.classList.add('disabled');
+        this._usernameInput.classList.remove('is-invalid');
+        this._passwordInput.classList.remove('is-invalid');
+      } else {
+        this._usernameInput.classList.remove('disabled');
+        this._passwordInput.classList.remove('disabled');
+        this._usernameInput.classList.add('is-invalid');
+        this._passwordInput.classList.add('is-invalid');
+        this._hide('status');
       }
     }
   }
