@@ -34,6 +34,7 @@ class IncidentNode {
   static outputTypes = [
     'TEXTURES',
     'CINEMA_DB',
+    'CINEMA_DB_PATH',
     'POINT_ARRAY',
   ];
 
@@ -48,7 +49,9 @@ class IncidentNode {
     '2D_FIRE': IncidentNode.outputTypes[0],
     DISEASES_TEXTURE: IncidentNode.outputTypes[0],
     CINEMA_DB: IncidentNode.outputTypes[1],
-    POINT_ARRAY: IncidentNode.outputTypes[2],
+    CINEMA_DB_JSON: IncidentNode.outputTypes[1],
+    CINEMA_DB_PATH: IncidentNode.outputTypes[2],
+    POINT_ARRAY: IncidentNode.outputTypes[3],
   }
 
   /**
@@ -188,16 +191,29 @@ class IncidentNode {
 
       output = [`${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`];
 
-      if (metadata.type === 'CINEMA_DB') {
-        window.callNative('incidentNode.extractDataSet', metadata.uuid);
+      switch (metadata.type) {
+        case 'CINEMA_DB_JSON': {
+          window.callNative('incidentNode.extractDataSet', metadata.uuid);
 
-        const [caseName, timeStep] = metadata.comment.split('_');
+          const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
 
-        output = {
-          caseName,
-          timeStep,
-          uuid: datasetId,
-        };
+          output = {
+            caseName,
+            timeStep,
+            uuid: datasetId,
+          };
+          break;
+        }
+
+        case 'CINEMA_DB':
+        case 'CINEMA_DB_PATH':
+          window.callNative('incidentNode.extractDataSet', metadata.uuid);
+
+          output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${metadata.name.replace('.zip', '')}`;
+          break;
+
+        default:
+          break;
       }
     } catch (e) {
       console.error(`Error loading metadata for dataset '${datasetId}'. Incident: '${incidentId}. Message: ${e}`);
