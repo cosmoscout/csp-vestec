@@ -197,6 +197,7 @@ void Plugin::init() {
 
   // TODO:Create the Node editor
   m_pNodeEditor->RegisterSocketType("CINEMA_DB");
+  m_pNodeEditor->RegisterSocketType("CINEMA_DB_PATH");
   m_pNodeEditor->RegisterSocketType("POINT_ARRAY");
   m_pNodeEditor->RegisterSocketType("TEXTURES");
   m_pNodeEditor->RegisterSocketType("INCIDENT");

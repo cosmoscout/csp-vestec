@@ -9,6 +9,7 @@
  *   caseName: string,
  *   converted: string|null,
  *   timeStep: string|number,
+ *   currentData: string|null
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -28,11 +29,11 @@ class CinemaDBNode {
    */
   builder(node) {
     const output = new D3NE.Output('CINEMA_DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const input = new D3NE.Input('CINEMA_DB_PATH', CosmoScout.vestecNE.sockets.CINEMA_DB_PATH);
 
     const caseNames = new D3NE.Control(
       `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
       (element, control) => {
-        window.callNative('readCaseNames', node.id, '');
         const select = $(`#case_names_${node.id}`);
 
         select.selectpicker();
@@ -50,13 +51,15 @@ class CinemaDBNode {
 
     const timeSteps = new D3NE.Control(
       `<div id="time_slider_${node.id}" class="slider"></div>`, (_element, _control) => {
-        window.callNative('getTimeSteps', node.id, '');
       },
     );
+
+    node.data.currentData = null;
 
     node.addControl(caseNames);
     node.addControl(timeSteps);
     node.addOutput(output);
+    node.addInput(input);
 
     return node;
   }
@@ -66,10 +69,21 @@ class CinemaDBNode {
    * Calls window.convertFile for current case name + time step combination -> CS writes JS vtk file
    *
    * @param {Node} node
-   * @param {Array} _inputs - Unused
+   * @param {Array} inputs - Unused
    * @param {Array} outputs - CinemaDB
    */
-  worker(node, _inputs, outputs) {
+  worker(node, inputs, outputs) {
+    if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+      return;
+    }
+
+    if (node.data.currentData === null || node.data.currentData !== inputs[0][0]) {
+      window.callNative('readCaseNames', node.id, inputs[0][0]);
+      window.callNative('getTimeSteps', node.id, inputs[0][0]);
+
+      node.data.currentData = inputs[0][0];
+    }
+
     if (node.data.caseName === undefined || node.data.timeStep === undefined) {
       return;
     }
@@ -79,13 +93,14 @@ class CinemaDBNode {
     if (node.data.converted !== fileName) {
       console.debug(`[CinemaDB Node #${node.id}] Converting ${fileName}.`);
 
-      window.callNative('convertFile', node.data.caseName, node.data.timeStep);
+      window.callNative('convertFile', node.data.caseName, node.data.timeStep, inputs[0][0]);
       node.data.converted = fileName;
     }
 
     outputs[0] = {
       caseName: node.data.caseName,
       timeStep: node.data.timeStep,
+      path: inputs[0][0],
     };
   }
 
@@ -161,7 +176,7 @@ class CinemaDBNode {
     });
 
     // Just do once after initialization
-    CosmoScout.vestecNE.updateEditor();
+    // CosmoScout.vestecNE.updateEditor();
   }
 
   /**
@@ -169,24 +184,34 @@ class CinemaDBNode {
    *
    * @param {string|number} id - Node id
    * @param {string} caseNames - JSON Array of case names
+   *
+   * @returns void
    */
   static fillCaseNames(id, caseNames) {
     const json = JSON.parse(caseNames);
-    let liSimulations = '';
 
-    for (let i = 0; i < json.length; i++) {
-      liSimulations += `<option>${json[i]}</option>`;
+    if (json.length === 0) {
+      return;
     }
 
-    const select = $(`#case_names_${id}`);
+    const element = document.getElementById(`case_names_${id}`);
 
-    select.html(liSimulations);
-    select.selectpicker('refresh');
+    $(element).selectpicker('destroy');
+    CosmoScout.gui.clearHtml(element);
+
+    json.forEach((simulation) => {
+      const option = document.createElement('option');
+      option.text = simulation;
+
+      element.appendChild(option);
+    });
+
+    $(element).selectpicker();
 
     const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
 
     if (typeof node !== 'undefined') {
-      node.data.caseName = select.val();
+      node.data.caseName = $(element).val();
     } else {
       console.error(`Node with id ${id} not found.`);
     }

@@ -46,26 +46,26 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->executeJavascript(node);
 
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double, std::string>("readCaseNames",
-      "Returns available case names", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id);
+  pEditor->GetGuiItem()->registerCallback("readCaseNames",
+      "Returns available case names", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, std::string>("getTimeSteps",
-      "Returns time steps for a case", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
+  pEditor->GetGuiItem()->registerCallback("getTimeSteps",
+      "Returns time steps for a case", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<std::string, std::string>("convertFile",
+  pEditor->GetGuiItem()->registerCallback("convertFile",
       "Converts a .vtu file to .json",
-      std::function([](const std::string caseName, std::string timeStep) {
-        CinemaDBNode::ConvertFile(caseName, timeStep);
+      std::function([](const std::string caseName, std::string timeStep, std::string path) {
+        CinemaDBNode::ConvertFile(caseName, timeStep, path);
       }));
 }
 
-void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& timeStep) {
+void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& timeStep, const std::string& path) {
   auto reader = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(path);
   reader->Update();
 
   /////////////////
@@ -87,25 +87,25 @@ void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& t
   ///////////////// Dump to vtk js
   auto dumper = vtkHttpDataSetWriter::New();
   dumper->SetFileName(
-      (csp::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)).c_str());
+      (path + "/converted/" + caseName + "_" + (timeStep)).c_str());
   dumper->SetInputConnection(polyFilter->GetOutputPort());
   dumper->Write();
 
   csp::vestec::logger().debug("[" + GetName() +
-                              "::ConvertFile] JSON written to: " + csp::vestec::Plugin::dataDir +
-                              "/export/" + caseName + "_" + (timeStep));
+                              "::ConvertFile] JSON written to: " + path +
+                              "/converted/" + caseName + "_" + (timeStep));
 }
 
-void CinemaDBNode::ReadCaseNames(int id) {
+void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
   json args;
 
   csp::vestec::logger().debug(
       "[" + GetName() +
-      "::ReadCaseNames] Reading case names from cinema database: " + csp::vestec::Plugin::dataDir);
+      "::ReadCaseNames] Reading case names from cinema database: " + path);
 
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(path);
   reader->Update();
 
   auto table = vtkTable::SafeDownCast(reader->GetOutput());
@@ -122,16 +122,16 @@ void CinemaDBNode::ReadCaseNames(int id) {
   m_pItem->callJavascript("CinemaDBNode.fillCaseNames", id, args.dump());
 }
 
-void CinemaDBNode::GetTimeSteps(int id) {
+void CinemaDBNode::GetTimeSteps(int id, const std::string& path) {
   json args;
 
   csp::vestec::logger().debug(
       "[" + GetName() +
-      "::GetTimeSteps] Reading time info from cinema database: " + csp::vestec::Plugin::dataDir);
+      "::GetTimeSteps] Reading time info from cinema database: " + path);
 
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(path);
   reader->Update();
 
   auto          table = vtkTable::SafeDownCast(reader->GetOutput());
