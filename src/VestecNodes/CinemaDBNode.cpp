@@ -28,7 +28,7 @@
 using json = nlohmann::json;
 
 CinemaDBNode::CinemaDBNode(cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id, 1, 1) {
 }
 
 CinemaDBNode::~CinemaDBNode() {

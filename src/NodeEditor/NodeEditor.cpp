@@ -79,10 +79,7 @@ void NodeEditor::AddConnection(int from, int to, int fromPort, int toPort) {
     Node* node1 = it1->second;
     Node* node2 = it2->second;
 
-    // TODO Crashes with incident node
-    // TODO Crashes with incident node
-    // TODO Crashes with incident node
-    /*node1->AddOutportNode(to, node2, fromPort, toPort);*/
+    node1->AddOutportNode(to, node2, fromPort, toPort);
     node2->AddInportNode(from, node1, fromPort, toPort);
     csp::vestec::logger().info(
         "[NodeEditor::AddConnection] Add connection from node {} to node {}", from, to);
@@ -162,16 +159,16 @@ void NodeEditor::InitNodeEditor() {
       "Adds a new Node connection",
       std::function(
           [this](double outputNode, double inputNode, double outputPort, double inputPort) {
-/*            this->AddConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
-                static_cast<int>(outputPort), static_cast<int>(inputPort));*/
+            this->AddConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
+                static_cast<int>(outputPort), static_cast<int>(inputPort));
           }));
 
   m_pWebView->registerCallback<double, double, double, double>("DeleteConnection",
       "Deletes a Node connection",
       std::function(
           [this](double outputNode, double inputNode, double outputPort, double inputPort) {
-/*            this->DeleteConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
-                static_cast<int>(outputPort), static_cast<int>(inputPort));*/
+            this->DeleteConnection(static_cast<int>(outputNode), static_cast<int>(inputNode),
+                static_cast<int>(outputPort), static_cast<int>(inputPort));
           }));
 }
 } // namespace VNE

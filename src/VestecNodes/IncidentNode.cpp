@@ -17,7 +17,7 @@
 #include <zipper/unzipper.h>
 
 IncidentNode::IncidentNode(cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id, 0, 4) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

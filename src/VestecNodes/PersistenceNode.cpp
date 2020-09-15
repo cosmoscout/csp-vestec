@@ -8,7 +8,7 @@
 #include "../Plugin.hpp"
 
 PersistenceNode::PersistenceNode(cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id, 1, 1) {
 }
 
 PersistenceNode::~PersistenceNode() {
