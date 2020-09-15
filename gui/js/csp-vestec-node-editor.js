@@ -215,10 +215,13 @@
 
       this.editor.eventListener.on('connectioncreate', (connection, persistent) => {
         try {
-          window.callNative('AddConnection', parseInt(connection.output.node.id, 10),
+          window.callNative(
+            'AddConnection',
+            parseInt(connection.output.node.id, 10),
             parseInt(connection.input.node.id, 10),
             connection.output.node.outputs.findIndex((output) => output === connection.output),
-            connection.input.node.inputs.findIndex((input) => input === connection.input));
+            connection.input.node.inputs.findIndex((input) => input === connection.input),
+          );
         } catch (e) {
           console.error(`Error: AddConnection In #${connection.input.node.id} Out #${
             connection.output.node.id}`,
@@ -228,10 +231,13 @@
 
       this.editor.eventListener.on('connectionremove', (connection, persistent) => {
         try {
-          window.callNative('DeleteConnection', parseInt(connection.output.node.id, 10),
+          window.callNative(
+            'DeleteConnection',
+            parseInt(connection.output.node.id, 10),
             parseInt(connection.input.node.id, 10),
             connection.output.node.outputs.findIndex((output) => output === connection.output),
-            connection.input.node.inputs.findIndex((input) => input === connection.input));
+            connection.input.node.inputs.findIndex((input) => input === connection.input),
+          );
         } catch (e) {
           console.error(`Error: DeleteConnection In #${connection.input.node.id} Out #${
             connection.output.node.id}`,
