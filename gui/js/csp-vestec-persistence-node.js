@@ -179,6 +179,10 @@ class PersistenceNode {
       path = `/${CosmoScout.vestec.downloadDir}/extracted/${inputs[0][0].uuid}/${fileName}`;
     }
 
+    if (typeof inputs[0][0].path !== 'undefined') {
+      path = `/${inputs[0][0].path}/converted/${fileName}`;
+    }
+
     renderer.load(path).then(() => {
       node.data.activeFile = fileName;
       renderer.update();
