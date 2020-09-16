@@ -34,14 +34,14 @@ std::string IncidentNode::GetName() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void IncidentNode::Init(VNE::NodeEditor* pEditor) {
-  csp::vestec::logger().debug("[" + GetName() + "] Init");
+  csp::vestec::logger().debug("[{}] Init", GetName());
 
   const std::string node =
       cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-incident-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);
 
-  pEditor->GetGuiItem()->registerCallback("incidentNode.downloadDataSet", "Downloads a given Dataset",
-      std::function([](std::string uuid, std::string token) {
+  pEditor->GetGuiItem()->registerCallback("incidentNode.downloadDataSet",
+      "Downloads a given Dataset", std::function([](std::string uuid, std::string token) {
         std::string downloadPath(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
 
         if (boost::filesystem::exists(downloadPath)) {
@@ -76,8 +76,8 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
         out.close();
       }));
 
-  pEditor->GetGuiItem()->registerCallback(
-      "incidentNode.extractDataSet", "Extracts a given Dataset", std::function([](std::string uuid) {
+  pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
+      std::function([](std::string uuid) {
         std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
         std::string extract(csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid);
 

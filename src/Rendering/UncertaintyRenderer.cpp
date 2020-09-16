@@ -115,7 +115,7 @@ bool UncertaintyOverlayRenderer::Do() {
     return false;
   }
   // Get viewport information required to get previous depth buffer
-  auto        viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
+  auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
   auto const& data     = mGBufferData[viewport];
   {
     // get active planet
@@ -304,12 +304,12 @@ void UncertaintyOverlayRenderer::getGLError(std::string name) {
   int error = glGetError();
   if (error != 0) {
     csp::vestec::logger().error(
-        "[UncertaintyOverlayRenderer]  Error in" + name + " Error code: " + std::to_string(error));
+        "[UncertaintyOverlayRenderer]  Error in {} Error code: {}", name, std::to_string(error));
   }
 }
 
 void UncertaintyOverlayRenderer::UploadTextures() {
-  auto        viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
+  auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
   auto const& data     = mGBufferData[viewport];
 
   // Get the first texture

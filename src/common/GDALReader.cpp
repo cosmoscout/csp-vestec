@@ -60,13 +60,13 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   GDALReader::mMutex.unlock();
 
   if (poDatasetSrc == NULL) {
-    csp::vestec::logger().error("[GDALReader::ReadGrayScaleTexture] Failed to load " + filename);
+    csp::vestec::logger().error("[GDALReader::ReadGrayScaleTexture] Failed to load {}", filename);
     return;
   }
 
   if (poDatasetSrc->GetProjectionRef() == NULL) {
     csp::vestec::logger().error(
-        "[GDALReader::ReadGrayScaleTexture] No projection defined for " + filename);
+        "[GDALReader::ReadGrayScaleTexture] No projection defined for {}", filename);
     return;
   }
 

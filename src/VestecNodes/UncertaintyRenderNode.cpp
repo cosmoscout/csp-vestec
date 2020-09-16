@@ -71,8 +71,7 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
       "Sets the uncertainty visualization mode", std::function([pEditor](double id, double val) {
         UncertaintyOverlayRenderer::RenderMode renderMode;
 
-        csp::vestec::logger().debug(
-            "[" + GetName() + "] Switching cp vis to " + std::to_string(val));
+        csp::vestec::logger().debug("[{}] Switching cp vis to {}", GetName(), std::to_string(val));
 
         switch ((int)val) {
         case 1:
