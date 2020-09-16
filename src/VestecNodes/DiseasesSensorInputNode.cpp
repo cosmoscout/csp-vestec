@@ -23,7 +23,7 @@ std::string DiseasesSensorInputNode::GetName() {
 }
 
 void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
-  csp::vestec::logger().debug("[" + GetName() + "] Init");
+  csp::vestec::logger().debug("[{}] Init", GetName());
 
   // Load JavaScipt content from file
   std::string code = cs::utils::filesystem::loadToString(
@@ -42,5 +42,5 @@ void DiseasesSensorInputNode::ReadSensorFileNames(int id) {
   std::set<std::string> lFiles(
       cs::utils::filesystem::listFiles(mPluginConfig.mDiseasesDir + "/input"));
   json args(lFiles);
-  m_pItem->callJavascript("DiseasesSensorInput.fillWithSensorFiles", id, args.dump());
+  m_pItem->callJavascript("DiseasesSensorInputNode.fillWithSensorFiles", id, args.dump());
 }

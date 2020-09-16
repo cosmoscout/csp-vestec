@@ -65,17 +65,17 @@ void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, doubl
   }
 
   json args(listOfFiles);
-  m_pItem->callJavascript("DiseasesSimulation.setFileListForTimeStep", id, args.dump());
+  m_pItem->callJavascript("DiseasesSimulationNode.setFileListForTimeStep", id, args.dump());
 }
 
 void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, std::string path) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));
-  m_pItem->callJavascript("DiseasesSimulation.setNumberOfEnsembleMembers", id, lDirs.size());
+  m_pItem->callJavascript("DiseasesSimulationNode.setNumberOfEnsembleMembers", id, lDirs.size());
 }
 
 void DiseasesSimulation::SetSimulationModes(int id) {
   std::set<std::string> lDirs(
       cs::utils::filesystem::listDirs(mPluginConfig.mDiseasesDir + "/output/"));
   json args(lDirs);
-  m_pItem->callJavascript("DiseasesSimulation.fillSimModes", id, args.dump());
+  m_pItem->callJavascript("DiseasesSimulationNode.fillSimModes", id, args.dump());
 }
