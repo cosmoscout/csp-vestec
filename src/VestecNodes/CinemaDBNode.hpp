@@ -40,7 +40,8 @@ class CinemaDBNode : public VNE::Node {
    */
   void GetTimeSteps(int id, const std::string& path);
 
-  void static ConvertFile(const std::string& caseName, const std::string& timeStep, const std::string& path);
+  void static ConvertFile(
+      const std::string& caseName, const std::string& timeStep, const std::string& path);
 };
 
 #endif /* CINEMADB_SOURCE_NODE_HPP_ */
