@@ -40,6 +40,8 @@ class CinemaDBNode {
 
         control.putData('caseName', 'none');
         control.putData('converted', null);
+        control.putData('caseNameSelectParent', element.parentElement);
+        element.parentElement.classList.add('hidden');
 
         element.addEventListener('change', (event) => {
           control.putData('caseName', event.target.value);
@@ -50,7 +52,9 @@ class CinemaDBNode {
     );
 
     const timeSteps = new D3NE.Control(
-      `<div id="time_slider_${node.id}" class="slider"></div>`, (_element, _control) => {
+      `<div id="time_slider_${node.id}" class="slider"></div>`, (element, control) => {
+        control.putData('timeSliderParent', element.parentElement);
+        element.parentElement.classList.add('hidden');
       },
     );
 
@@ -74,8 +78,13 @@ class CinemaDBNode {
    */
   worker(node, inputs, outputs) {
     if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+      node.data.caseNameSelectParent.classList.add('hidden');
+      node.data.timeSliderParent.classList.add('hidden');
       return;
     }
+
+    node.data.caseNameSelectParent.classList.remove('hidden');
+    node.data.timeSliderParent.classList.remove('hidden');
 
     if (node.data.currentData === null || node.data.currentData !== inputs[0][0]) {
       window.callNative('readCaseNames', node.id, inputs[0][0]);
@@ -135,7 +144,7 @@ class CinemaDBNode {
 
     rangers.min = [min];
     for (let i = 2; i < json.length; ++i) {
-      const percent = (json[i] - min) / (max - min) * 100;
+      const percent = ((json[i] - min) / (max - min)) * 100;
 
       if (i < json.length - 1) {
         rangers[`${percent}%`] = [json[i], json[i + 1] - json[i]];
@@ -171,12 +180,9 @@ class CinemaDBNode {
       }
     });
 
-    slider.noUiSlider.on('set', (_values) => {
+    slider.noUiSlider.on('set', () => {
       CosmoScout.vestecNE.updateEditor();
     });
-
-    // Just do once after initialization
-    // CosmoScout.vestecNE.updateEditor();
   }
 
   /**
