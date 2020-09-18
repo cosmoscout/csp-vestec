@@ -58,6 +58,7 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
     uniform bool          uUseTime = false;
     uniform dvec4         uBounds;
     uniform vec2          uRange;
+    uniform vec3          uRadii;
 
     uniform vec3          uSunDirection;
 
@@ -126,6 +127,51 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
 
         return result;
     }
+
+    // ===========================================================================
+    vec3 scaleToGeodeticSurface(vec3 cartesian, vec3 radii) {
+        vec3 radii2        = radii * radii;
+        vec3 radii4        = radii2 * radii2;
+        vec3 oneOverRadii2 = 1.0 / radii2;
+        vec3 cartesian2    = cartesian * cartesian;
+
+        float beta  = 1.0 / sqrt(dot(cartesian2, oneOverRadii2));
+        float n     = length(beta * cartesian * oneOverRadii2);
+        float alpha = (1.0 - beta) * (length(cartesian) / n);
+        double s     = 0.0;
+        float dSdA  = 1.0;
+
+        vec3 d;
+
+        do {
+            alpha -= (s / dSdA);
+
+            d    = vec3(1.0) + (alpha * oneOverRadii2);
+            s    = dot(cartesian2, 1.0 / (radii2 * d * d)) - 1.0;
+            dSdA = dot(cartesian2, 1.0 / (radii4 * d * d * d)) * -2.0;
+
+        } while (abs(s) > 0.00000000001);
+
+        return cartesian / d;
+    }
+    // ===========================================================================
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    vec3 surfaceToNormal(vec3 cartesian, vec3 radii) {
+        vec3 radii2        = radii * radii;
+        vec3 oneOverRadii2 = 1.0 / radii2;
+        return normalize(cartesian * oneOverRadii2);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    vec2 surfaceToLngLat(vec3 cartesian, vec3 radii) {
+        vec3 geodeticNormal = surfaceToNormal(cartesian, radii);
+        return vec2(atan(geodeticNormal.x, geodeticNormal.z), asin(geodeticNormal.y));
+    }
+
+
     // ===========================================================================
     vec3 heat(float v) {
         float value = 1.0-v;
@@ -145,7 +191,8 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
             discard;
         }else{
             dvec3 worldPos  = GetPosition();
-            dvec2 lnglat    = GetLngLat(worldPos);
+            //dvec2 lnglat    = GetLngLat(worldPos);
+            vec2 lnglat    = surfaceToLngLat(vec3(worldPos.x, worldPos.y, worldPos.z), uRadii);
 
             FragColor = vec4(worldPos, 1.0);
 

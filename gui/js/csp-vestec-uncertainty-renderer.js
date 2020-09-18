@@ -30,10 +30,10 @@ class UncertaintyRenderNode {
         <select id="vis_mode_' +
                       node.id + '" class="combobox col-7">\
           <option value="1">Average</option>\
-          <option value="2">Variance</option>\
-          <option value="3">Difference</option>\
-          <option value="4">Average*Variance</option>\
-          <option value="5">Average*Difference</option>\
+          <option value="2">StdDeviation</option>\
+          <option value="3">AbsDifference</option>\
+          <option value="4">StdDeviation*Average</option>\
+          <option value="5">AbsDifference*Average</option>\
         </select>\
       </div>\
     </div>';

@@ -62,7 +62,8 @@
      */
     init() {
       console.log("Init VESTEC plugin in javascript done");
-      document.getElementById('vestec-system').setAttribute('src', 'http://vestec.epcc.ed.ac.uk/');
+      //document.getElementById('vestec-system').setAttribute('src', 'http://vestec.epcc.ed.ac.uk/');
+      document.getElementById('vestec-system').setAttribute('src', 'https://vestec-project.eu/override-http-headers-default-settings-x-frame-options');
     }
 
     /**

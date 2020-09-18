@@ -43,6 +43,7 @@ uniform float         uMinPersistence;
 uniform float         uMaxPersistence;
 uniform float         uHeightScale;
 uniform float         uWidthScale;
+uniform vec3          uRadii;
 
 in VS_OUT
 {
@@ -60,28 +61,18 @@ out GS_OUT
 
 const float PI = 3.14159265359;
 
-float VP_toGeocentricLat(float geodeticLat, vec2 radius)
-{
-    float f = (radius.x - radius.y) / radius.x;
-    return atan(pow(1.0 - f, 2.0) * tan(geodeticLat));
+vec3 geodeticSurfaceNormal(vec2 lngLat) {
+  return vec3(cos(lngLat.y) * sin(lngLat.x), sin(lngLat.y),
+      cos(lngLat.y) * cos(lngLat.x));
 }
 
-// Converts point @a lnglat from geodetic (lat,lng) to cartesian
-// coordinates (x,y,z) for an ellipsoid with radii @a radius.
-vec3 VP_toCartesian(vec2 lnglat, vec2 radius)
-{
-    lnglat.y = VP_toGeocentricLat(lnglat.y, radius);
-
-    vec2  c   = cos(lnglat);
-    vec2  s   = sin(lnglat);
-
-    // point on ellipsoid surface
-    return vec3(
-    c.y * s.x * radius.x,
-    s.y * radius.y,
-    c.y * c.x * radius.x
-    );
+vec3 toCartesian(vec2 lonLat) {
+  vec3 n = geodeticSurfaceNormal(lonLat);
+  vec3 k = n * uRadii * uRadii;
+  float gamma = sqrt(dot(k, n));
+  return k / gamma;
 }
+
 
 // Emits a vertex and sets gs_out values
 void outputVertex(vec4 vPos, int i, int sides, vec4[5] positions)
@@ -128,7 +119,7 @@ void main()
         vec4 offset = vec4(cos(ang) * widthScale, -sin(ang) * widthScale, 0.0, 0.0);
         vec4 inPos = gl_in[0].gl_Position + offset;
 
-        vec3 posV = VP_toCartesian(inPos.xy, vec2(6378500, 6378500));
+        vec3 posV = toCartesian(inPos.xy);
 
         vec3 scaledPos = posV * heightScale;
 

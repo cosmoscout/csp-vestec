@@ -162,7 +162,13 @@ bool CriticalPointsRenderer::Do() {
       m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), static_cast<int>(mRenderMode));
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uHeightScale"), mHeightScale);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uWidthScale"), mWidthScale);
+  
+  //provide radii to shader
+  auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"), static_cast<float>(mRadii[0]),
+      static_cast<float>(mRadii[1]), static_cast<float>(mRadii[2]));
 
+  //provide sun direction
   auto sunDirection =
       glm::normalize(glm::inverse(matWorldTransform) *
                      (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));

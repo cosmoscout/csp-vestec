@@ -36,7 +36,7 @@ class CriticalPointsNode {
       animate: false,
       range: {
         'min': 1,
-        'max': 5,
+        'max': 10,
       },
     };
 
