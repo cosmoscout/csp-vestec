@@ -18,7 +18,9 @@
 
 class CinemaDBNode {
   /**
-   * Setting this disables loading incidents from the vestec system
+   * Setting this disables loading data from the vestec system
+   * And instead uses the local path configured in the vestec config
+   * Set 'vestec-topo-dir'
    *
    * @type {string}
    * @private
@@ -81,8 +83,8 @@ class CinemaDBNode {
     node.addControl(timeSteps);
     node.addOutput(output);
 
-    if (typeof CinemaDBNode.path === 'undefined') {
-      const input = new D3NE.Input('CINEMA_DB_PATH', CosmoScout.vestecNE.sockets.CINEMA_DB_PATH);
+    if (this._useVestec()) {
+      const input = new D3NE.Input('PATH', CosmoScout.vestecNE.sockets.PATH);
       node.addInput(input);
     }
 
@@ -94,7 +96,7 @@ class CinemaDBNode {
    * Calls window.convertFile for current case name + time step combination -> CS writes JS vtk file
    *
    * @param {Node} node
-   * @param {Array} inputs - Unused
+   * @param {Array} inputs -
    * @param {Array} outputs - CinemaDB
    */
   worker(node, inputs, outputs) {
@@ -106,8 +108,8 @@ class CinemaDBNode {
       }
 
       if (node.data.currentData === null || node.data.currentData !== inputs[0][0]) {
-        window.callNative('readCaseNames', node.id, inputs[0][0]);
-        window.callNative('getTimeSteps', node.id, inputs[0][0]);
+        window.callNative('CinemaDBNode.readCaseNames', node.id, inputs[0][0]);
+        window.callNative('CinemaDBNode.getTimeSteps', node.id, inputs[0][0]);
 
         node.data.currentData = inputs[0][0];
       }
