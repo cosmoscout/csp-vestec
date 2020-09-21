@@ -34,7 +34,7 @@ class IncidentNode {
   static outputTypes = [
     'TEXTURES',
     'CINEMA_DB',
-    'CINEMA_DB_PATH',
+    'PATH',
     'POINT_ARRAY',
   ];
 
@@ -51,6 +51,7 @@ class IncidentNode {
     CINEMA_DB: IncidentNode.outputTypes[1],
     CINEMA_DB_JSON: IncidentNode.outputTypes[1],
     CINEMA_DB_PATH: IncidentNode.outputTypes[2],
+    PATH: IncidentNode.outputTypes[2],
     POINT_ARRAY: IncidentNode.outputTypes[3],
   }
 
@@ -189,12 +190,14 @@ class IncidentNode {
       const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
       window.callNative('incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
 
-      output = [`${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`];
+      output = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
+
+      if (metadata.name.includes('.zip')) {
+        window.callNative('incidentNode.extractDataSet', metadata.uuid);
+      }
 
       switch (metadata.type) {
         case 'CINEMA_DB_JSON': {
-          window.callNative('incidentNode.extractDataSet', metadata.uuid);
-
           const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
 
           output = {
@@ -205,10 +208,8 @@ class IncidentNode {
           break;
         }
 
+        case 'PATH':
         case 'CINEMA_DB':
-        case 'CINEMA_DB_PATH':
-          window.callNative('incidentNode.extractDataSet', metadata.uuid);
-
           output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${metadata.name.replace('.zip', '')}`;
           break;
 
