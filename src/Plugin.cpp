@@ -188,7 +188,6 @@ void Plugin::init() {
   Plugin::vestecDownloadDir = mPluginSettings.mVestecDownloadDir;
 
   if (!boost::filesystem::exists(mPluginSettings.mVestecDownloadDir)) {
-    cs::utils::filesystem::createDirectoryRecursively(mPluginSettings.mVestecDownloadDir);
     cs::utils::filesystem::createDirectoryRecursively(mPluginSettings.mVestecDownloadDir + "/extracted");
   }
 

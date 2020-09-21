@@ -277,6 +277,12 @@ bool UncertaintyOverlayRenderer::Do() {
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
         sunDirection[0], sunDirection[1], sunDirection[2]);
 
+    //provide radii to shader
+    auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"), static_cast<float>(mRadii[0]),
+      static_cast<float>(mRadii[1]), static_cast<float>(mRadii[2]));
+
+
     // Provide SSBO with min, max average values on location 3
     m_pBufferSSBO->BindBufferBase(GL_SHADER_STORAGE_BUFFER, 3);
 

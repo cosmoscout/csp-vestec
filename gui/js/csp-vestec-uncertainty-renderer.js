@@ -27,6 +27,7 @@ class UncertaintyRenderNode {
    */
   builder(node) {
     // Define HTML elements for the opacity slider
+
     const htmlOpacity = `
     <div>
       <div class="row">
@@ -39,13 +40,14 @@ class UncertaintyRenderNode {
         <div class="col-5 text">Mode:</div>
         <select id="vis_mode_${node.id}" class="combobox col-7">
           <option value="1">Average</option>
-          <option value="2">Variance</option>
-          <option value="3">Difference</option>
-          <option value="4">Average*Variance</option>
-          <option value="5">Average*Difference</option>
+          <option value="2">StdDeviation</option>
+          <option value="3">AbsDifference</option>
+          <option value="4">StdDeviation*Average</option>
+          <option value="5">AbsDifference*Average</option>
         </select>
       </div>
     </div>`;
+
 
     // Slider to control the opcity of the overlay
     const opacityControl = new D3NE.Control(htmlOpacity, (element, control) => {

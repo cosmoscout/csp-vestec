@@ -18,6 +18,14 @@
 
 class CinemaDBNode {
   /**
+   * Setting this disables loading incidents from the vestec system
+   *
+   * @type {string}
+   * @private
+   */
+  static path;
+
+  /**
    * Builder function
    * Creates the case name dropdown
    * Creates the timestep slider
@@ -29,7 +37,6 @@ class CinemaDBNode {
    */
   builder(node) {
     const output = new D3NE.Output('CINEMA_DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
-    const input = new D3NE.Input('CINEMA_DB_PATH', CosmoScout.vestecNE.sockets.CINEMA_DB_PATH);
 
     const caseNames = new D3NE.Control(
       `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
@@ -41,7 +48,12 @@ class CinemaDBNode {
         control.putData('caseName', 'none');
         control.putData('converted', null);
         control.putData('caseNameSelectParent', element.parentElement);
-        element.parentElement.classList.add('hidden');
+
+        if (this._useVestec()) {
+          element.parentElement.classList.add('hidden');
+        } else {
+          window.callNative('CinemaDBNode.readCaseNames', node.id, CinemaDBNode.path);
+        }
 
         element.addEventListener('change', (event) => {
           control.putData('caseName', event.target.value);
@@ -54,7 +66,12 @@ class CinemaDBNode {
     const timeSteps = new D3NE.Control(
       `<div id="time_slider_${node.id}" class="slider"></div>`, (element, control) => {
         control.putData('timeSliderParent', element.parentElement);
-        element.parentElement.classList.add('hidden');
+
+        if (this._useVestec()) {
+          element.parentElement.classList.add('hidden');
+        } else {
+          window.callNative('CinemaDBNode.getTimeSteps', node.id, CinemaDBNode.path);
+        }
       },
     );
 
@@ -63,7 +80,11 @@ class CinemaDBNode {
     node.addControl(caseNames);
     node.addControl(timeSteps);
     node.addOutput(output);
-    node.addInput(input);
+
+    if (typeof CinemaDBNode.path === 'undefined') {
+      const input = new D3NE.Input('CINEMA_DB_PATH', CosmoScout.vestecNE.sockets.CINEMA_DB_PATH);
+      node.addInput(input);
+    }
 
     return node;
   }
@@ -77,21 +98,23 @@ class CinemaDBNode {
    * @param {Array} outputs - CinemaDB
    */
   worker(node, inputs, outputs) {
-    if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
-      node.data.caseNameSelectParent.classList.add('hidden');
-      node.data.timeSliderParent.classList.add('hidden');
-      return;
+    if (this._useVestec()) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+        node.data.caseNameSelectParent.classList.add('hidden');
+        node.data.timeSliderParent.classList.add('hidden');
+        return;
+      }
+
+      if (node.data.currentData === null || node.data.currentData !== inputs[0][0]) {
+        window.callNative('readCaseNames', node.id, inputs[0][0]);
+        window.callNative('getTimeSteps', node.id, inputs[0][0]);
+
+        node.data.currentData = inputs[0][0];
+      }
     }
 
     node.data.caseNameSelectParent.classList.remove('hidden');
     node.data.timeSliderParent.classList.remove('hidden');
-
-    if (node.data.currentData === null || node.data.currentData !== inputs[0][0]) {
-      window.callNative('readCaseNames', node.id, inputs[0][0]);
-      window.callNative('getTimeSteps', node.id, inputs[0][0]);
-
-      node.data.currentData = inputs[0][0];
-    }
 
     if (node.data.caseName === undefined || node.data.timeStep === undefined) {
       return;
@@ -99,17 +122,24 @@ class CinemaDBNode {
 
     const fileName = `${node.data.caseName}_${node.data.timeStep}`;
 
+    let path;
+    if (this._useVestec()) {
+      path = inputs[0][0];
+    } else {
+      path = CinemaDBNode.path;
+    }
+
     if (node.data.converted !== fileName) {
       console.debug(`[CinemaDB Node #${node.id}] Converting ${fileName}.`);
 
-      window.callNative('convertFile', node.data.caseName, node.data.timeStep, inputs[0][0]);
+      window.callNative('CinemaDBNode.convertFile', node.data.caseName, node.data.timeStep, path);
       node.data.converted = fileName;
     }
 
     outputs[0] = {
       caseName: node.data.caseName,
       timeStep: node.data.timeStep,
-      path: inputs[0][0],
+      path,
     };
   }
 
@@ -126,6 +156,15 @@ class CinemaDBNode {
       builder: this.builder.bind(this),
       worker: this.worker.bind(this),
     });
+  }
+
+  /**
+   *
+   * @return {boolean}
+   * @private
+   */
+  _useVestec() {
+    return typeof CinemaDBNode.path === 'undefined';
   }
 
   /**
@@ -221,6 +260,15 @@ class CinemaDBNode {
     } else {
       console.error(`Node with id ${id} not found.`);
     }
+  }
+
+  /**
+   * A path to load cinemadb data from
+   *
+   * @param {string} path
+   */
+  static setPath(path) {
+    CinemaDBNode.path = path;
   }
 
   /**
