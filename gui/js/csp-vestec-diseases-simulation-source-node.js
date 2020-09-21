@@ -17,6 +17,16 @@
  * Node for reading and selecting the wildfire simulation data
  */
 class DiseasesSimulationNode {
+  /**
+   * Setting this disables loading data from the vestec system
+   * And instead uses the local path configured in the vestec config
+   * Set 'vestec-diseases-dir'
+   *
+   * @type {string}
+   * @private
+   */
+  static path;
+
   constructor() {
     this.animate = false;
   }
@@ -59,6 +69,15 @@ class DiseasesSimulationNode {
     const ensembleControl = new D3NE.Control(htmlInfo, (element, control) => {
       // Initialize data array to hold filenames
       control.putData('fileList', []);
+
+      control.putData('ensembleControlParent', element.parentElement);
+
+      if (this._useVestec()) {
+        element.parentElement.classList.add('hidden');
+      } else {
+        // Call once for initialization
+        window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10), DiseasesSimulationNode.path);
+      }
     });
 
 
@@ -83,6 +102,12 @@ class DiseasesSimulationNode {
       const select = $(element).find(`#sim_mode_${node.id}`);
       select.selectpicker();
 
+      control.putData('simModeSelectParent', element.parentElement);
+
+      if (this._useVestec()) {
+        element.parentElement.classList.add('hidden');
+      }
+
       // Initialize the slider
       const slider = element.querySelector(`#slider_day${node.id}`);
       noUiSlider.create(slider, {
@@ -94,14 +119,14 @@ class DiseasesSimulationNode {
         console.log('Change combo box');
 
         // Update the number of enseble members
-        window.callNative('setNumberOfEnsembleMembers', parseInt(node.id, 10), $(this).val());
+        window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), $(this).val());
 
         // Get the files for the simulation mode and timestep
         const timestep = $(element).find(`#slider_day${node.id}`).val();
         const simPath = $(element).find(`#sim_mode_${node.id}`).val();
         window.callNative(
-          'getFilesForTimeStep',
-          parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
+          'DiseasesSimulationNode.getFilesForTimeStep',
+          parseInt(node.id, 10), simPath.toString(), parseFloat(timestep), DiseasesSimulationNode.path,
         );
       });
 
@@ -109,8 +134,11 @@ class DiseasesSimulationNode {
       slider.noUiSlider.on('set', (values, handle) => {
         const timestep = values[handle];
         const simPath = $(element).find(`#sim_mode_${node.id}`).val();
+
+        window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), $(this).val());
+
         window.callNative(
-          'getFilesForTimeStep',
+          'DiseasesSimulationNode.getFilesForTimeStep',
           parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
         );
       });
@@ -129,9 +157,6 @@ class DiseasesSimulationNode {
           this.animate = false;
         }
       });
-
-      // Call once for initialization
-      window.callNative('readDiseasesSimulationModes', parseInt(node.id, 10));
     });
 
     node.addControl(ensembleControl);
@@ -141,6 +166,11 @@ class DiseasesSimulationNode {
     const output = new D3NE.Output('TEXTURE(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
 
+    if (this._useVestec()) {
+      const input = new D3NE.Input('PATH', CosmoScout.vestecNE.sockets.PATH);
+      node.addInput(input);
+    }
+
     return node;
   }
 
@@ -149,10 +179,25 @@ class DiseasesSimulationNode {
    * Loads the vtk file from input and draws the canvas
    *
    * @param {Node} node
-   * @param {Array} _inputs - unused
+   * @param {Array} inputs -
    * @param {Array} outputs - Texture
    */
-  worker(node, _inputs, outputs) {
+  worker(node, inputs, outputs) {
+    if (this._useVestec()) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+        node.data.ensembleControlParent.classList.add('hidden');
+        node.data.simModeSelectParent.classList.add('hidden');
+        return;
+      }
+
+      if (node.data.fileList.length === 0) {
+        window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10), inputs[0][0]);
+      }
+    }
+
+    node.data.ensembleControlParent.classList.remove('hidden');
+    node.data.simModeSelectParent.classList.remove('hidden');
+
     outputs[0] = node.data.fileList;
   }
 
@@ -181,6 +226,24 @@ class DiseasesSimulationNode {
     if (typeof D3NE === 'undefined') {
       throw new Error('D3NE is not defined.');
     }
+  }
+
+  /**
+   *
+   * @return {boolean}
+   * @private
+   */
+  _useVestec() {
+    return typeof DiseasesSimulationNode.path === 'undefined';
+  }
+
+  /**
+   * A path to load cinemadb data from
+   *
+   * @param {string} path
+   */
+  static setPath(path) {
+    DiseasesSimulationNode.path = `${path}/Output`;
   }
 
   static setNumberOfEnsembleMembers(id, number) {

@@ -11,7 +11,7 @@ using json = nlohmann::json;
 
 DiseasesSimulation::DiseasesSimulation(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id, 0, 1) {
+    : VNE::Node(pItem, id, 1, 1) {
   mPluginConfig = config;
 }
 
@@ -29,21 +29,26 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->executeJavascript(code);
 
+  if (!csp::vestec::Plugin::dataDir.empty()) {
+    // Todo use dedicated member
+    pEditor->GetGuiItem()->callJavascript("DiseasesSimulationNode.setPath", csp::vestec::Plugin::dataDir + "/../diseases");
+  }
+
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double, std::string, double>("getFilesForTimeStep",
+  pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.getFilesForTimeStep",
       "Returns files for a time step",
       std::function([pEditor](double id, std::string mode, double t) {
         pEditor->GetNode<DiseasesSimulation>(id)->GetFileNamesForTimeStep(id, mode, t);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, std::string>("setNumberOfEnsembleMembers",
+  pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.setNumberOfEnsembleMembers",
       "Sets the number of ensemble members", std::function([pEditor](double id, std::string path) {
         pEditor->GetNode<DiseasesSimulation>(id)->SetNumberOfEnsembleMembers(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double>("readDiseasesSimulationModes",
-      "Returns available diseases simulation modes", std::function([pEditor](double id) {
-        pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id);
+  pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.readDiseasesSimulationModes",
+      "Returns available diseases simulation modes", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id, path);
       }));
 }
 
@@ -73,9 +78,9 @@ void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, std::string path) {
   m_pItem->callJavascript("DiseasesSimulationNode.setNumberOfEnsembleMembers", id, lDirs.size());
 }
 
-void DiseasesSimulation::SetSimulationModes(int id) {
+void DiseasesSimulation::SetSimulationModes(int id, std::string path) {
   std::set<std::string> lDirs(
-      cs::utils::filesystem::listDirs(mPluginConfig.mDiseasesDir + "/output/"));
+      cs::utils::filesystem::listDirs(path));
   json args(lDirs);
   m_pItem->callJavascript("DiseasesSimulationNode.fillSimModes", id, args.dump());
 }

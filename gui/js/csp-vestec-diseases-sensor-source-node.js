@@ -18,6 +18,16 @@
  */
 class DiseasesSensorInputNode {
   /**
+   * Setting this disables loading data from the vestec system
+   * And instead uses the local path configured in the vestec config
+   * Set 'vestec-diseases-dir'
+   *
+   * @type {string}
+   * @private
+   */
+  static path;
+
+  /**
    * Node Editor Component builder
    *
    * @param {Node} node
@@ -32,17 +42,25 @@ class DiseasesSensorInputNode {
         const select = $(element);
         select.selectpicker();
 
+        control.putData('sensorFileSelectParent', element.parentElement);
+
+        if (this._useVestec()) {
+          element.parentElement.classList.add('hidden');
+        } else {
+          // Now, since simulation mode changed, read the files for that simulation mode
+          window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), DiseasesSensorInputNode.path);
+        }
+
         select.on('change', function () {
           // Forward file to output
           control.putData('sensorFile', $(this).val());
 
           CosmoScout.vestecNE.updateEditor();
         });
-
-        // Now, since simulation mode changed, read the files for that simulation mode
-        window.callNative('readSensorFileNames', parseInt(node.id, 10));
       },
     );
+
+    node.data.sensorFile = null;
 
     // Add control elements
     node.addControl(simulationFile);
@@ -50,6 +68,12 @@ class DiseasesSensorInputNode {
     // Define the output type
     const output = new D3NE.Output('TEXTURE', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
+
+    if (this._useVestec()) {
+      const input = new D3NE.Input('PATH', CosmoScout.vestecNE.sockets.PATH);
+      node.addInput(input);
+    }
+
     return node;
   }
 
@@ -58,12 +82,25 @@ class DiseasesSensorInputNode {
    * Loads the vtk file from input and draws the canvas
    *
    * @param {Node} node
-   * @param {Array} _inputs - unused
+   * @param {Array} inputs -
    * @param {Array} outputs - Texture
    */
-  worker(node, _inputs, outputs) {
+  worker(node, inputs, outputs) {
+    if (this._useVestec()) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+        node.data.sensorFileSelectParent.classList.add('hidden');
+        return;
+      }
+
+      if (node.data.sensorFile === null) {
+        window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), inputs[0][0]);
+      }
+    }
+
+    node.data.sensorFileSelectParent.classList.remove('hidden');
+
     /** @type {DiseasesSensorInputNode} */
-    if (typeof node.data.sensorFile !== 'undefined') {
+    if (node.data.sensorFile !== null && node.data.sensorFile !== 'none') {
       const files = [];
       files.push(node.data.sensorFile);
       outputs[0] = files;
@@ -83,6 +120,24 @@ class DiseasesSensorInputNode {
       builder: this.builder.bind(this),
       worker: this.worker.bind(this),
     });
+  }
+
+  /**
+   *
+   * @return {boolean}
+   * @private
+   */
+  _useVestec() {
+    return typeof DiseasesSensorInputNode.path === 'undefined';
+  }
+
+  /**
+   * A path to load cinemadb data from
+   *
+   * @param {string} path
+   */
+  static setPath(path) {
+    DiseasesSensorInputNode.path = `${path}/input`;
   }
 
   /**
@@ -118,6 +173,14 @@ class DiseasesSensorInputNode {
     body.find(`#sensor_file_${id}`).html(liOutputs);
     body.find(`#sensor_file_${id}`).selectpicker('refresh');
     body.find(`#sensor_file_${id}`).trigger('change');
+
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
+
+    if (typeof node !== 'undefined') {
+      node.data.sensorFile = body.find(`#sensor_file_${id}`).val();
+    } else {
+      console.error(`Node with id ${id} not found.`);
+    }
   }
 }
 
