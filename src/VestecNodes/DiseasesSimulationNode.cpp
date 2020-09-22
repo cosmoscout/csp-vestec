@@ -78,9 +78,10 @@ void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, std::string path) {
   m_pItem->callJavascript("DiseasesSimulationNode.setNumberOfEnsembleMembers", id, lDirs.size());
 }
 
-void DiseasesSimulation::SetSimulationModes(int id, std::string path) {
+void DiseasesSimulation::SetSimulationModes(int id, const std::string& path) {
   std::set<std::string> lDirs(
       cs::utils::filesystem::listDirs(path));
   json args(lDirs);
+
   m_pItem->callJavascript("DiseasesSimulationNode.fillSimModes", id, args.dump());
 }

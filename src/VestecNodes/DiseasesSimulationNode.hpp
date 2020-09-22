@@ -38,7 +38,7 @@ class DiseasesSimulation : public VNE::Node {
   /**
    * Set the simulation modes
    */
-  void SetSimulationModes(int id, std::string path);
+  void SetSimulationModes(int id, const std::string& path);
 
  private:
   csp::vestec::Plugin::Settings mPluginConfig;

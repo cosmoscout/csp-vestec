@@ -27,26 +27,35 @@ class DiseasesSimulationNode {
    */
   static path;
 
-  constructor() {
-    this.animate = false;
-  }
-
-  static startAnimation(self, slider) {
-    const timestep = slider.noUiSlider.get();
-    if (parseInt(timestep, 10) < 364) {
-      slider.noUiSlider.set(parseInt(timestep, 10) + 1);
-    } else {
-      slider.noUiSlider.set(0);
-    }
-
-    if (self.animate === true) {
-      setTimeout(() => {
-        DiseasesSimulationNode.startAnimation(self, slider);
-      }, 60);
-    }
-  }
-
   /**
+   *
+   * @type {boolean}
+   */
+  animate = false;
+
+    timeoutId;
+
+    static startAnimation(self, slider, node) {
+      if (typeof node.data.ensembleMembers === 'undefined') {
+        return;
+      }
+
+      const timestep = slider.noUiSlider.get();
+
+      if (parseInt(timestep, 10) < node.data.ensembleMembers - 1) {
+        slider.noUiSlider.set(parseInt(timestep, 10) + 1);
+      } else {
+        slider.noUiSlider.set(0);
+      }
+
+      if (self.animate === true) {
+        return setTimeout(() => {
+          DiseasesSimulationNode.startAnimation(self, slider, node);
+        }, 60);
+      }
+    }
+
+    /**
    * Builder function
    * Creates the simulation mode dropdown
    * Creates the info text for number of ensemble members
@@ -56,125 +65,103 @@ class DiseasesSimulationNode {
    * @param {Node} node
    * @returns {Node} D3NE Node
    */
-  builder(node) {
-    // Define HTML elements
-    const htmlInfo = `<div class="row">
-                        <div class="col-10 text">Ensemble members:</div>
-                        <div class="col-2">
-                          <div class="text" id="ensemble_num_${node.id}"></div>
-                        </div>
-                      </div>`;
-
+    builder(node) {
     // Info for the number of ensembles
-    const ensembleControl = new D3NE.Control(htmlInfo, (element, control) => {
-      // Initialize data array to hold filenames
-      control.putData('fileList', []);
+      const ensembleControl = new D3NE.Control(
+        `<div class="row">
+        <div class="col-10 text">Ensemble members:</div>
+        <div class="col-2">
+          <div class="text" id="ensemble_num_${node.id}"></div>
+        </div>
+      </div>`,
+        (element, control) => {
+          control.putData('ensembleControlParent', element.parentElement);
 
-      control.putData('ensembleControlParent', element.parentElement);
+          if (this._useVestec()) {
+            element.parentElement.classList.add('hidden');
+          }
+        },
+      );
+
+      const simControl = new D3NE.Control(
+        `<div>
+          <div class="row">
+            <div class="col-3 text">Mode:</div>
+            <select id="sim_mode_${node.id}" class="combobox col-9"><option>none</option></select>
+          </div>
+          <div class="row">
+            <div class="col-3 text">Day:</div>
+            <div class="col-9">
+              <div id="slider_day${node.id}"></div>
+            </div>
+          </div>
+          <div class="row">
+            <button class="col-12" id="play_mode_${node.id}">Play</button>
+          </div>
+        </div>`,
+        (element, control) => {
+          control.putData('simControlParent', element.parentElement);
+
+          if (this._useVestec()) {
+            element.parentElement.classList.add('hidden');
+          }
+
+          const select = element.querySelector(`#sim_mode_${node.id}`);
+          const slider = element.querySelector(`#slider_day${node.id}`);
+          const playButton = element.querySelector(`#play_mode_${node.id}`);
+
+          $(select).selectpicker();
+
+          // When combo box changes update the files and number of ensemble info
+          $(select).on('change', (event) => {
+          // console.log('Change combo box');
+            window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), event.target.value);
+
+            // Get the files for the simulation mode and timestep
+            const timestep = $(slider).val();
+            const simPath = $(select).val();
+
+            window.callNative(
+              'DiseasesSimulationNode.getFilesForTimeStep',
+              parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
+            );
+          });
+
+          playButton.addEventListener('click', (event) => {
+            if (this.animate === false) {
+              event.target.innerText = 'Pause';
+              this.animate = true;
+
+              this.timeoutId = DiseasesSimulationNode.startAnimation(this, slider, node);
+            } else {
+              clearTimeout(this.timeoutId);
+              event.target.innerText = 'Play';
+              this.animate = false;
+            }
+          });
+        },
+      );
+
+      node.addControl(ensembleControl);
+      node.addControl(simControl);
+
+      // Define the output type
+      const output = new D3NE.Output('TEXTURE(s)', CosmoScout.vestecNE.sockets.TEXTURES);
+      node.addOutput(output);
 
       if (this._useVestec()) {
-        element.parentElement.classList.add('hidden');
+        const input = new D3NE.Input('PATH', CosmoScout.vestecNE.sockets.PATH);
+        node.addInput(input);
+
+        node.data.loaded = false;
       } else {
-        // Call once for initialization
         window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10), DiseasesSimulationNode.path);
       }
-    });
 
-
-    const htmlControl = `<div>
-                          <div class="row">
-                            <div class="col-3 text">Mode:</div>
-                            <select id="sim_mode_${node.id}" class="combobox col-9"><option>none</option></select>
-                          </div>
-                          <div class="row">
-                            <div class="col-3 text">Day:</div>
-                            <div class="col-9">
-                              <div id="slider_day${node.id}"></div>
-                            </div>
-                          </div>
-                          <div class="row">
-                            <button class="col-12" id="play_mode_${node.id}">Play</button>
-                          </div>
-                        </div>`;
-
-    const simcontrol = new D3NE.Control(htmlControl, (element, control) => {
-      // Initialize the combo box with the simulation modes
-      const select = $(element).find(`#sim_mode_${node.id}`);
-      select.selectpicker();
-
-      control.putData('simModeSelectParent', element.parentElement);
-
-      if (this._useVestec()) {
-        element.parentElement.classList.add('hidden');
-      }
-
-      // Initialize the slider
-      const slider = element.querySelector(`#slider_day${node.id}`);
-      noUiSlider.create(slider, {
-        start: 1, step: 1, animate: false, range: { min: 0, max: 364 },
-      });
-
-      // When combo box changes update the files and number of ensemble info
-      select.on('change', function () {
-        console.log('Change combo box');
-
-        // Update the number of enseble members
-        window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), $(this).val());
-
-        // Get the files for the simulation mode and timestep
-        const timestep = $(element).find(`#slider_day${node.id}`).val();
-        const simPath = $(element).find(`#sim_mode_${node.id}`).val();
-        window.callNative(
-          'DiseasesSimulationNode.getFilesForTimeStep',
-          parseInt(node.id, 10), simPath.toString(), parseFloat(timestep), DiseasesSimulationNode.path,
-        );
-      });
-
-      // Event handling when slider changes
-      slider.noUiSlider.on('set', (values, handle) => {
-        const timestep = values[handle];
-        const simPath = $(element).find(`#sim_mode_${node.id}`).val();
-
-        window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), $(this).val());
-
-        window.callNative(
-          'DiseasesSimulationNode.getFilesForTimeStep',
-          parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
-        );
-      });
-
-      const playButton = $(element).find(`#play_mode_${node.id}`);
-      console.log(`Button: ${playButton}`);
-
-      playButton.click(function () {
-        if (this.animate === false) {
-          $(element).find(`#play_mode_${node.id}`).text('Pause');
-          this.animate = true;
-          const slider = element.querySelector(`#slider_day${node.id}`);
-          DiseasesSimulationNode.startAnimation(this, slider);
-        } else {
-          $(element).find(`#play_mode_${node.id}`).text('Play');
-          this.animate = false;
-        }
-      });
-    });
-
-    node.addControl(ensembleControl);
-    node.addControl(simcontrol);
-
-    // Define the output type
-    const output = new D3NE.Output('TEXTURE(s)', CosmoScout.vestecNE.sockets.TEXTURES);
-    node.addOutput(output);
-
-    if (this._useVestec()) {
-      const input = new D3NE.Input('PATH', CosmoScout.vestecNE.sockets.PATH);
-      node.addInput(input);
+      return node;
     }
 
-    return node;
-  }
-
-  /**
+    /**
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
    *
@@ -182,109 +169,151 @@ class DiseasesSimulationNode {
    * @param {Array} inputs -
    * @param {Array} outputs - Texture
    */
-  worker(node, inputs, outputs) {
-    if (this._useVestec()) {
-      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
-        node.data.ensembleControlParent.classList.add('hidden');
-        node.data.simModeSelectParent.classList.add('hidden');
-        return;
+    worker(node, inputs, outputs) {
+      /*      console.log(inputs);
+      console.log(node.data); */
+      if (this._useVestec()) {
+        if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+          node.data.ensembleControlParent.classList.add('hidden');
+          node.data.simControlParent.classList.add('hidden');
+          return;
+        }
+
+        if (!node.data.loaded) {
+          window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10), inputs[0][0]);
+          node.data.loaded = true;
+        }
       }
 
-      if (node.data.fileList.length === 0) {
-        window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10), inputs[0][0]);
-      }
+      node.data.ensembleControlParent.classList.remove('hidden');
+      node.data.simControlParent.classList.remove('hidden');
+
+      outputs[0] = node.data.fileList;
     }
 
-    node.data.ensembleControlParent.classList.remove('hidden');
-    node.data.simModeSelectParent.classList.remove('hidden');
-
-    outputs[0] = node.data.fileList;
-  }
-
-  /**
+    /**
    * Node Editor Component
    *
    * @returns {D3NE.Component}
    * @throws {Error}
    */
-  getComponent() {
-    this._checkD3NE();
+    getComponent() {
+      this._checkD3NE();
 
-    return new D3NE.Component('DiseasesSimulation', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
-    });
-  }
+      return new D3NE.Component('DiseasesSimulation', {
+        builder: this.builder.bind(this),
+        worker: this.worker.bind(this),
+      });
+    }
 
-  /**
+    /**
    * Check if D3NE is available
    *
    * @throws {Error}
    * @private
    */
-  _checkD3NE() {
-    if (typeof D3NE === 'undefined') {
-      throw new Error('D3NE is not defined.');
+    _checkD3NE() {
+      if (typeof D3NE === 'undefined') {
+        throw new Error('D3NE is not defined.');
+      }
     }
-  }
 
-  /**
+    /**
    *
    * @return {boolean}
    * @private
    */
-  _useVestec() {
-    return typeof DiseasesSimulationNode.path === 'undefined';
-  }
+    _useVestec() {
+      return typeof DiseasesSimulationNode.path === 'undefined';
+    }
 
-  /**
+    /**
    * A path to load cinemadb data from
    *
    * @param {string} path
    */
-  static setPath(path) {
-    DiseasesSimulationNode.path = `${path}/Output`;
-  }
+    static setPath(path) {
+      DiseasesSimulationNode.path = `${path}/Output`;
+    }
 
-  static setNumberOfEnsembleMembers(id, number) {
-    $('body').find(`#ensemble_num_${id}`).html(number);
-  }
+    static setNumberOfEnsembleMembers(id, number) {
+      document.querySelector(`#ensemble_num_${id}`).innerText = number;
 
-  /**
+      const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
+      node.data.ensembleMembers = number;
+
+      const slider = document.querySelector(`#slider_day${id}`);
+
+      if (typeof slider.noUiSlider !== 'undefined') {
+        slider.noUiSlider.destroy();
+      }
+
+      noUiSlider.create(slider, {
+        start: 1, step: 1, animate: false, range: { min: 0, max: number - 1 },
+      });
+
+      // Event handling when slider changes
+      slider.noUiSlider.on('set', (values, handle) => {
+        const timestep = values[handle];
+
+        const simPath = $(`#sim_mode_${node.id}`).val();
+
+        window.callNative(
+          'DiseasesSimulationNode.getFilesForTimeStep',
+          parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
+        );
+      });
+    }
+
+    /**
    * Adds the simulation modes to `sim_mode_id' dropdown
    */
-  static fillSimModes(id, modes) {
-    const json = JSON.parse(modes);
-    let liModes = '';
+    static fillSimModes(id, modes) {
+      const json = JSON.parse(modes);
 
-    for (let i = 0; i < json.length; i++) {
-      const obj = json[i];
-      const fileName = obj.split('/').pop();
-      liModes += `<option value='${obj}'>${fileName}</option>`;
-    }
+      const element = document.querySelector(`#sim_mode_${id}`);
+      $(element).selectpicker('destroy');
 
-    const body = $('body');
+      CosmoScout.gui.clearHtml(element);
 
-    body.find(`#sim_mode_${id}`).html(liModes);
-    body.find(`#sim_mode_${id}`).selectpicker('refresh');
-    body.find(`#sim_mode_${id}`).trigger('change');
-  }
+      json.forEach((mode) => {
+        const option = document.createElement('option');
 
-  /**
-   * Receive the filelist from c++
-   */
-  static setFileListForTimeStep(id, fileList) {
-    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
-    if (typeof node !== 'undefined') {
-      node.data.fileList = [];
-      const json = JSON.parse(fileList);
-      for (let i = 0; i < json.length; i++) {
-        node.data.fileList.push(json[i]);
+        option.text = mode.split('/').pop();
+        option.value = mode;
+
+        element.appendChild(option);
+      });
+
+      $(element).selectpicker();
+
+      const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
+
+      if (typeof node !== 'undefined') {
+        node.data.simMode = $(element).val();
+        console.log('Set ensemble');
+        window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), node.data.simMode);
+      } else {
+        console.error(`Node with id ${id} not found.`);
       }
     }
-    // Files have changed trigger a processing step
-    CosmoScout.vestecNE.updateEditor();
-  }
+
+    /**
+   * Receive the filelist from c++
+   */
+    static setFileListForTimeStep(id, fileList) {
+      const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
+      if (typeof node !== 'undefined') {
+        node.data.fileList = [];
+        const json = JSON.parse(fileList);
+        for (let i = 0; i < json.length; i++) {
+          node.data.fileList.push(json[i]);
+        }
+      }
+
+      // Files have changed trigger a processing step
+      CosmoScout.vestecNE.updateEditor();
+    }
 }
 
 (() => {
