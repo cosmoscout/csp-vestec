@@ -5,7 +5,10 @@
  *
  * @typedef {Object} Node
  * @property {(number|string)} id
- * @property {{}} data
+ * @property {{
+ *     textureSelectParent: HTMLDivElement,
+ *     activeTexture: string
+ * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
  * @property {Function} addControl
@@ -81,9 +84,20 @@ class TextureRenderNode {
       });
     });
 
+    //
+    const textureSelectControl = new D3NE.Control(
+      `<select id="texture-node_${node.id}-texture-select" class="combobox"><option>none</option></select>`,
+      (element, control) => {
+        element.parentElement.classList.add('hidden');
+
+        control.putData('textureSelectParent', element.parentElement);
+      },
+    );
+
     // Add control elements
     node.addControl(opacityControl);
     node.addControl(timeControl);
+    node.addControl(textureSelectControl);
 
     // Define the input type
     const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
@@ -104,13 +118,35 @@ class TextureRenderNode {
     // input[0] = first input port
     // input[0][0] = the first array on input port 0
     // input[0][0][0] = the first entry in the array (filename)
-    if (inputs[0].length > 0
-        && inputs[0][0] !== null
-        && inputs[0][0].length > 0
-        && inputs[0][0][0].toString() !== this.lastFile) {
-      window.callNative('readSimulationResults', node.id, inputs[0][0][0].toString());
-      this.lastFile = inputs[0][0][0].toString();
+    if (typeof inputs[0][0] === 'undefined' || inputs[0][0].length === 0) {
+      return;
     }
+
+    let texture;
+
+    if (inputs[0][0].length === 1) {
+      texture = inputs[0][0][0];
+    } else if (inputs[0][0].length > 1) {
+      if (typeof node.data.activeFileSet === 'undefined' || node.data.activeFileSet !== inputs[0][0]) {
+        this._fillTextureSelect(inputs[0][0], node);
+      }
+
+      texture = node.data.activeTexture;
+    } else {
+      node.data.textureSelectParent.classList.add('hidden');
+      delete node.data.activeTexture;
+      delete this.lastFile;
+
+      return;
+    }
+
+    if (this.lastFile === texture) {
+      return;
+    }
+
+    this.lastFile = texture;
+
+    window.callNative('readSimulationResults', node.id, texture);
   }
 
   /**
@@ -138,6 +174,41 @@ class TextureRenderNode {
     if (typeof D3NE === 'undefined') {
       throw new Error('D3NE is not defined.');
     }
+  }
+
+
+  /**
+   * Adds content to the case name dropdown
+   *
+   * @param textures
+   * @param {Node} node
+   *
+   * @returns void
+   */
+  _fillTextureSelect(textures, node) {
+    const element = document.getElementById(`texture-node_${node.id}-texture-select`);
+
+    $(element).selectpicker('destroy');
+    CosmoScout.gui.clearHtml(element);
+
+    textures.forEach((texture) => {
+      const option = document.createElement('option');
+      option.value = texture;
+      option.text = texture.split('/').pop().toString();
+
+      element.appendChild(option);
+    });
+
+    $(element).selectpicker();
+
+    element.addEventListener('change', (event) => {
+      node.data.activeTexture = event.target.value;
+    });
+
+    node.data.activeTexture = $(element).val();
+    node.data.activeFileSet = textures;
+
+    node.data.textureSelectParent.classList.remove('hidden');
   }
 }
 
