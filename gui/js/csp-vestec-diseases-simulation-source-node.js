@@ -260,6 +260,13 @@ class DiseasesSimulationNode {
         parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
       );
     });
+
+    if (typeof DiseasesSimulationNode.path !== 'undefined') {
+      window.callNative(
+        'DiseasesSimulationNode.getFilesForTimeStep',
+        parseInt(node.id, 10), $(`#sim_mode_${node.id}`).val().toString(), 1,
+      );
+    }
   }
 
   /**
