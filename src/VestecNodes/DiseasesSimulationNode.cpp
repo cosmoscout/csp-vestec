@@ -48,13 +48,19 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.readDiseasesSimulationModes",
       "Returns available diseases simulation modes", std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id, path);
+        //pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id, path);
+
+        std::set<std::string> lDirs(
+            cs::utils::filesystem::listDirs(path));
+
+        json args(lDirs);
+
+        pEditor->GetGuiItem()->callJavascript("DiseasesSimulationNode.fillSimModes", id, args.dump());
       }));
 }
 
 void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, double t) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(mode));
-
   std::set<std::string> listOfFiles;
   // Get the file for the timestep in every member
   for (auto dir : lDirs) {
@@ -75,12 +81,18 @@ void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, doubl
 
 void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, std::string path) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));
-  m_pItem->callJavascript("DiseasesSimulationNode.setNumberOfEnsembleMembers", id, lDirs.size());
+
+  // TODO Awkward
+  std::string a = *lDirs.begin();
+  std::set<std::string> lFiles(cs::utils::filesystem::listFiles(a + "/"));
+
+  m_pItem->callJavascript("DiseasesSimulationNode.setNumberOfEnsembleMembers", id, lDirs.size(), lFiles.size());
 }
 
 void DiseasesSimulation::SetSimulationModes(int id, const std::string& path) {
   std::set<std::string> lDirs(
       cs::utils::filesystem::listDirs(path));
+
   json args(lDirs);
 
   m_pItem->callJavascript("DiseasesSimulationNode.fillSimModes", id, args.dump());
