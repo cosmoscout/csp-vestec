@@ -30,59 +30,53 @@ class TextureRenderNode {
    * @returns {Node} D3NE Node
    */
   builder(node) {
-    // Define HTML elements for the opacity slider
-    const htmlOpacity = `
-        <div class="row">
-            <div class="col-6 text">Opacity:</div>
-            <div class="col-6">
-                <div id="slider_opacity${node.id}"></div>
-            </div>
-        </div>`;
+    // Slider to control the opacity of the overlay
+    const opacityControl = new D3NE.Control(
+      `<div class="row">
+        <div class="col-6 text">Opacity:</div>
+        <div class="col-6">
+          <div id="texture-node_${node.id}-slider_opacity"></div>
+        </div>
+      </div>`,
+      (element, _control) => {
+        const slider = element.querySelector(`#texture-node_${node.id}-slider_opacity`);
+        noUiSlider.create(slider, { start: 1, animate: false, range: { min: 0, max: 1 } });
 
-    // Slider to control the opcity of the overlay
-    const opacityControl = new D3NE.Control(htmlOpacity, (element, control) => {
-      // Initialize HTML elements
-      const sliderQuery = `#slider_opacity${node.id}`;
-      const slider = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, { start: 1, animate: false, range: { min: 0, max: 1 } });
-
-      // Read the files for the given simulation mode and fill combobox when mode is changed
-      slider.noUiSlider.on('slide', (values, handle) => {
-        window.callNative('setOpacityTexture', node.id, parseFloat(values[handle]));
-      });
-    });
-
-    // Define HTML elements for the time handling
-    const htmlTime = `
-            <div class="row">
-                    <div class="col-2">
-                        <label class="checklabel">
-                            <input type="checkbox" id="set_enable_time${node.id}" />
-                            <i class="material-icons"></i>
-                        </label>
-                    </div>
-                    <div class="col-4 text">Time:</div>
-                    <div class="col-6">
-                        <div id="slider_time${node.id}"></div>
-                    </div>
-            </div>`;
+        // Read the files for the given simulation mode and fill combobox when mode is changed
+        slider.noUiSlider.on('slide', (values, handle) => {
+          window.callNative('TextureRenderNode.setOpacityTexture', node.id, parseFloat(values[handle]));
+        });
+      },
+    );
 
     // Slider and checkbox to control time animation
-    const timeControl = new D3NE.Control(htmlTime, (element, control) => {
-      // Initialize HTML elements
-      const sliderQuery = `#slider_time${node.id}`;
-      const slider = element.querySelector(sliderQuery);
-      noUiSlider.create(slider, { start: 6, animate: false, range: { min: 0, max: 6 } });
+    const timeControl = new D3NE.Control(
+      `<div class="row">
+        <div class="col-2">
+          <label class="checklabel">
+            <input type="checkbox" id="texture-node_${node.id}-set_enable_time" />
+            <i class="material-icons"></i>
+          </label>
+        </div>
+        <div class="col-4 text">Time:</div>
+        <div class="col-6">
+          <div id="texture-node_${node.id}-slider_time"></div>
+        </div>
+      </div>`,
+      (element, _control) => {
+        const slider = element.querySelector(`#texture-node_${node.id}-slider_time`);
+        noUiSlider.create(slider, { start: 6, animate: false, range: { min: 0, max: 6 } });
 
-      $(element).find(`#set_enable_time${node.id}`).on('click', function () {
-        window.callNative('set_enable_time', node.id, $(this).is(':checked'));
-      });
+        element.querySelector(`#texture-node_${node.id}-set_enable_time`).addEventListener('click', (event) => {
+          window.callNative('TextureRenderNode.setEnableTime', node.id, event.target.checked === true);
+        });
 
-      // Set the time value for the renderer
-      slider.noUiSlider.on('slide', (values, handle) => {
-        window.callNative('setTime', node.id, parseFloat(values[handle]));
-      });
-    });
+        // Set the time value for the renderer
+        slider.noUiSlider.on('slide', (values, handle) => {
+          window.callNative('TextureRenderNode.setTime', node.id, parseFloat(values[handle]));
+        });
+      },
+    );
 
     //
     const textureSelectControl = new D3NE.Control(
@@ -146,7 +140,7 @@ class TextureRenderNode {
 
     this.lastFile = texture;
 
-    window.callNative('readSimulationResults', node.id, texture);
+    window.callNative('TextureRenderNode.readSimulationResults', node.id, texture);
   }
 
   /**
