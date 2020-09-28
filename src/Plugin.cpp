@@ -46,6 +46,7 @@ EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
 std::string csp::vestec::Plugin::dataDir;
 std::string csp::vestec::Plugin::vestecServer;
 std::string csp::vestec::Plugin::vestecDownloadDir;
+std::string csp::vestec::Plugin::vestecDiseasesDir;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -186,6 +187,7 @@ void Plugin::init() {
   Plugin::dataDir           = mPluginSettings.mVestecDataDir;
   Plugin::vestecServer      = mPluginSettings.mVestecServer;
   Plugin::vestecDownloadDir = mPluginSettings.mVestecDownloadDir;
+  Plugin::vestecDiseasesDir = mPluginSettings.mDiseasesDir;
 
   if (!boost::filesystem::exists(mPluginSettings.mVestecDownloadDir)) {
     cs::utils::filesystem::createDirectoryRecursively(mPluginSettings.mVestecDownloadDir + "/extracted");

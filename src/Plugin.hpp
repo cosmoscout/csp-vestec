@@ -28,6 +28,7 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
   static std::string dataDir; ///< Directory where simulation data is stored
   static std::string vestecServer; ///< Vestec Server
   static std::string vestecDownloadDir; ///< Downloaded files location
+  static std::string vestecDiseasesDir; ///< Diseases
 
   struct Settings {
     std::string mVestecDataDir; ///< Directory where cinemaDB is stored
