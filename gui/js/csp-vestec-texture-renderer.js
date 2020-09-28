@@ -108,19 +108,15 @@ class TextureRenderNode {
    * @param {Array} _outputs - unused
    */
   worker(node, inputs, _outputs) {
-    /** @type {TextureRenderNode} */
-    // input[0] = first input port
-    // input[0][0] = the first array on input port 0
-    // input[0][0][0] = the first entry in the array (filename)
-    if (typeof inputs[0][0] === 'undefined' || inputs[0][0].length === 0) {
+    if (typeof inputs[0][0] === 'undefined') {
       return;
     }
 
     let texture;
 
-    if (inputs[0][0].length === 1) {
-      texture = inputs[0][0][0];
-    } else if (inputs[0][0].length > 1) {
+    if (typeof inputs[0][0] === 'string') {
+      texture = inputs[0][0];
+    } else if (typeof inputs[0][0] === 'object') {
       if (typeof node.data.activeFileSet === 'undefined' || node.data.activeFileSet !== inputs[0][0]) {
         this._fillTextureSelect(inputs[0][0], node);
       }
@@ -169,7 +165,6 @@ class TextureRenderNode {
       throw new Error('D3NE is not defined.');
     }
   }
-
 
   /**
    * Adds content to the case name dropdown
