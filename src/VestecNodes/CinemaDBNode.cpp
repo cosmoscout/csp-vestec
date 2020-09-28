@@ -50,17 +50,18 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
   }
 
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.readCaseNames", "Returns available case names",
-      std::function([pEditor](double id, std::string path) {
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.readCaseNames",
+      "Returns available case names", std::function([pEditor](double id, std::string path) {
         pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.getTimeSteps", "Returns time steps for a case",
-      std::function([pEditor](double id, std::string path) {
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.getTimeSteps",
+      "Returns time steps for a case", std::function([pEditor](double id, std::string path) {
         pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.convertFile", "Converts a .vtu file to .json",
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.convertFile",
+      "Converts a .vtu file to .json",
       std::function([](const std::string caseName, std::string timeStep, std::string path) {
         CinemaDBNode::ConvertFile(caseName, timeStep, path);
       }));
@@ -94,8 +95,8 @@ void CinemaDBNode::ConvertFile(
   dumper->SetInputConnection(polyFilter->GetOutputPort());
   dumper->Write();
 
-  csp::vestec::logger().debug("[{}::ConvertFile] JSON written to: {}/converted/{}_{}", GetName(),
-      path, caseName, timeStep);
+  csp::vestec::logger().debug(
+      "[{}::ConvertFile] JSON written to: {}/converted/{}_{}", GetName(), path, caseName, timeStep);
 }
 
 void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {

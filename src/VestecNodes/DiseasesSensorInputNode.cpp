@@ -33,19 +33,19 @@ void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
 
   if (!csp::vestec::Plugin::vestecDiseasesDir.empty()) {
     // Todo use dedicated member
-    pEditor->GetGuiItem()->callJavascript("DiseasesSensorInputNode.setPath", csp::vestec::Plugin::vestecDiseasesDir);
+    pEditor->GetGuiItem()->callJavascript(
+        "DiseasesSensorInputNode.setPath", csp::vestec::Plugin::vestecDiseasesDir);
   }
 
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback(
-      "DiseasesSensorInputNode.readSensorFileNames", "Reads sensor file names", std::function([pEditor](double id, std::string path) {
+  pEditor->GetGuiItem()->registerCallback("DiseasesSensorInputNode.readSensorFileNames",
+      "Reads sensor file names", std::function([pEditor](double id, std::string path) {
         pEditor->GetNode<DiseasesSensorInputNode>(id)->ReadSensorFileNames(id, path);
       }));
 }
 
 void DiseasesSensorInputNode::ReadSensorFileNames(int id, const std::string& path) {
-  std::set<std::string> lFiles(
-      cs::utils::filesystem::listFiles(path));
-  json args(lFiles);
+  std::set<std::string> lFiles(cs::utils::filesystem::listFiles(path));
+  json                  args(lFiles);
   m_pItem->callJavascript("DiseasesSensorInputNode.fillWithSensorFiles", id, args.dump());
 }

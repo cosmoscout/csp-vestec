@@ -190,7 +190,8 @@ void Plugin::init() {
   Plugin::vestecDiseasesDir = mPluginSettings.mDiseasesDir;
 
   if (!boost::filesystem::exists(mPluginSettings.mVestecDownloadDir)) {
-    cs::utils::filesystem::createDirectoryRecursively(mPluginSettings.mVestecDownloadDir + "/extracted");
+    cs::utils::filesystem::createDirectoryRecursively(
+        mPluginSettings.mVestecDownloadDir + "/extracted");
   }
 
   // Initialize vestec flow editor
