@@ -37,7 +37,7 @@ class DiseasesSensorInputNode {
   builder(node) {
     // Combobox for file selection
     const simulationFile = new D3NE.Control(
-      `<select id="sensor_file_${node.id}" class="combobox"><option>none</option></select>`,
+      `<select id="diseases-sensor-node_${node.id}-sensor-file-select" class="combobox"><option>none</option></select>`,
       (element, control) => {
         const select = $(element);
         select.selectpicker();
@@ -51,9 +51,9 @@ class DiseasesSensorInputNode {
           window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), DiseasesSensorInputNode.path);
         }
 
-        select.on('change', function () {
+        select.on('change', (event) => {
           // Forward file to output
-          control.putData('sensorFile', $(this).val());
+          control.putData('sensorFile', event.target.value);
 
           CosmoScout.vestecNE.updateEditor();
         });
@@ -101,9 +101,7 @@ class DiseasesSensorInputNode {
 
     /** @type {DiseasesSensorInputNode} */
     if (node.data.sensorFile !== null && node.data.sensorFile !== 'none') {
-      const files = [];
-      files.push(node.data.sensorFile);
-      outputs[0] = files;
+      outputs[0] = node.data.sensorFile;
     }
   }
 
@@ -137,7 +135,7 @@ class DiseasesSensorInputNode {
    * @param {string} path
    */
   static setPath(path) {
-    DiseasesSensorInputNode.path = `${path}/input`;
+    DiseasesSensorInputNode.path = `${path}/input/`;
   }
 
   /**
@@ -153,31 +151,35 @@ class DiseasesSensorInputNode {
   }
 
   /**
-   * Fill the combobox with the different sensor source files
+   * Adds content to the case name dropdown
    *
    * @param {number|string} id - #sensor_file_ID
    * @param simOutputs
+   *
+   * @returns void
    */
   static fillWithSensorFiles(id, simOutputs) {
-    const json = JSON.parse(simOutputs);
-    let liOutputs = '';
+    const element = document.querySelector(`#diseases-sensor-node_${id}-sensor-file-select`);
 
-    for (let i = 0; i < json.length; i++) {
-      const obj = json[i];
-      const modeName = obj.split('/').pop();
-      liOutputs += `<option value='${obj}'>${modeName}</option>`;
-    }
+    $(element).selectpicker('destroy');
+    CosmoScout.gui.clearHtml(element);
 
-    const body = $('body');
+    const sensorFiles = JSON.parse(simOutputs);
 
-    body.find(`#sensor_file_${id}`).html(liOutputs);
-    body.find(`#sensor_file_${id}`).selectpicker('refresh');
-    body.find(`#sensor_file_${id}`).trigger('change');
+    sensorFiles.forEach((sensorFile) => {
+      const option = document.createElement('option');
+      option.value = sensorFile;
+      option.text = sensorFile.split('/').pop().toString();
+
+      element.appendChild(option);
+    });
+
+    $(element).selectpicker();
 
     const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
 
     if (typeof node !== 'undefined') {
-      node.data.sensorFile = body.find(`#sensor_file_${id}`).val();
+      node.data.sensorFile = element.value;
     } else {
       console.error(`Node with id ${id} not found.`);
     }
