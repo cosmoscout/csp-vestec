@@ -29,9 +29,9 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->executeJavascript(code);
 
-  if (!csp::vestec::Plugin::dataDir.empty()) {
+  if (!csp::vestec::Plugin::vestecDiseasesDir.empty()) {
     // Todo use dedicated member
-    pEditor->GetGuiItem()->callJavascript("DiseasesSimulationNode.setPath", csp::vestec::Plugin::dataDir + "/../diseases");
+    pEditor->GetGuiItem()->callJavascript("DiseasesSimulationNode.setPath", csp::vestec::Plugin::vestecDiseasesDir);
   }
 
   // Example callback for communication from JavaScript to C++
