@@ -10,31 +10,19 @@
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
-#include <VistaOGLExt/Rendering/ABuffer/VistaABufferOIT.h>
 #include <VistaOGLExt/VistaBufferObject.h>
 #include <VistaOGLExt/VistaGLSLShader.h>
-#include <VistaOGLExt/VistaOGLUtils.h>
-#include <VistaOGLExt/VistaShaderRegistry.h>
 #include <VistaOGLExt/VistaTexture.h>
-#include <VistaOGLExt/VistaVertexArrayObject.h>
 
 // CosmoScout includes
-#include "../../../../src/cs-core/SolarSystem.hpp"
-#include "../../../../src/cs-scene/CelestialAnchor.hpp"
-#include "../../../../src/cs-scene/CelestialBody.hpp"
 #include "../../../../src/cs-utils/FrameTimings.hpp"
 
 // Standard includes
-#include <GL/freeglut.h>
-#include <GL/gl.h>
-#include <glm/gtc/type_ptr.hpp>
-
 #include <algorithm>
-#include <fstream>
 #include <functional>
+#include <glm/gtc/type_ptr.hpp>
 #include <json.hpp>
 #include <sstream>
-#include <unordered_set>
 #include <vector>
 
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
@@ -135,7 +123,8 @@ bool UncertaintyOverlayRenderer::Do() {
     glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
 
-    double nearClip, farClip;
+    double nearClip = NAN;
+    double farClip  = NAN;
     GetVistaSystem()
         ->GetDisplayManager()
         ->GetCurrentRenderInfo()
@@ -168,13 +157,13 @@ bool UncertaintyOverlayRenderer::Do() {
 
       // Provide texture sizes for correct lookups
       m_pComputeShader->SetUniform(
-          m_pComputeShader->GetUniformLocation("uSizeTexX"), (int)mvecTextures[0].x);
+          m_pComputeShader->GetUniformLocation("uSizeTexX"), mvecTextures[0].x);
 
       m_pComputeShader->SetUniform(
-          m_pComputeShader->GetUniformLocation("uSizeTexY"), (int)mvecTextures[0].y);
+          m_pComputeShader->GetUniformLocation("uSizeTexY"), mvecTextures[0].y);
 
       m_pComputeShader->SetUniform(
-          m_pComputeShader->GetUniformLocation("uSizeTexZ"), (int)mvecTextures.size());
+          m_pComputeShader->GetUniformLocation("uSizeTexZ"), static_cast<int>(mvecTextures.size()));
 
       // Provide access to write the output into a SSBO
       int group_size_x = (mvecTextures[0].x / 16) + 1;
@@ -261,15 +250,16 @@ bool UncertaintyOverlayRenderer::Do() {
     loc = m_pSurfaceShader->GetUniformLocation("uMatMV");
     glUniformMatrix4fv(loc, 1, GL_FALSE, matMV.GetData());
 
-    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float)farClip);
-
     m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uNumTextures"), (int)mvecTextures.size());
+        m_pSurfaceShader->GetUniformLocation("uFarClip"), static_cast<float>(farClip));
+
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uNumTextures"),
+        static_cast<int>(mvecTextures.size()));
     loc = m_pSurfaceShader->GetUniformLocation("uBounds");
     glUniform4dv(loc, 1, mvecTextures[0].lnglatBounds.data());
-    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), mOpacity);
     m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uVisMode"), (int)mRenderMode);
+        m_pSurfaceShader->GetUniformLocation("uVisMode"), static_cast<int>(mRenderMode));
 
     auto sunDirection =
         glm::normalize(glm::inverse(matWorldTransform) *
@@ -277,11 +267,11 @@ bool UncertaintyOverlayRenderer::Do() {
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
         sunDirection[0], sunDirection[1], sunDirection[2]);
 
-    //provide radii to shader
+    // provide radii to shader
     auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());
-    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"), static_cast<float>(mRadii[0]),
-      static_cast<float>(mRadii[1]), static_cast<float>(mRadii[2]));
-
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"),
+        static_cast<float>(mRadii[0]), static_cast<float>(mRadii[1]),
+        static_cast<float>(mRadii[2]));
 
     // Provide SSBO with min, max average values on location 3
     m_pBufferSSBO->BindBufferBase(GL_SHADER_STORAGE_BUFFER, 3);

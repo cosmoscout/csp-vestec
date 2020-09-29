@@ -15,12 +15,12 @@ class GDALReader {
    * e.g. sizes, data ranges, the buffer itself, and geo-referenced bounds
    */
   struct GreyScaleTexture {
-    int                   x;
-    int                   y;
-    std::array<double, 4> lnglatBounds;
-    std::array<double, 2> dataRange;
-    int                   buffersize;
-    float*                buffer;
+    int                   x{};
+    int                   y{};
+    std::array<double, 4> lnglatBounds{};
+    std::array<double, 2> dataRange{};
+    int                   buffersize{};
+    float*                buffer{};
     int                   timeIndex = 0;
   };
 
@@ -37,7 +37,7 @@ class GDALReader {
   /**
    * Adds a texture with unique path to the cache
    */
-  static void AddTextureToCache(std::string path, GreyScaleTexture& texture);
+  static void AddTextureToCache(const std::string& path, GreyScaleTexture& texture);
 
  private:
   static std::map<std::string, GreyScaleTexture> TextureCache;

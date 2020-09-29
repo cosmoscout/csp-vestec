@@ -13,27 +13,14 @@
 #include <VistaOGLExt/Rendering/ABuffer/VistaABufferOIT.h>
 #include <VistaOGLExt/VistaBufferObject.h>
 #include <VistaOGLExt/VistaGLSLShader.h>
-#include <VistaOGLExt/VistaOGLUtils.h>
-#include <VistaOGLExt/VistaShaderRegistry.h>
 #include <VistaOGLExt/VistaTexture.h>
-#include <VistaOGLExt/VistaVertexArrayObject.h>
-
-// CosmoScout includes
-#include "../../../../src/cs-core/SolarSystem.hpp"
-#include "../../../../src/cs-scene/CelestialAnchor.hpp"
-#include "../../../../src/cs-scene/CelestialBody.hpp"
 
 // Standard includes
-#include <GL/freeglut.h>
-#include <GL/gl.h>
-#include <glm/gtc/type_ptr.hpp>
-
-#include <algorithm>
-#include <fstream>
 #include <functional>
+#include <glm/gtc/type_ptr.hpp>
 #include <json.hpp>
-#include <sstream>
-#include <unordered_set>
+
+#include <cmath>
 
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
 using json = nlohmann::json;
@@ -118,7 +105,8 @@ bool TextureOverlayRenderer::Do() {
   glDepthMask(GL_FALSE);
   glEnable(GL_BLEND);
 
-  double nearClip, farClip;
+  double nearClip = NAN;
+  double farClip  = NAN;
   GetVistaSystem()
       ->GetDisplayManager()
       ->GetCurrentRenderInfo()
@@ -131,7 +119,7 @@ bool TextureOverlayRenderer::Do() {
   GLint iViewport[4];
   glGetIntegerv(GL_VIEWPORT, iViewport);
 
-  auto        viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
+  auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
   auto const& data     = mGBufferData[viewport];
 
   data.mDepthBuffer->Bind();
@@ -184,7 +172,8 @@ bool TextureOverlayRenderer::Do() {
   loc = m_pSurfaceShader->GetUniformLocation("uMatMV");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matMV.GetData());
 
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"), (float)farClip);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uFarClip"), static_cast<float>(farClip));
 
   // m_pSurfaceShader->SetUniform(
   //    m_pSurfaceShader->GetUniformLocation("uBounds"), 4, 1, mTexture.lnglatBounds.data());
@@ -193,21 +182,21 @@ bool TextureOverlayRenderer::Do() {
   glUniform4dv(loc, 1, mTexture.lnglatBounds.data());
 
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRange"),
-      (float)mTexture.dataRange[0], (float)mTexture.dataRange[1]);
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), (float)mOpacity);
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), (float)mTime);
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), (bool)mUseTime);
+      static_cast<float>(mTexture.dataRange[0]), static_cast<float>(mTexture.dataRange[1]));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), mOpacity);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), mTime);
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), mUseTime);
 
   auto sunDirection =
       glm::normalize(glm::inverse(matWorldTransform) *
                      (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
       sunDirection[0], sunDirection[1], sunDirection[2]);
-  
-  //provide radii to shader
+
+  // provide radii to shader
   auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"), static_cast<float>(mRadii[0]),
-      static_cast<float>(mRadii[1]), static_cast<float>(mRadii[2]));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"),
+      static_cast<float>(mRadii[0]), static_cast<float>(mRadii[1]), static_cast<float>(mRadii[2]));
 
   int depthBits = 0;
   glGetIntegerv(GL_DEPTH_BITS, &depthBits);

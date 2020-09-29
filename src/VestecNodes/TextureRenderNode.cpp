@@ -97,7 +97,7 @@ void TextureRenderNode::SetUseTime(bool use) {
 void TextureRenderNode::ReadSimulationResult(std::string filename) {
   // Read the GDAL texture (grayscale only 1 float channel)
   GDALReader::GreyScaleTexture texture;
-  GDALReader::ReadGrayScaleTexture(texture, filename);
+  GDALReader::ReadGrayScaleTexture(texture, std::move(filename));
 
   // Add the new texture for rendering
   m_pRenderer->SetOverlayTexture(texture);
