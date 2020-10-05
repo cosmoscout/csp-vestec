@@ -7,6 +7,7 @@
  * @property {(number|string)} id
  * @property {{
  *   sensorFile: string,
+ *   sensorFilePath: string,
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -89,11 +90,14 @@ class DiseasesSensorInputNode {
     if (this._useVestec()) {
       if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
         node.data.sensorFileSelectParent.classList.add('hidden');
+        node.data.sensorFile = null;
+        delete node.data.sensorFilePath;
         return;
       }
 
-      if (node.data.sensorFile === null) {
+      if (node.data.sensorFile === null || node.data.sensorFilePath !== inputs[0][0]) {
         window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), inputs[0][0]);
+        node.data.sensorFilePath = inputs[0][0];
       }
     }
 

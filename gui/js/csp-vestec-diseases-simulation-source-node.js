@@ -29,7 +29,7 @@ class DiseasesSimulationNode {
    */
   static path;
 
-  static startAnimation(self, slider, node) {
+  static startAnimation(slider, node) {
     if (typeof node.data.ensembleMembers === 'undefined') {
       return;
     }
@@ -49,7 +49,7 @@ class DiseasesSimulationNode {
       }
 
       return setTimeout(() => {
-        DiseasesSimulationNode.startAnimation(self, slider, node);
+        DiseasesSimulationNode.startAnimation(slider, node);
       }, 60 / speed);
     }
   }
@@ -120,8 +120,6 @@ class DiseasesSimulationNode {
 
         // When combo box changes update the files and number of ensemble info
         select.addEventListener('change', (event) => {
-          console.log(event);
-          console.log($(select).val());
           // console.log('Change combo box');
           window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), event.target.value);
 
@@ -140,7 +138,7 @@ class DiseasesSimulationNode {
             event.target.innerText = 'Pause';
             node.data.animate = true;
 
-            node.data.timeoutId = DiseasesSimulationNode.startAnimation(this, slider, node);
+            node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
           } else {
             clearTimeout(node.data.timeoutId);
             event.target.innerText = 'Play';
@@ -165,7 +163,7 @@ class DiseasesSimulationNode {
           node.data.playbackSpeed = handles;
           if (node.data.animate) {
             clearTimeout(node.data.timeoutId);
-            node.data.timeoutId = DiseasesSimulationNode.startAnimation(this, slider, node);
+            node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
           }
         });
       },
@@ -203,6 +201,9 @@ class DiseasesSimulationNode {
       if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
         node.data.ensembleControlParent.classList.add('hidden');
         node.data.simControlParent.classList.add('hidden');
+
+        delete node.data.fileList;
+        node.data.loaded = false;
         return;
       }
 
