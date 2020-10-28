@@ -33,14 +33,15 @@ class CinemaDBNode : public VNE::Node {
   /**
    * Read the use case names from the Cinema data base and fill the combobox
    */
-  void ReadCaseNames(int id);
+  void ReadCaseNames(int id, const std::string& path);
 
   /**
    * Read the time steps from the Cinema data base and initialize the silder
    */
-  void GetTimeSteps(int id);
+  void GetTimeSteps(int id, const std::string& path);
 
-  void static ConvertFile(const std::string& caseName, const std::string& timeStep);
+  void static ConvertFile(
+      const std::string& caseName, const std::string& timeStep, const std::string& path);
 };
 
 #endif /* CINEMADB_SOURCE_NODE_HPP_ */

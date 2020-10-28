@@ -28,7 +28,7 @@
 using json = nlohmann::json;
 
 CinemaDBNode::CinemaDBNode(cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id, 1, 1) {
 }
 
 CinemaDBNode::~CinemaDBNode() {
@@ -39,33 +39,38 @@ std::string CinemaDBNode::GetName() {
 }
 
 void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
-  csp::vestec::logger().debug("[" + GetName() + "] Init");
+  csp::vestec::logger().debug("[{}] Init", GetName());
 
   const std::string node =
       cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-cinemadb-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);
 
+  if (!csp::vestec::Plugin::dataDir.empty()) {
+    pEditor->GetGuiItem()->callJavascript("CinemaDBNode.setPath", csp::vestec::Plugin::dataDir);
+  }
+
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double, std::string>("readCaseNames",
-      "Returns available case names", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id);
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.readCaseNames",
+      "Returns available case names", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, std::string>("getTimeSteps",
-      "Returns time steps for a case", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id);
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.getTimeSteps",
+      "Returns time steps for a case", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<std::string, std::string>("convertFile",
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.convertFile",
       "Converts a .vtu file to .json",
-      std::function([](const std::string caseName, std::string timeStep) {
-        CinemaDBNode::ConvertFile(caseName, timeStep);
+      std::function([](const std::string caseName, std::string timeStep, std::string path) {
+        CinemaDBNode::ConvertFile(caseName, timeStep, path);
       }));
 }
 
-void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& timeStep) {
+void CinemaDBNode::ConvertFile(
+    const std::string& caseName, const std::string& timeStep, const std::string& path) {
   auto reader = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(path);
   reader->Update();
 
   /////////////////
@@ -85,36 +90,34 @@ void CinemaDBNode::ConvertFile(const std::string& caseName, const std::string& t
   polyFilter->Update();
 
   ///////////////// Dump to vtk js
-  auto dumper = vtkHttpDataSetWriter::New();
-  dumper->SetFileName(
-      (csp::vestec::Plugin::dataDir + "/export/" + caseName + "_" + (timeStep)).c_str());
+  auto* dumper = vtkHttpDataSetWriter::New();
+  dumper->SetFileName((path + "/converted/" + caseName + "_" + (timeStep)).c_str());
   dumper->SetInputConnection(polyFilter->GetOutputPort());
   dumper->Write();
 
-  csp::vestec::logger().debug("[" + GetName() +
-                              "::ConvertFile] JSON written to: " + csp::vestec::Plugin::dataDir +
-                              "/export/" + caseName + "_" + (timeStep));
+  csp::vestec::logger().debug(
+      "[{}::ConvertFile] JSON written to: {}/converted/{}_{}", GetName(), path, caseName, timeStep);
 }
 
-void CinemaDBNode::ReadCaseNames(int id) {
+void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
   json args;
 
   csp::vestec::logger().debug(
-      "[" + GetName() +
-      "::ReadCaseNames] Reading case names from cinema database: " + csp::vestec::Plugin::dataDir);
+      "[{}::ReadCaseNames] Reading case names from cinema database: {}", GetName(), path);
 
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(path);
   reader->Update();
 
-  auto table = vtkTable::SafeDownCast(reader->GetOutput());
+  auto* table = vtkTable::SafeDownCast(reader->GetOutput());
 
   std::set<std::string> caseNames;
-  auto caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
+  auto* caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
 
-  for (int x = 0; x < table->GetNumberOfRows(); ++x)
+  for (int x = 0; x < table->GetNumberOfRows(); ++x) {
     caseNames.insert(caseNamesColumn->GetValue(x));
+  }
   for (auto entry : caseNames) {
     args.push_back(entry);
   }
@@ -122,21 +125,20 @@ void CinemaDBNode::ReadCaseNames(int id) {
   m_pItem->callJavascript("CinemaDBNode.fillCaseNames", id, args.dump());
 }
 
-void CinemaDBNode::GetTimeSteps(int id) {
+void CinemaDBNode::GetTimeSteps(int id, const std::string& path) {
   json args;
 
   csp::vestec::logger().debug(
-      "[" + GetName() +
-      "::GetTimeSteps] Reading time info from cinema database: " + csp::vestec::Plugin::dataDir);
+      "[{}::GetTimeSteps] Reading time info from cinema database: {}", GetName(), path);
 
   ttk::globalDebugLevel_ = 3;
   auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
-  reader->SetDatabasePath(csp::vestec::Plugin::dataDir);
+  reader->SetDatabasePath(path);
   reader->Update();
 
-  auto          table = vtkTable::SafeDownCast(reader->GetOutput());
+  auto*         table = vtkTable::SafeDownCast(reader->GetOutput());
   std::set<int> caseNames;
-  auto          timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
+  auto*         timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
 
   int min = std::numeric_limits<int>::max();
   int max = std::numeric_limits<int>::min();
@@ -149,8 +151,9 @@ void CinemaDBNode::GetTimeSteps(int id) {
   args.push_back(min); // min
   args.push_back(max); // max
 
-  for (auto entry : caseNames)
+  for (auto entry : caseNames) {
     args.push_back(entry);
+  }
 
   m_pItem->callJavascript("CinemaDBNode.createSlider", id, args.dump());
 }

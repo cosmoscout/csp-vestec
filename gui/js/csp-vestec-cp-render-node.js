@@ -1,13 +1,32 @@
-/* global D3NE */
+/* global D3NE, $, noUiSlider, CosmoScout */
+
+/**
+ * CriticalPoints Node definition
+ *
+ * @typedef {Object} Node
+ * @property {(number|string)} id
+ * @property {{
+ *   activeFile: string|null,
+ * }} data
+ * @property {Function} addOutput
+ * @property {Function} addInput
+ * @property {Function} addControl
+ */
 
 /**
  * HTML code for the node editor and the Critical Point render node.
  * It gets points stored in a JSON object as input
  */
 class CriticalPointsNode {
-  lastInputString = "";
+  lastInputString = '';
 
-  _builder(node) {
+  /**
+   * Component builder
+   *
+   * @param {Node} node
+   * @returns {Node} D3NE Node
+   */
+  builder(node) {
     const renderModeHtml = `<div class="row">
                 <div class="col-5 text">Mode:</div>
                 <select id="vis_mode_${node.id}" class="combobox col-7">
@@ -19,13 +38,15 @@ class CriticalPointsNode {
                 </select>
             </div>`;
 
-    const renderModeControl = new D3NE.Control(renderModeHtml, (element, control) => {
+    const renderModeControl = new D3NE.Control(renderModeHtml, (element, _control) => {
       // Initialize combobox for the visualization mode
-      const select = $(element).find("#vis_mode_" + node.id);
+      const select = $(element).find(`#vis_mode_${node.id}`);
       select.selectpicker();
-      select.on("change", function() {
+      select.on('change', () => {
         window.callNative(
-            "setCriticalPointsVisualizationMode", parseInt(node.id), parseInt($(this).val()));
+          'setCriticalPointsVisualizationMode',
+          parseInt(node.id, 10), parseInt($(this).val(), 10),
+        );
       });
     });
 
@@ -35,8 +56,8 @@ class CriticalPointsNode {
       snap: false,
       animate: false,
       range: {
-        'min': 1,
-        'max': 10,
+        min: 1,
+        max: 5,
       },
     };
 
@@ -47,13 +68,13 @@ class CriticalPointsNode {
                 </div> 
             </div>`;
 
-    const heightControl = new D3NE.Control(heightControlHTML, (element, control) => {
+    const heightControl = new D3NE.Control(heightControlHTML, (element, _control) => {
       const heightScale = element.querySelector(`#height_scale_${node.id}`);
 
       noUiSlider.create(heightScale, sliderOptions);
 
       heightScale.noUiSlider.on('update', (value) => {
-        window.callNative("setCriticalPointsHeightScale", parseInt(node.id), parseFloat(value));
+        window.callNative('setCriticalPointsHeightScale', parseInt(node.id, 10), parseFloat(value));
       });
     });
 
@@ -64,13 +85,13 @@ class CriticalPointsNode {
                 </div>
             </div>`;
 
-    const widthControl = new D3NE.Control(widthControlHTML, (element, control) => {
+    const widthControl = new D3NE.Control(widthControlHTML, (element, _control) => {
       const widthScale = element.querySelector(`#width_scale_${node.id}`);
 
       noUiSlider.create(widthScale, sliderOptions);
 
       widthScale.noUiSlider.on('update', (value) => {
-        window.callNative("setCriticalPointsWidthScale", parseInt(node.id), parseFloat(value));
+        window.callNative('setCriticalPointsWidthScale', parseInt(node.id, 10), parseFloat(value));
       });
     });
 
@@ -80,7 +101,7 @@ class CriticalPointsNode {
 
     node.data.activeFile = null;
 
-    const input = new D3NE.Input('Points', CosmoScout.vestec.sockets.POINT_ARRAY);
+    const input = new D3NE.Input('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
 
     node.addInput(input);
 
@@ -90,13 +111,13 @@ class CriticalPointsNode {
   /**
    * Node Editor Worker function
    * Loads the vtk file from input and draws the canvas
-   * @param node {{id: number, data: {canvas: HTMLCanvasElement, context:
-   * CanvasRenderingContext2D}}}
-   * @param inputs {any[][]}
-   * @param outputs {any[][]}
+   *
+   * @param {Node} node
+   * @param {Array} inputs - Point Array
+   * @param {Array} _outputs - unused
    * @private
    */
-  _worker(node, inputs, outputs) {
+  worker(node, inputs, _outputs) {
     if (inputs[0].length === 0) {
       console.debug(`[CriticalPointsNode #${node.id}] Input Empty`);
       return;
@@ -104,13 +125,14 @@ class CriticalPointsNode {
 
     if (this.lastInputString !== JSON.stringify(inputs[0][0])) {
       // Send points to C++ for rendering in OGL
-      window.callNative("setPoints", node.id, JSON.stringify(inputs[0][0]));
+      window.callNative('setPoints', node.id, JSON.stringify(inputs[0][0]));
       this.lastInputString = JSON.stringify(inputs[0][0]);
     }
   }
 
   /**
    * Node Editor Component
+   *
    * @returns {D3NE.Component}
    * @throws {Error}
    */
@@ -118,13 +140,14 @@ class CriticalPointsNode {
     this._checkD3NE();
 
     return new D3NE.Component('CriticalPointsNode', {
-      builder: this._builder.bind(this),
-      worker: this._worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 
   /**
    * Check if D3NE is available
+   *
    * @throws {Error}
    * @private
    */
@@ -138,5 +161,5 @@ class CriticalPointsNode {
 (() => {
   const CPnode = new CriticalPointsNode();
 
-  CosmoScout.vestec.addNode('CriticalPointsNode', CPnode.getComponent());
+  CosmoScout.vestecNE.addNode('CriticalPointsNode', CPnode.getComponent());
 })();

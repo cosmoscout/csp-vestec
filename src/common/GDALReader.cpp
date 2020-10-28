@@ -18,7 +18,7 @@ void GDALReader::InitGDAL() {
   GDALReader::mIsInitialized = true;
 }
 
-void GDALReader::AddTextureToCache(std::string path, GreyScaleTexture& texture) {
+void GDALReader::AddTextureToCache(const std::string& path, GreyScaleTexture& texture) {
   GDALReader::mMutex.lock();
   // Cache the texture
   TextureCache.insert(std::make_pair(path, texture));
@@ -32,12 +32,17 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
     return;
   }
 
+  csp::vestec::logger().debug("Reading filename {}", filename);
+
   // Check for texture in cache
   GDALReader::mMutex.lock();
-  std::map<std::string, GreyScaleTexture>::iterator it = TextureCache.find(filename);
+  auto it = TextureCache.find(filename);
   if (it != TextureCache.end()) {
     texture = it->second;
+
     GDALReader::mMutex.unlock();
+    csp::vestec::logger().debug("Found {} in gdal cache.", filename);
+
     return;
   }
   GDALReader::mMutex.unlock();
@@ -49,36 +54,39 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   double                noDataValue = -100000;
   double                adfSrcGeoTransform[6];
   double                adfDstGeoTransform[6];
-  std::array<double, 4> bounds;
-  std::array<double, 2> d_dataRange;
+  std::array<double, 4> bounds{};
+  std::array<double, 2> d_dataRange{};
 
-  int resX = 0, resY = 0;
+  int resX = 0;
+  int resY = 0;
   // Open the file. Needs to be supported by GDAL
   // TODO: There seems a multithreading issue in netCDF so we need to lock data reading
   GDALReader::mMutex.lock();
-  poDatasetSrc = (GDALDataset*)GDALOpen(filename.data(), GA_ReadOnly);
+  poDatasetSrc = static_cast<GDALDataset*>(GDALOpen(filename.data(), GA_ReadOnly));
   GDALReader::mMutex.unlock();
 
-  if (poDatasetSrc == NULL) {
-    csp::vestec::logger().error("[GDALReader::ReadGrayScaleTexture] Failed to load " + filename);
+  if (poDatasetSrc == nullptr) {
+    csp::vestec::logger().error("[GDALReader::ReadGrayScaleTexture] Failed to load {}", filename);
     return;
   }
 
-  if (poDatasetSrc->GetProjectionRef() == NULL) {
+  if (poDatasetSrc->GetProjectionRef() == nullptr) {
     csp::vestec::logger().error(
-        "[GDALReader::ReadGrayScaleTexture] No projection defined for " + filename);
+        "[GDALReader::ReadGrayScaleTexture] No projection defined for {}", filename);
     return;
   }
 
   // Read geotransform from src image
   poDatasetSrc->GetGeoTransform(adfSrcGeoTransform);
 
-  int  bGotMin, bGotMax; // like bool if it was successful
-  auto poBand    = poDatasetSrc->GetRasterBand(1);
+  int   bGotMin  = 0;
+  int   bGotMax  = 0; // like bool if it was successful
+  auto* poBand   = poDatasetSrc->GetRasterBand(1);
   d_dataRange[0] = poBand->GetMinimum(&bGotMin);
   d_dataRange[1] = poBand->GetMaximum(&bGotMax);
-  if (!(bGotMin && bGotMax))
-    GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, d_dataRange.data());
+  if (!(bGotMin && bGotMax)) {
+    GDALComputeRasterMinMax(static_cast<GDALRasterBandH>(poBand), TRUE, d_dataRange.data());
+  }
 
   /////////////////////// Reprojection /////////////////////
   char* pszDstWKT = nullptr;
@@ -89,8 +97,8 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   oSRS.exportToWkt(&pszDstWKT);
 
   // Create the transformation object handle
-  auto hTransformArg = GDALCreateGenImgProjTransformer(
-      poDatasetSrc, poDatasetSrc->GetProjectionRef(), NULL, pszDstWKT, FALSE, 0.0, 1);
+  auto* hTransformArg = GDALCreateGenImgProjTransformer(
+      poDatasetSrc, poDatasetSrc->GetProjectionRef(), nullptr, pszDstWKT, FALSE, 0.0, 1);
 
   // Create output coordinate system and store transformation
   auto eErr = GDALSuggestedWarpOutput(
@@ -117,11 +125,13 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   psWarpOptions->hSrcDS          = poDatasetSrc;
   psWarpOptions->hDstDS          = nullptr;
   psWarpOptions->nBandCount      = 1;
-  psWarpOptions->panSrcBands     = (int*)CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
-  psWarpOptions->panSrcBands[0]  = 1;
-  psWarpOptions->panDstBands     = (int*)CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
-  psWarpOptions->panDstBands[0]  = 1;
-  psWarpOptions->pfnProgress     = GDALTermProgress;
+  psWarpOptions->panSrcBands =
+      static_cast<int*>(CPLMalloc(sizeof(int) * psWarpOptions->nBandCount));
+  psWarpOptions->panSrcBands[0] = 1;
+  psWarpOptions->panDstBands =
+      static_cast<int*>(CPLMalloc(sizeof(int) * psWarpOptions->nBandCount));
+  psWarpOptions->panDstBands[0] = 1;
+  psWarpOptions->pfnProgress    = GDALTermProgress;
 
   psWarpOptions->pTransformerArg = GDALCreateGenImgProjTransformer3(
       GDALGetProjectionRef(poDatasetSrc), adfSrcGeoTransform, pszDstWKT, adfDstGeoTransform);
@@ -140,7 +150,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   GDALClose(poDatasetSrc);
   /////////////////////// Reprojection End /////////////////
   texture.buffersize   = bufferSize;
-  texture.buffer       = (float*)CPLMalloc(bufferSize);
+  texture.buffer       = static_cast<float*>(CPLMalloc(bufferSize));
   texture.x            = resX;
   texture.y            = resY;
   texture.dataRange    = d_dataRange;

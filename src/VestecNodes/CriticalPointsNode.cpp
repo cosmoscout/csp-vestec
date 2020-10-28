@@ -20,7 +20,7 @@ using json = nlohmann::json;
 CriticalPointsNode::CriticalPointsNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
-    : VNE::Node(pItem, id)
+    : VNE::Node(pItem, id, 1, 0)
     , m_pAnchor(pAnchor) {
   // Store config data for later usage
   mPluginConfig = config;
@@ -46,7 +46,7 @@ std::string CriticalPointsNode::GetName() {
 }
 
 void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
-  csp::vestec::logger().debug("[" + GetName() + "] Init");
+  csp::vestec::logger().debug("[{}] Init", GetName());
   // Load JavaScipt content from file which defines the node
   // in the node editor
   std::string code =
@@ -69,8 +69,7 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback<double, double>("setCriticalPointsVisualizationMode",
       "Sets the visualization mode", std::function([pEditor](double id, double val) {
         CriticalPointsRenderer::RenderMode renderMode = CriticalPointsRenderer::RenderMode::ALL;
-        csp::vestec::logger().debug(
-            "[" + GetName() + "] Switching cp vis to " + std::to_string(val));
+        csp::vestec::logger().debug("[{}] Switching cp vis to {}", GetName(), std::to_string(val));
 
         switch (static_cast<int>(val)) {
         case 0:
@@ -171,5 +170,5 @@ void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
   vecPoints.push_back(maxP);
 
   m_pRenderer->SetPoints(vecPoints);
-  csp::vestec::logger().debug("[" + GetName() + "::SetPoints] Got points from JavaScript");
+  csp::vestec::logger().debug("[{}::SetPoints] Got points from JavaScript", GetName());
 }

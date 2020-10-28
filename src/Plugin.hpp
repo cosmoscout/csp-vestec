@@ -8,6 +8,7 @@
 #define CSP_VESTEC_PLUGIN_HPP
 
 #include "../../../src/cs-core/PluginBase.hpp"
+#include "../../../src/cs-core/tools/Mark.hpp"
 #include "../../../src/cs-gui/GuiItem.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-utils/Property.hpp"
@@ -24,12 +25,18 @@ namespace csp::vestec {
 
 class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
  public:
-  static std::string dataDir; ///< Directory where simulation data is stored
+  static std::string dataDir;           ///< Directory where simulation data is stored
+  static std::string vestecServer;      ///< Vestec Server
+  static std::string vestecDownloadDir; ///< Downloaded files location
+  static std::string vestecDiseasesDir; ///< Diseases
 
   struct Settings {
     std::string mVestecDataDir; ///< Directory where cinemaDB is stored
     std::string mFireDir;       ///< Directory where the fire simulation output is stored
     std::string mDiseasesDir; ///< Directory where the diseases simulation and sensor data is stored
+
+    std::string mVestecServer;      ///< Vestec Server - Login / Workflows
+    std::string mVestecDownloadDir; ///< Vestec Downloaded files location
   };
 
   void init() override;
@@ -44,6 +51,8 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
  private:
   Settings                                        mPluginSettings;
   std::shared_ptr<cs::scene::CelestialAnchorNode> mVestecTransform;
+  std::shared_ptr<cs::core::tools::Mark>          mMarkStart;
+  std::shared_ptr<cs::core::tools::Mark>          mMarkEnd;
 
   // Node editor for VESTEC
   VNE::NodeEditor* m_pNodeEditor;

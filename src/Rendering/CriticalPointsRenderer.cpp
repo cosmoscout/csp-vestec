@@ -66,7 +66,7 @@ void CriticalPointsRenderer::SetWidthScale(float scale) {
 
 void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
   csp::vestec::logger().debug(
-      "[CriticalPointsRenderer] Copy data to VBO: " + std::to_string(vecPoints.size()));
+      "[CriticalPointsRenderer] Copy data to VBO: {}", std::to_string(vecPoints.size()));
   m_vecPoints.clear();
 
   // Get persistence range

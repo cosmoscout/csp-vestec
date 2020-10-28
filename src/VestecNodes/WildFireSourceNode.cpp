@@ -11,7 +11,7 @@ using json = nlohmann::json;
 
 WildFireSourceNode::WildFireSourceNode(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id, 1, 0) {
   mPluginConfig = config;
 }
 

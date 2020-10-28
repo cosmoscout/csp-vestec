@@ -11,7 +11,7 @@ using json = nlohmann::json;
 
 DiseasesSimulation::DiseasesSimulation(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id, 1, 1) {
   mPluginConfig = config;
 }
 
@@ -25,36 +25,48 @@ std::string DiseasesSimulation::GetName() {
 void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file
   std::string code = cs::utils::filesystem::loadToString(
-      "../share/resources/gui/js/csp-vestec-disaeses-simulation-source-node.js");
+      "../share/resources/gui/js/csp-vestec-diseases-simulation-source-node.js");
 
   pEditor->GetGuiItem()->executeJavascript(code);
 
+  if (!csp::vestec::Plugin::vestecDiseasesDir.empty()) {
+    pEditor->GetGuiItem()->callJavascript(
+        "DiseasesSimulationNode.setPath", csp::vestec::Plugin::vestecDiseasesDir);
+  }
+
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double, std::string, double>("getFilesForTimeStep",
+  pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.getFilesForTimeStep",
       "Returns files for a time step",
       std::function([pEditor](double id, std::string mode, double t) {
         pEditor->GetNode<DiseasesSimulation>(id)->GetFileNamesForTimeStep(id, mode, t);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, std::string>("setNumberOfEnsembleMembers",
+  pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.setNumberOfEnsembleMembers",
       "Sets the number of ensemble members", std::function([pEditor](double id, std::string path) {
         pEditor->GetNode<DiseasesSimulation>(id)->SetNumberOfEnsembleMembers(id, path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double>("readDiseasesSimulationModes",
-      "Returns available diseases simulation modes", std::function([pEditor](double id) {
-        pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id);
+  pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.readDiseasesSimulationModes",
+      "Returns available diseases simulation modes",
+      std::function([pEditor](double id, std::string path) {
+        // pEditor->GetNode<DiseasesSimulation>(id)->SetSimulationModes(id, path);
+
+        std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));
+
+        json args(lDirs);
+
+        pEditor->GetGuiItem()->callJavascript(
+            "DiseasesSimulationNode.fillSimModes", id, args.dump());
       }));
 }
 
-void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, double t) {
+void DiseasesSimulation::GetFileNamesForTimeStep(int id, const std::string& mode, double t) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(mode));
-
   std::set<std::string> listOfFiles;
   // Get the file for the timestep in every member
-  for (auto dir : lDirs) {
+  for (const auto& dir : lDirs) {
     std::set<std::string> lFiles(cs::utils::filesystem::listFiles(dir));
-    for (auto file : lFiles) {
+    for (const auto& file : lFiles) {
       std::stringstream number;
       number << t;
       std::string search = "day_" + number.str() + ".nc";
@@ -65,17 +77,24 @@ void DiseasesSimulation::GetFileNamesForTimeStep(int id, std::string mode, doubl
   }
 
   json args(listOfFiles);
-  m_pItem->callJavascript("DiseasesSimulation.setFileListForTimeStep", id, args.dump());
+  m_pItem->callJavascript("DiseasesSimulationNode.setFileListForTimeStep", id, args.dump());
 }
 
-void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, std::string path) {
+void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, const std::string& path) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));
-  m_pItem->callJavascript("DiseasesSimulation.setNumberOfEnsembleMembers", id, lDirs.size());
+
+  // TODO Awkward
+  std::string           a = *lDirs.begin();
+  std::set<std::string> lFiles(cs::utils::filesystem::listFiles(a + "/"));
+
+  m_pItem->callJavascript(
+      "DiseasesSimulationNode.setNumberOfEnsembleMembers", id, lDirs.size(), lFiles.size());
 }
 
-void DiseasesSimulation::SetSimulationModes(int id) {
-  std::set<std::string> lDirs(
-      cs::utils::filesystem::listDirs(mPluginConfig.mDiseasesDir + "/output/"));
+void DiseasesSimulation::SetSimulationModes(int id, const std::string& path) {
+  std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));
+
   json args(lDirs);
-  m_pItem->callJavascript("DiseasesSimulation.fillSimModes", id, args.dump());
+
+  m_pItem->callJavascript("DiseasesSimulationNode.fillSimModes", id, args.dump());
 }

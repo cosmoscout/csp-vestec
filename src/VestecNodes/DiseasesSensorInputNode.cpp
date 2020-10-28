@@ -11,7 +11,7 @@ using json = nlohmann::json;
 
 DiseasesSensorInputNode::DiseasesSensorInputNode(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id) {
+    : VNE::Node(pItem, id, 1, 1) {
   mPluginConfig = config;
 }
 
@@ -23,24 +23,29 @@ std::string DiseasesSensorInputNode::GetName() {
 }
 
 void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
-  csp::vestec::logger().debug("[" + GetName() + "] Init");
+  csp::vestec::logger().debug("[{}] Init", GetName());
 
   // Load JavaScipt content from file
   std::string code = cs::utils::filesystem::loadToString(
-      "../share/resources/gui/js/csp-vestec-disaeses-sensor-source-node.js");
+      "../share/resources/gui/js/csp-vestec-diseases-sensor-source-node.js");
 
   pEditor->GetGuiItem()->executeJavascript(code);
 
+  if (!csp::vestec::Plugin::vestecDiseasesDir.empty()) {
+    // Todo use dedicated member
+    pEditor->GetGuiItem()->callJavascript(
+        "DiseasesSensorInputNode.setPath", csp::vestec::Plugin::vestecDiseasesDir);
+  }
+
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback<double>(
-      "readSensorFileNames", "Reads sensor file names", std::function([pEditor](double id) {
-        pEditor->GetNode<DiseasesSensorInputNode>(id)->ReadSensorFileNames(id);
+  pEditor->GetGuiItem()->registerCallback("DiseasesSensorInputNode.readSensorFileNames",
+      "Reads sensor file names", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<DiseasesSensorInputNode>(id)->ReadSensorFileNames(id, path);
       }));
 }
 
-void DiseasesSensorInputNode::ReadSensorFileNames(int id) {
-  std::set<std::string> lFiles(
-      cs::utils::filesystem::listFiles(mPluginConfig.mDiseasesDir + "/input"));
-  json args(lFiles);
-  m_pItem->callJavascript("DiseasesSensorInput.fillWithSensorFiles", id, args.dump());
+void DiseasesSensorInputNode::ReadSensorFileNames(int id, const std::string& path) {
+  std::set<std::string> lFiles(cs::utils::filesystem::listFiles(path));
+  json                  args(lFiles);
+  m_pItem->callJavascript("DiseasesSensorInputNode.fillWithSensorFiles", id, args.dump());
 }

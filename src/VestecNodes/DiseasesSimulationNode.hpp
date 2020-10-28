@@ -28,17 +28,17 @@ class DiseasesSimulation : public VNE::Node {
   /**
    * Read available filename for a given timestep. In each ensemble member there should be one
    */
-  void GetFileNamesForTimeStep(int id, std::string mode, double t);
+  void GetFileNamesForTimeStep(int id, const std::string& mode, double t);
 
   /**
    * Set the number of ensemble members to the FlowEditor node
    */
-  void SetNumberOfEnsembleMembers(int id, std::string path);
+  void SetNumberOfEnsembleMembers(int id, const std::string& path);
 
   /**
    * Set the simulation modes
    */
-  void SetSimulationModes(int id);
+  void SetSimulationModes(int id, const std::string& path);
 
  private:
   csp::vestec::Plugin::Settings mPluginConfig;

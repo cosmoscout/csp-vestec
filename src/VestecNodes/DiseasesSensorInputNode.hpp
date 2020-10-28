@@ -29,7 +29,7 @@ class DiseasesSensorInputNode : public VNE::Node {
   /**
    * Read available textures and fill combo box
    */
-  void ReadSensorFileNames(int id);
+  void ReadSensorFileNames(int id, const std::string& path);
 
  private:
   csp::vestec::Plugin::Settings mPluginConfig;

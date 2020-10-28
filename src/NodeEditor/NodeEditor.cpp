@@ -52,13 +52,13 @@ void NodeEditor::RegisterSocketType(const std::string& name) {
 void NodeEditor::AddNewNode(int id, const std::string& name) {
   auto it = m_mapCreatorFunctions.find(name);
   if (it != m_mapCreatorFunctions.end()) {
-    csp::vestec::logger().info("[NodeEditor::AddNewNode] New " + name +
-                               "node added to editor! ID = " + std::to_string(id));
+    csp::vestec::logger().info(
+        "[NodeEditor::AddNewNode] New {} node added to editor! ID = {}", name, id);
 
     Node* pNode    = m_mapCreatorFunctions[name](m_pWebView, id);
     m_mapNodes[id] = pNode;
   } else {
-    csp::vestec::logger().info("[NodeEditor::AddNewNode] No creator function found for " + name);
+    csp::vestec::logger().info("[NodeEditor::AddNewNode] No creator function found for {}", name);
   }
 }
 
@@ -67,8 +67,7 @@ void NodeEditor::DeleteNode(int id) {
   if (it != m_mapNodes.end()) {
     delete it->second;
     m_mapNodes.erase(it);
-    csp::vestec::logger().info(
-        "[NodeEditor::DeleteNode] Delete node with id " + std::to_string(id));
+    csp::vestec::logger().info("[NodeEditor::DeleteNode] Delete node with id {}", id);
   }
 }
 
@@ -82,8 +81,8 @@ void NodeEditor::AddConnection(int from, int to, int fromPort, int toPort) {
 
     node1->AddOutportNode(to, node2, fromPort, toPort);
     node2->AddInportNode(from, node1, fromPort, toPort);
-    csp::vestec::logger().info("[NodeEditor::AddConnection] Add connection from node " +
-                               std::to_string(from) + " to node " + std::to_string(to));
+    csp::vestec::logger().info(
+        "[NodeEditor::AddConnection] Add connection from node {} to node {}", from, to);
 
   } else {
     csp::vestec::logger().error(
@@ -101,26 +100,26 @@ void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
 
     node2->RemoveInputNode(from, fromPort, toPort);
     node1->RemoveOutputNode(to, fromPort, toPort);
-    csp::vestec::logger().info("[NodeEditor::DeleteConnection] Delete connection from node " +
-                               std::to_string(from) + " to node " + std::to_string(to));
+    csp::vestec::logger().info(
+        "[NodeEditor::DeleteConnection] Delete connection from node {} to node {}", from, to);
   } else if (it1 != m_mapNodes.end()) {
     Node* node = it1->second;
     node->RemoveOutputNode(to, fromPort, toPort);
     csp::vestec::logger().info(
-        "[NodeEditor::DeleteConnection] Only removed output ports of node " + std::to_string(from));
+        "[NodeEditor::DeleteConnection] Only removed output ports of node {}", from);
 
   } else if (it2 != m_mapNodes.end()) {
     Node* node = it2->second;
     node->RemoveInputNode(from, fromPort, toPort);
     csp::vestec::logger().info(
-        "[NodeEditor::DeleteConnection] Only removed input ports of node " + std::to_string(to));
+        "[NodeEditor::DeleteConnection] Only removed input ports of node {}", to);
   }
 }
 
 void NodeEditor::InitNodeEditor() {
   // Loop over sockets and add them to the editor
   for (auto const& name : m_vecSockets) {
-    m_pWebView->callJavascript("CosmoScout.vestec.addSocket", name);
+    m_pWebView->callJavascript("CosmoScout.vestecNE.addSocket", name);
   }
 
   // Loop over registered node types and make them in javascript available
@@ -130,20 +129,20 @@ void NodeEditor::InitNodeEditor() {
 
   // Add node editor components
   for (auto const& name : m_mapInitFunctions) {
-    m_pWebView->callJavascript("CosmoScout.vestec.addComponent", name.first);
+    m_pWebView->callJavascript("CosmoScout.vestecNE.addComponent", name.first);
   }
 
   // Build the context menu
   for (auto const& category : m_mapCategories) {
-    m_pWebView->callJavascript("CosmoScout.vestec.addContextMenuCategory", category.first);
+    m_pWebView->callJavascript("CosmoScout.vestecNE.addContextMenuCategory", category.first);
 
     for (auto const& node : category.second) {
-      m_pWebView->callJavascript("CosmoScout.vestec.addContextMenuContent", category.first, node);
+      m_pWebView->callJavascript("CosmoScout.vestecNE.addContextMenuContent", category.first, node);
     }
   }
 
-  m_pWebView->callJavascript("CosmoScout.vestec.initContextMenu");
-  m_pWebView->callJavascript("CosmoScout.vestec.initNodeEditor");
+  m_pWebView->callJavascript("CosmoScout.vestecNE.initContextMenu");
+  m_pWebView->callJavascript("CosmoScout.vestecNE.initNodeEditor");
 
   m_pWebView->waitForFinishedLoading();
   // Register the required callbacks

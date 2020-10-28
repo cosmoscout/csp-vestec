@@ -20,45 +20,6 @@
     color: rgb(0, 0, 0);
 }
 
-#csp-vestec-node-editor #vestec-tabs {
-    border-bottom: 0;
-}
-
-#csp-vestec-node-editor #vestec-tabs .nav-item {
-    padding: 6px 4px 2px 4px;
-    margin: 0 10px;
-}
-
-#csp-vestec-node-editor .vestec-container {
-    padding: 0 0 !important;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-#csp-vestec-node-editor .vestec-tabs {
-    margin: 0 !important;
-    flex-grow: 1;
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-#csp-vestec-node-editor .vestec-tab-content {
-    margin: 0;
-    padding: 2px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: 0;
-}
-
-#csp-vestec-node-editor .vestec-tab-content.active {
-    z-index: 111;
-}
-
 #csp-vestec-node-editor .vestec-info {
     background-color: var(--cs-color-text);
     border-top-left-radius: 15px;
@@ -71,16 +32,6 @@
     height: 35px;
     width: 100%;
     z-index: 112;
-}
-
-#csp-vestec-node-editor .vestec-portal {
-    background-color: rgb(229, 229, 240);
-    opacity: 1.0;
-    padding: 0 0 !important;
-    height: 100%;
-    width: 100%;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
 }
 
 #csp-vestec-node-editor .datepicker table tr th,
@@ -129,6 +80,39 @@
     border-width: 2px;
     border-color: gray;
     overflow: hidden;
+}
+
+#csp-vestec-logout-row,
+#csp-vestec-status-row {
+    height: 30px;
+}
+
+#csp-vestec-login-row {
+    height: 200px;
+}
+
+.row.hideable {
+    transition: opacity 0.25s, height 0.25s;
+    opacity: 1;
+}
+
+.row.hideable.invisible {
+    opacity: 0;
+    height: 0 !important; /* eww */
+    margin-bottom: 0 !important; /* eww */
+}
+
+#csp-vestec-status-row .material-icons {
+    animation: spin infinite 3s linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .node-editor {
