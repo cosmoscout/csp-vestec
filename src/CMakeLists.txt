@@ -32,6 +32,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 find_package(TTKVTK REQUIRED)
 find_package(GDAL REQUIRED)
+find_package(zipper REQUIRED)
 
 # The cosmoscout vr vestec plugin project
 file(GLOB SOURCE_FILES *.cpp)
@@ -88,7 +89,7 @@ target_link_libraries(csp-vestec
         Boost::program_options
         ttk::vtk::ttkAll
 		GDAL::GDAL
-        ${COSMOSCOUT_EXTERNALS_DIR}/lib/Zipper.lib
+        Zipper
 )
 
 # Define include direcories
