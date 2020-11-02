@@ -278,9 +278,9 @@ void Plugin::deInit() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::update() {
-  auto  simTime = mTimeControl->pSimulationTime.get();
-  float timeOfDay =
-      cs::utils::convert::time::toPosix(simTime).time_of_day().total_milliseconds() / 1000.0;
+  // auto  simTime = mTimeControl->pSimulationTime.get();
+  // float timeOfDay =
+  //    cs::utils::convert::time::toPosix(simTime).time_of_day().total_milliseconds() / 1000.0;
   // Update plugin per frame
 
   if (mMarkStart != nullptr) {

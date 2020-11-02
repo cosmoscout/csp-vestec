@@ -89,6 +89,9 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
         case 5:
           renderMode = UncertaintyOverlayRenderer::RenderMode::Mixed_Difference;
           break;
+        default:
+          renderMode = UncertaintyOverlayRenderer::RenderMode::Average;
+          break;
         }
         pEditor->GetNode<UncertaintyRenderNode>(id)->GetRenderNode()->SetVisualizationMode(
             renderMode);
