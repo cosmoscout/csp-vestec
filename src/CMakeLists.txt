@@ -30,6 +30,12 @@ else()
   endif()
 endif()
 
+if (DEFINED ENV{zipper_DIR})
+  SET(zipper_DIR "$ENV{zipper_DIR}")
+else()
+  SET(zipper_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake)
+endif()
+
 # Find third party dependencies
 set(Boost_REALPATH ON)
 set(Boost_USE_MULTITHREADED ON)
@@ -95,7 +101,7 @@ target_link_libraries(csp-vestec
         Boost::program_options
         ttk::vtk::ttkAll
 		GDAL::GDAL
-        Zipper
+        zipper::zipper
 )
 
 # Define include direcories
