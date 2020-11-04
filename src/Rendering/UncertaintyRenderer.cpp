@@ -322,7 +322,7 @@ void UncertaintyOverlayRenderer::UploadTextures() {
 
   // Allocate texture array
   data.mColorBuffer->Bind();
-  if (lBufferSize != texture0.x * texture0.y * mvecTextures.size()) {
+  if (lBufferSize != static_cast<long>(texture0.x * texture0.y * mvecTextures.size())) {
     glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, texture0.x, texture0.y, mvecTextures.size());
     lBufferSize = texture0.x * texture0.y * mvecTextures.size();
   }

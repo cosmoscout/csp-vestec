@@ -21,7 +21,19 @@ endif()
 if (DEFINED ENV{GDAL_DIR})
   SET(GDAL_DIR "$ENV{GDAL_DIR}")
 else()
-  SET(GDAL_DIR ${COSMOSCOUT_EXTERNALS_DIR}/gdal)
+  if (MSVC)
+    SET(GDAL_DIR ${COSMOSCOUT_EXTERNALS_DIR}/gdal)
+  else()
+    SET(GDAL_DIR ${INSTALL_DIR})
+    SET(GDAL_LIBRARY "${INSTALL_DIR}/lib/libgdal.so")
+    SET(GDAL_INCLUDE_DIR "${INSTALL_DIR}/include")
+  endif()
+endif()
+
+if (DEFINED ENV{zipper_DIR})
+  SET(zipper_DIR "$ENV{zipper_DIR}")
+else()
+  SET(zipper_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake)
 endif()
 
 # Find third party dependencies
@@ -32,6 +44,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 find_package(TTKVTK REQUIRED)
 find_package(GDAL REQUIRED)
+find_package(zipper REQUIRED)
 
 # The cosmoscout vr vestec plugin project
 file(GLOB SOURCE_FILES *.cpp)
@@ -88,7 +101,7 @@ target_link_libraries(csp-vestec
         Boost::program_options
         ttk::vtk::ttkAll
 		GDAL::GDAL
-        ${COSMOSCOUT_EXTERNALS_DIR}/lib/Zipper.lib
+        zipper::zipper
 )
 
 # Define include direcories
