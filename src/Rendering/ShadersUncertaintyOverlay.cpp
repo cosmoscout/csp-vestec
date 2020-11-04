@@ -360,7 +360,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
     // ===========================================================================
     //Calculate the color for the uncertainty
     vec3 heatUncertainty(float u) {
-        return vec3((1 - u) * vec3( 0.9, 0.9, 0.9));
+        return vec3((1.0 - u) * vec3( 1.0, 1.0, 1.0));
     }
 
 
@@ -423,7 +423,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                 
                 vec4 colorScalar = vec4(heat(normSimValue), uOpacity);
                 vec4 colorDifference = vec4(heatUncertainty(normDiffValue), uOpacity);
-                vec4 colorVariance = vec4(heatUncertainty(variance), uOpacity);
+                vec4 colorVariance = vec4(heatUncertainty(2*stdDev), uOpacity);
                 
                 vec4 color;
                 switch (uVisMode) {
