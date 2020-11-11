@@ -96,6 +96,8 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   oSRS.SetWellKnownGeogCS("WGS84");
   oSRS.exportToWkt(&pszDstWKT);
 
+  // TODO: CPLAssert is debug only
+  /*
   // Create the transformation object handle
   auto* hTransformArg = GDALCreateGenImgProjTransformer(
       poDatasetSrc, poDatasetSrc->GetProjectionRef(), nullptr, pszDstWKT, FALSE, 0.0, 1);
@@ -104,6 +106,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   auto eErr = GDALSuggestedWarpOutput(
       poDatasetSrc, GDALGenImgProjTransform, hTransformArg, adfDstGeoTransform, &resX, &resY);
   CPLAssert(eErr == CE_None);
+  */
 
   // Calculate extents of the image
   bounds[0] =
