@@ -25,8 +25,6 @@ else()
     SET(GDAL_DIR ${COSMOSCOUT_EXTERNALS_DIR}/gdal)
   else()
     SET(GDAL_DIR ${INSTALL_DIR})
-    SET(GDAL_LIBRARY "${INSTALL_DIR}/lib/libgdal.so")
-    SET(GDAL_INCLUDE_DIR "${INSTALL_DIR}/include")
   endif()
 endif()
 
