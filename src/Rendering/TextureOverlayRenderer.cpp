@@ -130,7 +130,6 @@ bool TextureOverlayRenderer::Do() {
     data.mColorBuffer->Bind();
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_R32F, mTexture.x, mTexture.y, 0, GL_RED, GL_FLOAT, mTexture.buffer);
-    delete mTexture.buffer;
     mUpdateTexture = false;
   }
 
