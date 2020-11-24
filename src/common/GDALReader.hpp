@@ -39,6 +39,11 @@ class GDALReader {
    */
   static void AddTextureToCache(const std::string& path, GreyScaleTexture& texture);
 
+  /**
+   * Clear cache
+   */
+  static void ClearCache();
+
  private:
   static std::map<std::string, GreyScaleTexture> TextureCache;
   static std::mutex                              mMutex;

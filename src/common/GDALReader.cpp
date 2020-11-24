@@ -78,7 +78,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
 
   // Read geotransform from src image
   poDatasetSrc->GetGeoTransform(adfSrcGeoTransform);
-
+  
   int   bGotMin  = 0;
   int   bGotMax  = 0; // like bool if it was successful
   auto* poBand   = poDatasetSrc->GetRasterBand(1);
@@ -95,9 +95,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   OGRSpatialReference oSRS;
   oSRS.SetWellKnownGeogCS("WGS84");
   oSRS.exportToWkt(&pszDstWKT);
-
-  // TODO: CPLAssert is debug only
-  /*
+  
   // Create the transformation object handle
   auto* hTransformArg = GDALCreateGenImgProjTransformer(
       poDatasetSrc, poDatasetSrc->GetProjectionRef(), nullptr, pszDstWKT, FALSE, 0.0, 1);
@@ -105,8 +103,6 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   // Create output coordinate system and store transformation
   auto eErr = GDALSuggestedWarpOutput(
       poDatasetSrc, GDALGenImgProjTransform, hTransformArg, adfDstGeoTransform, &resX, &resY);
-  CPLAssert(eErr == CE_None);
-  */
 
   // Calculate extents of the image
   bounds[0] =
@@ -151,6 +147,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   GDALDestroyGenImgProjTransformer(psWarpOptions->pTransformerArg);
   GDALDestroyWarpOptions(psWarpOptions);
   GDALClose(poDatasetSrc);
+
   /////////////////////// Reprojection End /////////////////
   texture.buffersize   = bufferSize;
   texture.buffer       = static_cast<float*>(CPLMalloc(bufferSize));
@@ -161,4 +158,19 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   std::memcpy(texture.buffer, &bufferData[0], bufferSize);
 
   GDALReader::AddTextureToCache(filename, texture);
+}
+
+void GDALReader::ClearCache()
+{
+  std::map<std::string, GreyScaleTexture>::iterator it;
+
+   GDALReader::mMutex.lock();
+  //Loop over textures and delete buffer
+  for(it = TextureCache.begin(); it != TextureCache.end(); it++)
+  {
+    auto texture = it->second;
+    delete texture.buffer;
+  }
+  TextureCache.clear(); 
+  GDALReader::mMutex.unlock();
 }
