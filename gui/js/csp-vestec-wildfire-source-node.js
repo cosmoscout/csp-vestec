@@ -65,7 +65,7 @@ class WildFireSourceNode {
     node.addControl(simulationFile);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURES', CosmoScout.vestecNE.sockets.TEXTURES);
+    const output = new D3NE.Output('TEXTURE(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
