@@ -101,7 +101,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
       poDatasetSrc, poDatasetSrc->GetProjectionRef(), nullptr, pszDstWKT, FALSE, 0.0, 1);
 
   // Create output coordinate system and store transformation
-  auto eErr = GDALSuggestedWarpOutput(
+  GDALSuggestedWarpOutput(
       poDatasetSrc, GDALGenImgProjTransform, hTransformArg, adfDstGeoTransform, &resX, &resY);
 
   // Calculate extents of the image
