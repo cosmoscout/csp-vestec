@@ -41,7 +41,7 @@ const std::string TextureOverlayRenderer::SURFACE_VERT = R"(
 )";
 
 const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
-    #version 450
+    #version 440
     out vec4 FragColor;
 
     uniform sampler2DRect uDepthBuffer;
@@ -138,7 +138,7 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
         float beta  = 1.0 / sqrt(dot(cartesian2, oneOverRadii2));
         float n     = length(beta * cartesian * oneOverRadii2);
         float alpha = (1.0 - beta) * (length(cartesian) / n);
-        double s     = 0.0;
+        float s     = 0.0;
         float dSdA  = 1.0;
 
         vec3 d;
