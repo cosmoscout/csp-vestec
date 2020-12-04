@@ -47,6 +47,8 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
     uniform sampler2DRect uDepthBuffer;
     uniform sampler2D     uSimBuffer;
 
+    uniform sampler1D     uTransferFunction;
+
     uniform mat4          uMatInvMVP;
     uniform dmat4         uMatInvMV;
     uniform mat4          uMatInvP;
@@ -173,15 +175,6 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
 
 
     // ===========================================================================
-    vec3 heat(float v) {
-        float value = 1.0-v;
-        return (0.5+0.5*smoothstep(0.0, 0.1, value))*vec3(smoothstep(0.5, 0.3, value), value < 0.3 ?
-         smoothstep(0.0, 0.3, value) :
-         smoothstep(1.0, 0.6, value),
-         smoothstep(0.4, 0.6, value)
-        );
-    }
-
 
     void main()
     {     
@@ -218,7 +211,7 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
                 
                 //Texture lookup and color mapping
                 float normSimValue  = value / uRange.y;
-                vec4 color = vec4(heat(normSimValue), uOpacity);
+                vec4 color = texture(uTransferFunction, normSimValue);
                 
                 //Lighting using a normal calculated from partial derivative
                 vec3  fPos    = vec3(worldPos); //cast from double to float
@@ -236,7 +229,7 @@ const std::string TextureOverlayRenderer::SURFACE_FRAG = R"(
                 //vec3 result = (ambient + diffuse) * color.rgb;
                 vec3 result = color.rgb;
                
-                FragColor          = vec4(result, uOpacity);
+                FragColor = vec4(result, color.a * uOpacity);
             }
             else
                 discard;
