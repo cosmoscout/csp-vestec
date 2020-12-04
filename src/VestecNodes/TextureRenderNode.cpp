@@ -21,7 +21,7 @@ using json = nlohmann::json;
 TextureRenderNode::TextureRenderNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
-    : VNE::Node(pItem, id, 1, 0)
+    : VNE::Node(pItem, id, 2, 0)
     , m_pAnchor(pAnchor) {
   // Store config data for later usage
   mPluginConfig = config;
@@ -69,6 +69,12 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
         pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
       }));
 
+  pEditor->GetGuiItem()->registerCallback<double, std::string>(
+      "TextureRenderNode.setTransferFunction", "Sets the transfer function for rendering",
+      std::function([pEditor](double id, std::string val) {
+        pEditor->GetNode<TextureRenderNode>(id)->SetTransferFunction(val);
+      }));
+
   // Callback to adjust the simulation time used to discard pixels
   pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setTime",
       "Adjusts the simulation time used to discard pixels",
@@ -84,6 +90,10 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
 
 void TextureRenderNode::SetOpacity(double val) {
   m_pRenderer->SetOpacity(val);
+}
+
+void TextureRenderNode::SetTransferFunction(std::string json) {
+  m_pRenderer->SetTransferFunction(json);
 }
 
 void TextureRenderNode::SetTime(double val) {

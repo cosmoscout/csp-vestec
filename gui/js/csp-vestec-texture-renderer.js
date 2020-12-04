@@ -21,6 +21,7 @@
 class TextureRenderNode {
   constructor() {
     this.lastFile = '';
+    this.lastTransferFunction = '';
   }
 
   /**
@@ -93,9 +94,12 @@ class TextureRenderNode {
     node.addControl(timeControl);
     node.addControl(textureSelectControl);
 
-    // Define the input type
-    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
-    node.addInput(input);
+    // Define the input types
+    const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
+    node.addInput(inputTexture);
+    const inputTransferFunction =
+      new D3NE.Input('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    node.addInput(inputTransferFunction);
 
     return node;
   }
@@ -108,35 +112,8 @@ class TextureRenderNode {
    * @param {Array} _outputs - unused
    */
   worker(node, inputs, _outputs) {
-    if (typeof inputs[0][0] === 'undefined') {
-      return;
-    }
-
-    let texture;
-
-    if (typeof inputs[0][0] === 'string') {
-      texture = inputs[0][0];
-    } else if (typeof inputs[0][0] === 'object') {
-      if (typeof node.data.activeFileSet === 'undefined' || node.data.activeFileSet !== inputs[0][0]) {
-        this._fillTextureSelect(inputs[0][0], node);
-      }
-
-      texture = node.data.activeTexture;
-    } else {
-      node.data.textureSelectParent.classList.add('hidden');
-      delete node.data.activeTexture;
-      delete this.lastFile;
-
-      return;
-    }
-
-    if (this.lastFile === texture) {
-      return;
-    }
-
-    this.lastFile = texture;
-
-    window.callNative('TextureRenderNode.readSimulationResults', node.id, texture);
+    this._checkTextureInput(node, inputs[0][0]);
+    this._checkTransferFunctionInput(node, inputs[1][0]);
   }
 
   /**
@@ -164,6 +141,69 @@ class TextureRenderNode {
     if (typeof D3NE === 'undefined') {
       throw new Error('D3NE is not defined.');
     }
+  }
+
+  /**
+   * Check if the texture input is present and if it changed since the last time this function was
+   * called. If it did change the new texture will be send to the renderer.
+   *
+   * @param {Node} node The node on which the check is run.
+   * @param {any} textureInput The texture input of the node.
+   */
+  _checkTextureInput(node, textureInput) {
+    if (typeof textureInput === 'undefined') {
+      return;
+    }
+
+    let texture;
+
+    if (typeof textureInput === 'string') {
+      texture = textureInput;
+    } else if (typeof textureInput === 'object') {
+      if (typeof node.data.activeFileSet === 'undefined' ||
+        node.data.activeFileSet !== textureInput) {
+        this._fillTextureSelect(textureInput, node);
+      }
+
+      texture = node.data.activeTexture;
+    } else {
+      node.data.textureSelectParent.classList.add('hidden');
+      delete node.data.activeTexture;
+      delete this.lastFile;
+
+      return;
+    }
+
+    if (this.lastFile === texture) {
+      return;
+    }
+
+    this.lastFile = texture;
+
+    window.callNative('TextureRenderNode.readSimulationResults', node.id, texture);
+  }
+
+  /**
+   * Check if the transfer function input is present and if it changed since the last time this
+   * function was called. If it did change the new transfer function will be send to the renderer.
+   *
+   * @param {Node} node The node on which the check is run.
+   * @param {any} transferFunctionInput The transfer function input of the node.
+   */
+  _checkTransferFunctionInput(node, transferFunctionInput) {
+    if (typeof transferFunctionInput === 'undefined') {
+      return;
+    }
+
+    const transferFunction = transferFunctionInput;
+
+    if (this.lastTransferFunction === transferFunction) {
+      return;
+    }
+
+    this.lastTransferFunction = transferFunction;
+
+    window.callNative('TextureRenderNode.setTransferFunction', node.id, transferFunction);
   }
 
   /**
