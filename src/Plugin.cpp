@@ -25,6 +25,7 @@
 #include "VestecNodes/IncidentNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
+#include "VestecNodes/TransferFunctionSourceNode.hpp"
 #include "VestecNodes/UncertaintyRenderNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
 
@@ -203,8 +204,15 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("POINT_ARRAY");
   m_pNodeEditor->RegisterSocketType("TEXTURES");
   m_pNodeEditor->RegisterSocketType("INCIDENT");
+  m_pNodeEditor->RegisterSocketType("TRANSFER_FUNCTION");
 
   // Register our node types for the flow editor
+  m_pNodeEditor->RegisterNodeType(TransferFunctionSourceNode::GetName(), "Sources",
+      [this](cs::gui::GuiItem* webView, int id) {
+        return new TransferFunctionSourceNode(mPluginSettings, webView, id);
+      },
+      [](VNE::NodeEditor* editor) { TransferFunctionSourceNode::Init(editor); });
+
   m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
