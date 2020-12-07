@@ -40,6 +40,9 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
    */
   void SetOpacity(double val);
 
+  /*
+   * Sets the transfer function for the shader
+   */
   void SetTransferFunction(std::string json);
 
   /**
@@ -89,7 +92,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
 
   GDALReader::GreyScaleTexture mTexture; //! The textured passed from outside via SetOverlayTexture
 
-  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction;
+  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction; //! Transfer function used in shader
 
   cs::core::SolarSystem*
       mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices

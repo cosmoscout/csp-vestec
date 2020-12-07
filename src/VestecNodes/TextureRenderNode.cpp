@@ -69,6 +69,7 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
         pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
       }));
 
+  // Callback to set a transfer function for the rendering
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "TextureRenderNode.setTransferFunction", "Sets the transfer function for rendering",
       std::function([pEditor](double id, std::string val) {
