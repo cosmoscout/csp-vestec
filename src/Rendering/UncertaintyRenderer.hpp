@@ -47,7 +47,15 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
    */
   void SetOpacity(double val);
 
+  /*
+   * Sets the transfer function for the shader for rendering scalar values
+   */
   void SetTransferFunction(std::string json);
+
+  /*
+   * Sets the transfer function for the shader for rendering difference and variance values
+   */
+  void SetTransferFunctionUncertainty(std::string json);
 
   /**
    * Adding a texture used for overlay rendering
@@ -108,7 +116,10 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
   std::vector<GDALReader::GreyScaleTexture>
       mvecTextures; //! The textured passed from outside via SetOverlayTexture
 
-  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction; //! Transfer function used in shader
+  std::unique_ptr<cs::graphics::ColorMap>
+      mTransferFunction; //! Transfer function used in shader for scalars
+  std::unique_ptr<cs::graphics::ColorMap>
+      mTransferFunctionUncertainty; //! Transfer function used in shader for difference and variance
 
   cs::core::SolarSystem*
       mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices

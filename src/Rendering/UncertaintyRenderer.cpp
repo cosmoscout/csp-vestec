@@ -31,7 +31,9 @@ using json = nlohmann::json;
 UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
     : mSolarSystem(pSolarSystem)
     , mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
-          boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json"))) {
+          boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json")))
+    , mTransferFunctionUncertainty(std::make_unique<cs::graphics::ColorMap>(
+          boost::filesystem::path("../share/resources/transferfunctions/Grayscale.json"))) {
   csp::vestec::logger().debug("[UncertaintyOverlayRenderer] Compiling shader");
 
   m_pSurfaceShader = nullptr;
@@ -89,6 +91,10 @@ void UncertaintyOverlayRenderer::SetOpacity(double val) {
 
 void UncertaintyOverlayRenderer::SetTransferFunction(std::string json) {
   mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
+}
+
+void UncertaintyOverlayRenderer::SetTransferFunctionUncertainty(std::string json) {
+  mTransferFunctionUncertainty = std::make_unique<cs::graphics::ColorMap>(json);
 }
 
 void UncertaintyOverlayRenderer::SetOverlayTextures(
@@ -242,11 +248,14 @@ bool UncertaintyOverlayRenderer::Do() {
     data.mColorBuffer->Bind(GL_TEXTURE1);
 
     mTransferFunction->bind(GL_TEXTURE2);
+    mTransferFunctionUncertainty->bind(GL_TEXTURE3);
 
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uDepthBuffer"), 0);
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSimBuffer"), 1);
 
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTransferFunction"), 2);
+    m_pSurfaceShader->SetUniform(
+        m_pSurfaceShader->GetUniformLocation("uTransferFunctionUncertainty"), 3);
 
     // Why is there no set uniform for matrices??? //TODO: There is one
     glm::dmat4 InverseWorldTransform = glm::inverse(matWorldTransform);

@@ -71,8 +71,11 @@ class UncertaintyRenderNode {
     const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(inputTexture);
     const inputTransferFunction =
-        new D3NE.Input('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+        new D3NE.Input('TRANSFER FUNCTION (average)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
+    const inputTransferFunctionUncertainty =
+      new D3NE.Input('TRANSFER FUNCTION (variance, difference)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    node.addInput(inputTransferFunctionUncertainty);
     return node;
   }
 
@@ -83,7 +86,8 @@ class UncertaintyRenderNode {
    */
   worker(node, inputs, _outputs) {
     this._checkTextureInput(node, inputs[0][0]);
-    this._checkTransferFunctionInput(node, inputs[1][0]);
+    this._checkTransferFunctionInput(node, inputs[1][0], "UncertaintyRenderNode.setTransferFunction");
+    this._checkTransferFunctionInput(node, inputs[2][0], "UncertaintyRenderNode.setTransferFunctionUncertainty");
   }
 
   /**
@@ -148,8 +152,9 @@ class UncertaintyRenderNode {
    *
    * @param {Node} node The node on which the check is run.
    * @param {any} transferFunctionInput The transfer function input of the node.
+   * @param {string} callback The callback to call if the transfer function changed
    */
-  _checkTransferFunctionInput(node, transferFunctionInput) {
+  _checkTransferFunctionInput(node, transferFunctionInput, callback) {
     if (typeof transferFunctionInput === 'undefined') {
       return;
     }
@@ -162,7 +167,7 @@ class UncertaintyRenderNode {
 
     this.lastTransferFunction = transferFunction;
 
-    window.callNative('UncertaintyRenderNode.setTransferFunction', node.id, transferFunction);
+    window.callNative(callback, node.id, transferFunction);
   }
 }
 

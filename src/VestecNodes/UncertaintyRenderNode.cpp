@@ -20,7 +20,7 @@ using json = nlohmann::json;
 UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
-    : VNE::Node(pItem, id, 2, 0)
+    : VNE::Node(pItem, id, 3, 0)
     , m_pAnchor(pAnchor) {
   // Store config data for later usage
   mPluginConfig = config;
@@ -69,9 +69,16 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
 
   // Callback to set a transfer function for the rendering
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunction",
-      "Sets the transfer function for rendering",
+      "Sets the transfer function for rendering scalars",
       std::function([pEditor](double id, std::string val) {
         pEditor->GetNode<UncertaintyRenderNode>(id)->SetTransferFunction(val);
+      }));
+
+  // Callback to set a transfer function for the rendering
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunctionUncertainty",
+      "Sets the transfer function for rendering difference and variance",
+      std::function([pEditor](double id, std::string val) {
+        pEditor->GetNode<UncertaintyRenderNode>(id)->SetTransferFunctionUncertainty(val);
       }));
 
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setUncertaintyVisualizationMode",
@@ -115,6 +122,10 @@ void UncertaintyRenderNode::SetOpacity(double val) {
 
 void UncertaintyRenderNode::SetTransferFunction(std::string json) {
   m_pRenderer->SetTransferFunction(json);
+}
+
+void UncertaintyRenderNode::SetTransferFunctionUncertainty(std::string json) {
+  m_pRenderer->SetTransferFunctionUncertainty(json);
 }
 
 void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {

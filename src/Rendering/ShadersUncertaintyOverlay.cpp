@@ -220,6 +220,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
     uniform sampler2DArray      uSimBuffer;
 
     uniform sampler1D           uTransferFunction;
+    uniform sampler1D           uTransferFunctionUncertainty;
 
     //Input SSBO
     layout(std430, binding=3) coherent buffer Pos{
@@ -349,13 +350,6 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
         return vec2(atan(geodeticNormal.x, geodeticNormal.z), asin(geodeticNormal.y));
     }
 
-    // ===========================================================================
-    //Calculate the color for the uncertainty
-    vec3 heatUncertainty(float u) {
-        return vec3((1.0 - u) * vec3( 1.0, 1.0, 1.0));
-    }
-
-
     void main()
     {     
         float fDepth = GetDepth();
@@ -414,9 +408,8 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                 float normDiffValue     = (absDifference  - position[6]) / (position[7] - position[6]);
                 
                 vec4 colorScalar = texture(uTransferFunction, normSimValue);
-                colorScalar.a *= uOpacity;
-                vec4 colorDifference = vec4(heatUncertainty(normDiffValue), uOpacity);
-                vec4 colorVariance = vec4(heatUncertainty(2*stdDev), uOpacity);
+                vec4 colorDifference = texture(uTransferFunctionUncertainty, normDiffValue);
+                vec4 colorVariance = texture(uTransferFunctionUncertainty, 2*stdDev);
                 
                 vec4 color;
                 switch (uVisMode) {
@@ -426,6 +419,8 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                     case 4: color = colorScalar * colorVariance; break;
                     case 5: color = colorScalar * colorDifference; break;
                 }
+
+                color.a *= uOpacity;
       
                 //Lighting using a normal calculated from partial derivative
                 vec3  fPos    = vec3(worldPos); //cast from double to float

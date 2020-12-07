@@ -43,9 +43,14 @@ class UncertaintyRenderNode : public VNE::Node {
   void SetOpacity(double val);
 
   /*
-   * Sets the transfer function for the rendering
+   * Sets the transfer function for rendering scalar values
    */
   void SetTransferFunction(std::string json);
+
+  /*
+   * Sets the transfer function for rendering difference and variance values
+   */
+  void SetTransferFunctionUncertainty(std::string json);
 
   /**
    * Get the OpenGL uncertainty render node from ViSTA
