@@ -101,9 +101,12 @@ class CriticalPointsNode {
 
     node.data.activeFile = null;
 
-    const input = new D3NE.Input('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
-
-    node.addInput(input);
+    // Define the input types
+    const inputPoints = new D3NE.Input('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
+    node.addInput(inputPoints);
+    const inputTransferFunction =
+      new D3NE.Input('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    node.addInput(inputTransferFunction);
 
     return node;
   }
@@ -118,16 +121,8 @@ class CriticalPointsNode {
    * @private
    */
   worker(node, inputs, _outputs) {
-    if (inputs[0].length === 0) {
-      console.debug(`[CriticalPointsNode #${node.id}] Input Empty`);
-      return;
-    }
-
-    if (this.lastInputString !== JSON.stringify(inputs[0][0])) {
-      // Send points to C++ for rendering in OGL
-      window.callNative('setPoints', node.id, JSON.stringify(inputs[0][0]));
-      this.lastInputString = JSON.stringify(inputs[0][0]);
-    }
+    this._checkPointsInput(node, inputs[0][0]);
+    this._checkTransferFunctionInput(node, inputs[1][0]);
   }
 
   /**
@@ -155,6 +150,49 @@ class CriticalPointsNode {
     if (typeof D3NE === 'undefined') {
       throw new Error('D3NE is not defined.');
     }
+  }
+
+  /**
+   * Check if the points input is present and if it changed since the last time this function was
+   * called. If it did change the new points will be sent to the renderer.
+   *
+   * @param {Node} node The node on which the check is run.
+   * @param {any} pointsInput The texture input of the node.
+   */
+  _checkPointsInput(node, pointsInput) {
+    if (typeof pointsInput === 'undefined') {
+      console.debug(`[CriticalPointsNode #${node.id}] Input Empty`);
+      return;
+    }
+
+    if (this.lastInputString !== JSON.stringify(pointsInput)) {
+      // Send points to C++ for rendering in OGL
+      window.callNative('setPoints', node.id, JSON.stringify(pointsInput));
+      this.lastInputString = JSON.stringify(pointsInput);
+    }
+  }
+
+  /**
+   * Check if the transfer function input is present and if it changed since the last time this
+   * function was called. If it did change the new transfer function will be send to the renderer.
+   *
+   * @param {Node} node The node on which the check is run.
+   * @param {any} transferFunctionInput The transfer function input of the node.
+   */
+  _checkTransferFunctionInput(node, transferFunctionInput) {
+    if (typeof transferFunctionInput === 'undefined') {
+      return;
+    }
+
+    const transferFunction = transferFunctionInput;
+
+    if (this.lastTransferFunction === transferFunction) {
+      return;
+    }
+
+    this.lastTransferFunction = transferFunction;
+
+    window.callNative('CriticalPointsNode.setTransferFunction', node.id, transferFunction);
   }
 }
 

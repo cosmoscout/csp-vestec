@@ -20,7 +20,7 @@ using json = nlohmann::json;
 CriticalPointsNode::CriticalPointsNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
-    : VNE::Node(pItem, id, 1, 0)
+    : VNE::Node(pItem, id, 2, 0)
     , m_pAnchor(pAnchor) {
   // Store config data for later usage
   mPluginConfig = config;
@@ -63,6 +63,13 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback<double, double>("setOpacity",
       "Adjust the opacity of the rendering", std::function([pEditor](double id, double val) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetOpacity(val);
+      }));
+
+	// Callback to set a transfer function for the rendering
+  pEditor->GetGuiItem()->registerCallback<double, std::string>(
+      "CriticalPointsNode.setTransferFunction", "Sets the transfer function for rendering",
+      std::function([pEditor](double id, std::string val) {
+        pEditor->GetNode<CriticalPointsNode>(id)->SetTransferFunction(val);
       }));
 
   // Callback to set the visualization mode
@@ -114,6 +121,10 @@ CriticalPointsRenderer* CriticalPointsNode::GetRenderNode() {
 
 void CriticalPointsNode::SetOpacity(double val) {
   m_pRenderer->SetOpacity(val);
+}
+
+void CriticalPointsNode::SetTransferFunction(std::string json) {
+  m_pRenderer->SetTransferFunction(json);
 }
 
 void CriticalPointsNode::SetPoints(const std::string& jsonObj) {

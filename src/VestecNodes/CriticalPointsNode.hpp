@@ -41,14 +41,18 @@ class CriticalPointsNode : public VNE::Node {
    */
   void SetOpacity(double val);
 
+  /*
+   * Sets the transfer function for the rendering
+   */
+  void SetTransferFunction(std::string json);
+
   /**
    * Get the iunderlaying render node
    */
   CriticalPointsRenderer* GetRenderNode();
 
  private:
-  csp::vestec::Plugin::Settings
-                                  mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
+  csp::vestec::Plugin::Settings mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
   CriticalPointsRenderer* m_pRenderer =

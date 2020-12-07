@@ -167,15 +167,7 @@ uniform int           uVisualizationMode = 4;
 
 uniform vec3          uSunDirection;
 
-vec3 heat(float v) {
-    float value = 1.0-v;
-
-    return (0.5+0.5*smoothstep(0.0, 0.1, value))*vec3(smoothstep(0.5, 0.3, value), value < 0.3 ?
-    smoothstep(0.0, 0.3, value) :
-    smoothstep(1.0, 0.6, value),
-    smoothstep(0.4, 0.6, value)
-    );
-}
+uniform sampler1D     uTransferFunction;
 
 void main()
 {
@@ -184,7 +176,7 @@ void main()
     }
 
     float value = (fs_in.persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
-    vec4 color = vec4(heat(value), 1);
+    vec4 color = texture(uTransferFunction, value);
 
     float ambientStrength = 0.2;
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
@@ -195,7 +187,7 @@ void main()
 
     vec3 result = (ambient + diffuse) * color.rgb;
 
-    FragColor = vec4(result.rgb, 1);
+    FragColor = vec4(result.rgb, color.a);
 
     gl_FragDepth = length(vec3(fs_in.vPos.xyz)) / uFarClip;
 }
