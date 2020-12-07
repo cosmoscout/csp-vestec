@@ -67,9 +67,12 @@ class UncertaintyRenderNode {
     // Add control elements
     node.addControl(opacityControl);
 
-    // Define the input type
-    const input = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
-    node.addInput(input);
+    // Define the input types
+    const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
+    node.addInput(inputTexture);
+    const inputTransferFunction =
+        new D3NE.Input('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    node.addInput(inputTransferFunction);
     return node;
   }
 
@@ -79,25 +82,8 @@ class UncertaintyRenderNode {
    * @param {Array} _outputs - unused
    */
   worker(node, inputs, _outputs) {
-    if (typeof inputs[0][0] === 'undefined') {
-      return;
-    }
-
-    let textures;
-
-    if (typeof inputs[0][0] === 'object') {
-      textures = JSON.stringify(inputs[0][0]);
-    } else if (typeof inputs[0][0] === 'string') {
-      // A single texture, wrap in array
-      textures = [inputs[0][0]];
-    }
-
-    if (node.data.lastFiles === textures) {
-      return;
-    }
-
-    window.callNative('UncertaintyRenderNode.setTextureFiles', node.id, textures);
-    node.data.lastFiles = textures;
+    this._checkTextureInput(node, inputs[0][0]);
+    this._checkTransferFunctionInput(node, inputs[1][0]);
   }
 
   /**
@@ -125,6 +111,58 @@ class UncertaintyRenderNode {
     if (typeof D3NE === 'undefined') {
       throw new Error('D3NE is not defined.');
     }
+  }
+
+  /**
+   * Check if the texture input is present and if it changed since the last time this function was
+   * called. If it did change the new texture will be sent to the renderer.
+   *
+   * @param {Node} node The node on which the check is run.
+   * @param {any} textureInput The texture input of the node.
+   */
+  _checkTextureInput(node, textureInput) {
+    if (typeof textureInput === 'undefined') {
+      return;
+    }
+
+    let textures;
+
+    if (typeof textureInput === 'object') {
+      textures = JSON.stringify(textureInput);
+    } else if (typeof textureInput === 'string') {
+      // A single texture, wrap in array
+      textures = [textureInput];
+    }
+
+    if (node.data.lastFiles === textures) {
+      return;
+    }
+
+    window.callNative('UncertaintyRenderNode.setTextureFiles', node.id, textures);
+    node.data.lastFiles = textures;
+  }
+
+  /**
+   * Check if the transfer function input is present and if it changed since the last time this
+   * function was called. If it did change the new transfer function will be send to the renderer.
+   *
+   * @param {Node} node The node on which the check is run.
+   * @param {any} transferFunctionInput The transfer function input of the node.
+   */
+  _checkTransferFunctionInput(node, transferFunctionInput) {
+    if (typeof transferFunctionInput === 'undefined') {
+      return;
+    }
+
+    const transferFunction = transferFunctionInput;
+
+    if (this.lastTransferFunction === transferFunction) {
+      return;
+    }
+
+    this.lastTransferFunction = transferFunction;
+
+    window.callNative('UncertaintyRenderNode.setTransferFunction', node.id, transferFunction);
   }
 }
 

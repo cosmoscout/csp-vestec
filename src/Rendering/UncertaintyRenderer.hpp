@@ -6,6 +6,7 @@
 #include <VistaMath/VistaBoundingBox.h>
 
 #include "../../../../src/cs-core/SolarSystem.hpp"
+#include "../../../../src/cs-graphics/ColorMap.hpp"
 #include "../logger.hpp"
 
 #include <array>
@@ -45,6 +46,8 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
    * Set the opacity of the overlay
    */
   void SetOpacity(double val);
+
+  void SetTransferFunction(std::string json);
 
   /**
    * Adding a texture used for overlay rendering
@@ -104,6 +107,8 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
   std::mutex mLockTextureAccess; //! Mutex to lock texture access
   std::vector<GDALReader::GreyScaleTexture>
       mvecTextures; //! The textured passed from outside via SetOverlayTexture
+
+  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction; //! Transfer function used in shader
 
   cs::core::SolarSystem*
       mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices

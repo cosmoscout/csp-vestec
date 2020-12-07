@@ -219,6 +219,8 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
     uniform sampler2DRect       uDepthBuffer;
     uniform sampler2DArray      uSimBuffer;
 
+    uniform sampler1D           uTransferFunction;
+
     //Input SSBO
     layout(std430, binding=3) coherent buffer Pos{
         float position[];
@@ -346,16 +348,6 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
         vec3 geodeticNormal = surfaceToNormal(cartesian, radii);
         return vec2(atan(geodeticNormal.x, geodeticNormal.z), asin(geodeticNormal.y));
     }
-    
-    // ===========================================================================
-    vec3 heat(float v) {
-        float value = 1.0-v;
-        return (0.5+0.5*smoothstep(0.0, 0.1, value))*vec3(smoothstep(0.5, 0.3, value), value < 0.3 ?
-         smoothstep(0.0, 0.3, value) :
-         smoothstep(1.0, 0.6, value),
-         smoothstep(0.4, 0.6, value)
-        );
-    }
 
     // ===========================================================================
     //Calculate the color for the uncertainty
@@ -421,7 +413,8 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                 float normSimValue      = (average  - position[3]) / (position[4] - position[3]);
                 float normDiffValue     = (absDifference  - position[6]) / (position[7] - position[6]);
                 
-                vec4 colorScalar = vec4(heat(normSimValue), uOpacity);
+                vec4 colorScalar = texture(uTransferFunction, normSimValue);
+                colorScalar.a *= uOpacity;
                 vec4 colorDifference = vec4(heatUncertainty(normDiffValue), uOpacity);
                 vec4 colorVariance = vec4(heatUncertainty(2*stdDev), uOpacity);
                 
@@ -448,7 +441,7 @@ const std::string UncertaintyOverlayRenderer::SURFACE_FRAG = R"(
                 vec3 ambient = ambientStrength * lightColor;
                 vec3 diffuse = lightColor * NdotL;
                 //vec3 result = (ambient + diffuse) * color.rgb;
-                vec4 result = vec4(color.rgb, uOpacity);
+                vec4 result = color;
                
                 FragColor          = result;
             }
