@@ -22,11 +22,12 @@ The following node types are implemented:
     * **CinemaDBNode**: Reads the persistence diagrams stored in a Cinema database. The cinema database can be downloaded using the portal tab. The output can be visualized using the **PersistenceRenderNode**
     * **DiseasesSensorInput**: Reads the sensor input data (geo-referenced textures) used by the diseases simulation code. Output can be visualized using the **TextureRenderNode**
     * **DiseasesSimulation**: Reads the simulation ensemble data from the diseases simulation. The output can be visualized using the **UncertaintyRenderNode**
+    * **TransferFunctionSourceNode**: Allows creating a transfer function that can be used by the **TextureRenderNode**, **CriticalPointsNode** and **UncertaintyRenderNode** to control the visualization of the data
 * Render Nodes:
     * **PersistenceRenderNode**: Renders the persistence diagrams. User can specifiy minimum and maximum persistence values and directly brush data in the diagram. The output can be visualized using the **CriticalPointsNode**
     * **TextureRenderNode**: Simply renders the geo-referenced textures
     * **CriticalPointsNode**: Renders the critical points from the **PersistenceRenderNode**
-    * **UncertaintyRenderNode**: Does uncertainty visualization using the output of the **DiseasesSimulation** node. Computes per pixel averages, variances, and differences using an OpenGL compute shader. This values are passed to a fragment shader and are used for color coding using a simple heat map. Users can select the visualization mode.   
+    * **UncertaintyRenderNode**: Does uncertainty visualization using the output of the **DiseasesSimulation** node. Computes per pixel averages, variances, and differences using an OpenGL compute shader. This values are passed to a fragment shader and are used for color coding using a simple heat map. Users can select the visualization mode. A transfer function can be set seperately for the average values and for the variance and difference values.
 
 ## Integration of data for the analysis
 
@@ -64,3 +65,17 @@ To visualize the result data directly and combine them with the visualization an
 2.	Create a “TextureRenderNode” node under “Renderer -> TextureRenderNode” and connect them the output port of the previous node
     * (optional): Configure the opacity of the overlay and for the WildFireSourceNode as input the time animation can be enabled and configured using the slider
 
+## Setup a transfer function for render nodes
+
+Most render nodes allow setting a transfer function to customize the way data is visualized.
+Users can follow these steps to apply a custom transfer function to the visualization:
+
+1. Create a "TransferFunctionSourceNode" node under "Sources -> TransferFunctionSourceNode"
+    * (optional) Users can import one of several premade transfer functions to use as a basis by selecting a file from the dropdown next to the "Import" button and then clicking the button
+    * (optional) Users can export the created transfer function by entering a filename into the text field next to the "Export" buttton and then clicking the button. The transfer function is appended to the list of importable functions. It is saved in the CosmoScout installation directory under `share/resources/transferfunctions/<filename>`
+2. Connect the output port of the "TransferFunctionSourceNode" to the "TRANSFER FUNCTION" input port of a render node
+3. Drag and drop points in the transfer function editor to modify the transfer function. The domain of the function corresponds to the range of scalar values in the visualized data
+    * Drag points vertically to change the opacity for the corresponding scalar values
+    * Click anywhere in the editor to create a new point
+4. Click on a point to select it (signified by a thicker white outline). If the button at the bottom left of the editor shows a locked lock the selected point's color can be changed using the color picker next to the lock button. If the lock button shows an unlocked lock, the point's color will be determined by interpolating between the nearest locked points.
+    * The lock state of a point can be changed by clicking the lock button while the point is selected
