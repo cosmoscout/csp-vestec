@@ -23,9 +23,12 @@ if (DEFINED ENV{GDAL_DIR})
 else()
   if (MSVC)
     SET(GDAL_DIR ${COSMOSCOUT_EXTERNALS_DIR}/gdal)
-  else()
+  endif()
+
+  if(UNIX)
     SET(GDAL_DIR ${COSMOSCOUT_EXTERNALS_DIR})
     SET(GDAL_INCLUDE_DIR "${COSMOSCOUT_EXTERNALS_DIR}/include")
+    SET(GDAL_LIBRARY "${COSMOSCOUT_EXTERNALS_DIR}/lib/libgdal.so")
   endif()
 endif()
 
@@ -96,10 +99,12 @@ target_link_libraries(csp-vestec
         cs-core
         cs-gui
         cs-utils
-		cs-scene
+        cs-scene
         Boost::program_options
-        ttk::vtk::ttkAll
-		GDAL::GDAL
+        GDAL::GDAL
+        ttk::vtk::ttkCinemaProductReader
+        ttk::vtk::ttkCinemaQuery
+        ttk::vtk::ttkCinemaReader
         zipper::zipper
 )
 
