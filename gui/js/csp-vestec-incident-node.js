@@ -196,6 +196,8 @@ class IncidentNode {
         window.callNative('incidentNode.extractDataSet', metadata.uuid);
       }
 
+      metadata.type = metadata.type.toUpperCase();
+
       switch (metadata.type) {
         case 'CINEMA_DB_JSON': {
           const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
@@ -210,7 +212,7 @@ class IncidentNode {
 
         case 'PATH':
         case 'CINEMA_DB':
-          output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${metadata.name.replace('.zip', '')}`;
+          output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}`;
           break;
 
         default:
@@ -357,7 +359,7 @@ class IncidentNode {
       }));
 
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
-      IncidentNode.showOutputType(node, IncidentNode.typeMappings[metadata.type], true);
+      IncidentNode.showOutputType(node, IncidentNode.typeMappings[metadata.type.toUpperCase()], true);
 
       node.data.loadedDataHash = datasetId + incidentId;
       node.data.currentMetadata = metadata;
