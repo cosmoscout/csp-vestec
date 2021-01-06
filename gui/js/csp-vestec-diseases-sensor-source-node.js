@@ -38,27 +38,29 @@ class DiseasesSensorInputNode {
   builder(node) {
     // Combobox for file selection
     const simulationFile = new D3NE.Control(
-      `<select id="diseases-sensor-node_${node.id}-sensor-file-select" class="combobox"><option>none</option></select>`,
-      (element, control) => {
-        const select = $(element);
-        select.selectpicker();
+        `<select id="diseases-sensor-node_${
+            node.id}-sensor-file-select" class="combobox"><option>none</option></select>`,
+        (element, control) => {
+          const select = $(element);
+          select.selectpicker();
 
-        control.putData('sensorFileSelectParent', element.parentElement);
+          control.putData('sensorFileSelectParent', element.parentElement);
 
-        if (this._useVestec()) {
-          element.parentElement.classList.add('hidden');
-        } else {
-          // Now, since simulation mode changed, read the files for that simulation mode
-          window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), DiseasesSensorInputNode.path);
-        }
+          if (this._useVestec()) {
+            element.parentElement.classList.add('hidden');
+          } else {
+            // Now, since simulation mode changed, read the files for that simulation mode
+            window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10),
+                DiseasesSensorInputNode.path);
+          }
 
-        select.on('change', (event) => {
-          // Forward file to output
-          control.putData('sensorFile', event.target.value);
+          select.on('change', (event) => {
+            // Forward file to output
+            control.putData('sensorFile', event.target.value);
 
-          CosmoScout.vestecNE.updateEditor();
-        });
-      },
+            CosmoScout.vestecNE.updateEditor();
+          });
+        },
     );
 
     node.data.sensorFile = null;
@@ -88,7 +90,8 @@ class DiseasesSensorInputNode {
    */
   worker(node, inputs, outputs) {
     if (this._useVestec()) {
-      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' ||
+          inputs[0].length === 0) {
         node.data.sensorFileSelectParent.classList.add('hidden');
         node.data.sensorFile = null;
         delete node.data.sensorFilePath;
@@ -96,7 +99,8 @@ class DiseasesSensorInputNode {
       }
 
       if (node.data.sensorFile === null || node.data.sensorFilePath !== inputs[0][0]) {
-        window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), inputs[0][0]);
+        window.callNative(
+            'DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), inputs[0][0]);
         node.data.sensorFilePath = inputs[0][0];
       }
     }
@@ -173,7 +177,7 @@ class DiseasesSensorInputNode {
     sensorFiles.forEach((sensorFile) => {
       const option = document.createElement('option');
       option.value = sensorFile;
-      option.text = sensorFile.split('/').pop().toString();
+      option.text  = sensorFile.split('/').pop().toString();
 
       element.appendChild(option);
     });

@@ -34,87 +34,89 @@ class PersistenceNode {
    * @returns {Node} D3NE Node
    */
   builder(node) {
-    const renderer = new D3NE.Control(`<div id="render_control_${node.id}"></div>`, (element, control) => {
-      const color = 'rgb(221, 221, 255)';
+    const renderer =
+        new D3NE.Control(`<div id="render_control_${node.id}"></div>`, (element, control) => {
+          const color = 'rgb(221, 221, 255)';
 
-      const persistenceRenderer = new PersistenceRenderer(element, node.id, {
-        strokeStyle: color,
-        axesTextColor: color,
-        axesColor: color,
-        axesTickColor: color,
-        padding: {
-          left: 40,
-          top: 20,
-          right: 20,
-          bottom: 40,
-        },
-        waitTime: 1,
-        enablePersistenceFilter: true,
-        enableSelectionFilter: true,
-        selectionStopPropagation: true,
-      });
+          const persistenceRenderer = new PersistenceRenderer(element, node.id, {
+            strokeStyle: color,
+            axesTextColor: color,
+            axesColor: color,
+            axesTickColor: color,
+            padding: {
+              left: 40,
+              top: 20,
+              right: 20,
+              bottom: 40,
+            },
+            waitTime: 1,
+            enablePersistenceFilter: true,
+            enableSelectionFilter: true,
+            selectionStopPropagation: true,
+          });
 
-      // Update graph processing on selection changes
-      persistenceRenderer.container.addEventListener('pointsdrawn', (event /* CustomEvent */) => {
-        CosmoScout.vestecNE.updateEditor();
-      });
+          // Update graph processing on selection changes
+          persistenceRenderer.container.addEventListener(
+              'pointsdrawn', (event /* CustomEvent */) => {
+                CosmoScout.vestecNE.updateEditor();
+              });
 
-      const canvas = persistenceRenderer.renderer.getCanvas();
-      canvas.parentElement.classList.add('hidden');
+          const canvas = persistenceRenderer.renderer.getCanvas();
+          canvas.parentElement.classList.add('hidden');
 
-      control.putData('renderer', persistenceRenderer);
-      control.putData('canvas', canvas);
-    });
+          control.putData('renderer', persistenceRenderer);
+          control.putData('canvas', canvas);
+        });
 
     node.addControl(renderer);
 
     const minimizeButton = new D3NE.Control(
-      '<button data-minimized="false" class="hidden"><i class="material-icons minimize">picture_in_picture</i></button>',
-      (element, control) => {
-        Object.assign(element.style, {
-          border: 0,
-          background: 'none',
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          zIndex: 1,
-        });
+        '<button data-minimized="false" class="hidden"><i class="material-icons minimize">picture_in_picture</i></button>',
+        (element, control) => {
+          Object.assign(element.style, {
+            border: 0,
+            background: 'none',
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            zIndex: 1,
+          });
 
-        Object.assign(element.parentNode.style, {
-          padding: 0,
-        });
+          Object.assign(element.parentNode.style, {
+            padding: 0,
+          });
 
-        const canvas = control.getData('canvas');
+          const canvas = control.getData('canvas');
 
-        element.parentNode.addEventListener('click', (e) => {
-          e.stopPropagation();
+          element.parentNode.addEventListener('click', (e) => {
+            e.stopPropagation();
 
-          if (element.dataset.minimized === 'true') {
-            canvas.classList.remove('hidden');
-            element.dataset.minimized = 'false';
-          } else {
-            canvas.classList.add('hidden');
-            element.dataset.minimized = 'true';
-          }
-        });
+            if (element.dataset.minimized === 'true') {
+              canvas.classList.remove('hidden');
+              element.dataset.minimized = 'false';
+            } else {
+              canvas.classList.add('hidden');
+              element.dataset.minimized = 'true';
+            }
+          });
 
-        control.putData('button', element);
-      },
+          control.putData('button', element);
+        },
     );
 
     node.addControl(minimizeButton);
 
     const resetSelection = new D3NE.Control(
-      '<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>',
-      (element, control) => {
-        element.parentElement.classList.add('hidden');
+        '<button class="btn light-glass" style="color: #ddf; padding: 0 0.5rem;">Reset Selection</button>',
+        (element, control) => {
+          element.parentElement.classList.add('hidden');
 
-        element.addEventListener('click', () => {
-          node.data.renderer.setActiveSelectionBounds(undefined);
-        });
+          element.addEventListener('click', () => {
+            node.data.renderer.setActiveSelectionBounds(undefined);
+          });
 
-        control.putData('resetBtn', element);
-      },
+          control.putData('resetBtn', element);
+        },
     );
 
     node.addControl(resetSelection);
@@ -142,7 +144,7 @@ class PersistenceNode {
    */
   worker(node, inputs, outputs) {
     /** @type {PersistenceRenderer} */
-    const { renderer } = node.data;
+    const {renderer} = node.data;
 
     if (inputs[0].length === 0) {
       console.debug(`[Persistence Node #${node.id}] Input Empty`);

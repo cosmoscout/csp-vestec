@@ -26,38 +26,38 @@ class WildFireSourceNode {
   builder(node) {
     // Combobox for simulation mode selection
     const simulationMode = new D3NE.Control(
-      `<select id="simulation_mode_${node.id}" class="combobox"><option>none</option></select>`,
-      (element, control) => {
-        const select = $(element);
-        select.selectpicker();
+        `<select id="simulation_mode_${node.id}" class="combobox"><option>none</option></select>`,
+        (element, control) => {
+          const select = $(element);
+          select.selectpicker();
 
-        // Read the files for the given simulation mode and fill combobox when mode is changed
-        select.on('change', function () {
-          // Now, since simulation mode changed, read the files for that simulation mode
-          window.callNative('readSimulationFileNames', node.id, $(this).val());
+          // Read the files for the given simulation mode and fill combobox when mode is changed
+          select.on('change', function() {
+            // Now, since simulation mode changed, read the files for that simulation mode
+            window.callNative('readSimulationFileNames', node.id, $(this).val());
 
-          CosmoScout.vestecNE.updateEditor();
-        });
+            CosmoScout.vestecNE.updateEditor();
+          });
 
-        // Initially fill the combobox with simulation mode values (read from C++)
-        window.callNative('readSimulationModes', parseInt(node.id, 10), '');
-      },
+          // Initially fill the combobox with simulation mode values (read from C++)
+          window.callNative('readSimulationModes', parseInt(node.id, 10), '');
+        },
     );
 
     // Combobox for file selection
     const simulationFile = new D3NE.Control(
-      `<select id="simulation_file_${node.id}" class="combobox"><option>none</option></select>`,
-      (element, control) => {
-        const select = $(element);
-        select.selectpicker();
+        `<select id="simulation_file_${node.id}" class="combobox"><option>none</option></select>`,
+        (element, control) => {
+          const select = $(element);
+          select.selectpicker();
 
-        select.on('change', function () {
-          // Forward file to output
-          control.putData('simulationFile', $(this).val());
+          select.on('change', function() {
+            // Forward file to output
+            control.putData('simulationFile', $(this).val());
 
-          CosmoScout.vestecNE.updateEditor();
-        });
-      },
+            CosmoScout.vestecNE.updateEditor();
+          });
+        },
     );
 
     // Add control elements
@@ -115,11 +115,11 @@ class WildFireSourceNode {
 
   // Fill the combobox with the different simulation modes read from disc in c++
   static fillSimulationModes(id, simModes) {
-    const json = JSON.parse(simModes);
+    const json  = JSON.parse(simModes);
     let liModes = '';
 
     for (let i = 0; i < json.length; i++) {
-      const obj = json[i];
+      const obj      = json[i];
       const fileName = obj.split('/').pop();
       liModes += `<option value='${obj}'>${fileName}</option>`;
     }
@@ -132,11 +132,11 @@ class WildFireSourceNode {
 
   // Fill the combobox with the different simulation output files per mode
   static fillSimulationOutputs(id, simOutputs) {
-    const json = JSON.parse(simOutputs);
+    const json    = JSON.parse(simOutputs);
     let liOutputs = '';
 
     for (let i = 0; i < json.length; i++) {
-      const obj = json[i];
+      const obj      = json[i];
       const modeName = obj.split('/').pop();
       liOutputs += `<option value='${obj}'>${modeName}</option>`;
     }

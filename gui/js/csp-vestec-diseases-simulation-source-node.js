@@ -65,28 +65,29 @@ class DiseasesSimulationNode {
    * @returns {Node} D3NE Node
    */
   builder(node) {
-  // Info for the number of ensembles
+    // Info for the number of ensembles
     const ensembleControl = new D3NE.Control(
-      `<div class="row">
+        `<div class="row">
       <div class="col-10 text">Ensemble members:</div>
       <div class="col-2">
         <div class="text" id="diseases-simulation-node_${node.id}-ensemble_num"></div>
       </div>
     </div>`,
-      (element, control) => {
-        control.putData('ensembleControlParent', element.parentElement);
+        (element, control) => {
+          control.putData('ensembleControlParent', element.parentElement);
 
-        if (this._useVestec()) {
-          element.parentElement.classList.add('hidden');
-        }
-      },
+          if (this._useVestec()) {
+            element.parentElement.classList.add('hidden');
+          }
+        },
     );
 
     const simControl = new D3NE.Control(
-      `<div>
+        `<div>
         <div class="row">
           <div class="col-3 text">Mode:</div>
-          <select id="diseases-simulation-node_${node.id}-sim_mode" class="combobox col-9"><option>none</option></select>
+          <select id="diseases-simulation-node_${
+            node.id}-sim_mode" class="combobox col-9"><option>none</option></select>
         </div>
         <div class="row">
           <div class="col-3 text">Day:</div>
@@ -104,69 +105,74 @@ class DiseasesSimulationNode {
           </div>
         </div>
       </div>`,
-      (element, control) => {
-        control.putData('simControlParent', element.parentElement);
+        (element, control) => {
+          control.putData('simControlParent', element.parentElement);
 
-        if (this._useVestec()) {
-          element.parentElement.classList.add('hidden');
-        }
+          if (this._useVestec()) {
+            element.parentElement.classList.add('hidden');
+          }
 
-        const select = element.querySelector(`#diseases-simulation-node_${node.id}-sim_mode`);
-        const slider = element.querySelector(`#diseases-simulation-node_${node.id}-slider_day`);
-        const playButton = element.querySelector(`#diseases-simulation-node_${node.id}-play_mode`);
-        const playBackSpeed = element.querySelector(`#diseases-simulation-node_${node.id}-playback_speed`);
+          const select = element.querySelector(`#diseases-simulation-node_${node.id}-sim_mode`);
+          const slider = element.querySelector(`#diseases-simulation-node_${node.id}-slider_day`);
+          const playButton =
+              element.querySelector(`#diseases-simulation-node_${node.id}-play_mode`);
+          const playBackSpeed =
+              element.querySelector(`#diseases-simulation-node_${node.id}-playback_speed`);
 
-        $(select).selectpicker();
+          $(select).selectpicker();
 
-        // When combo box changes update the files and number of ensemble info
-        select.addEventListener('change', (event) => {
-          // console.log('Change combo box');
-          window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), event.target.value);
+          // When combo box changes update the files and number of ensemble info
+          select.addEventListener('change', (event) => {
+            // console.log('Change combo box');
+            window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers',
+                parseInt(node.id, 10), event.target.value);
 
-          // Get the files for the simulation mode and timestep
-          const timestep = $(slider).val();
-          const simPath = $(select).val();
+            // Get the files for the simulation mode and timestep
+            const timestep = $(slider).val();
+            const simPath  = $(select).val();
 
-          window.callNative(
-            'DiseasesSimulationNode.getFilesForTimeStep',
-            parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
+            window.callNative(
+                'DiseasesSimulationNode.getFilesForTimeStep',
+                parseInt(node.id, 10),
+                simPath.toString(),
+                parseFloat(timestep),
+            );
+          });
+
+          playButton.addEventListener('click', (event) => {
+            if (node.data.animate === false) {
+              event.target.innerText = 'Pause';
+              node.data.animate      = true;
+
+              node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
+            } else {
+              clearTimeout(node.data.timeoutId);
+              event.target.innerText = 'Play';
+              node.data.animate      = false;
+            }
+          });
+
+          noUiSlider.create(
+              playBackSpeed,
+              {
+                start: 1,
+                animate: false,
+                range: {
+                  min: 0.1,
+                  max: 2,
+                },
+                step: 0.1,
+              },
           );
-        });
 
-        playButton.addEventListener('click', (event) => {
-          if (node.data.animate === false) {
-            event.target.innerText = 'Pause';
-            node.data.animate = true;
-
-            node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
-          } else {
-            clearTimeout(node.data.timeoutId);
-            event.target.innerText = 'Play';
-            node.data.animate = false;
-          }
-        });
-
-        noUiSlider.create(
-          playBackSpeed,
-          {
-            start: 1,
-            animate: false,
-            range: {
-              min: 0.1,
-              max: 2,
-            },
-            step: 0.1,
-          },
-        );
-
-        playBackSpeed.noUiSlider.on('set', (handles) => {
-          node.data.playbackSpeed = handles;
-          if (node.data.animate) {
-            clearTimeout(node.data.timeoutId);
-            node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
-          }
-        });
-      },
+          playBackSpeed.noUiSlider.on('set', (handles) => {
+            node.data.playbackSpeed = handles;
+            if (node.data.animate) {
+              clearTimeout(node.data.timeoutId);
+              node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
+            }
+          });
+        },
     );
 
     node.addControl(ensembleControl);
@@ -182,7 +188,8 @@ class DiseasesSimulationNode {
 
       node.data.loaded = false;
     } else {
-      window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10), DiseasesSimulationNode.path);
+      window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10),
+          DiseasesSimulationNode.path);
     }
 
     return node;
@@ -198,7 +205,8 @@ class DiseasesSimulationNode {
    */
   worker(node, inputs, outputs) {
     if (this._useVestec()) {
-      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' ||
+          inputs[0].length === 0) {
         node.data.ensembleControlParent.classList.add('hidden');
         node.data.simControlParent.classList.add('hidden');
 
@@ -208,7 +216,8 @@ class DiseasesSimulationNode {
       }
 
       if (!node.data.loaded) {
-        window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10), inputs[0][0]);
+        window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes',
+            parseInt(node.id, 10), inputs[0][0]);
         node.data.loaded = true;
       }
     }
@@ -276,7 +285,10 @@ class DiseasesSimulationNode {
     }
 
     noUiSlider.create(slider, {
-      start: 1, step: 1, animate: false, range: { min: 0, max: files - 1 },
+      start: 1,
+      step: 1,
+      animate: false,
+      range: {min: 0, max: files - 1},
     });
 
     // Event handling when slider changes
@@ -286,15 +298,19 @@ class DiseasesSimulationNode {
       const simPath = $(`#diseases-simulation-node_${id}-sim_mode`).val();
 
       window.callNative(
-        'DiseasesSimulationNode.getFilesForTimeStep',
-        parseInt(node.id, 10), simPath.toString(), parseFloat(timestep),
+          'DiseasesSimulationNode.getFilesForTimeStep',
+          parseInt(node.id, 10),
+          simPath.toString(),
+          parseFloat(timestep),
       );
     });
 
     if (typeof DiseasesSimulationNode.path !== 'undefined') {
       window.callNative(
-        'DiseasesSimulationNode.getFilesForTimeStep',
-        parseInt(node.id, 10), $(`#diseases-simulation-node_${id}-sim_mode`).val().toString(), 1,
+          'DiseasesSimulationNode.getFilesForTimeStep',
+          parseInt(node.id, 10),
+          $(`#diseases-simulation-node_${id}-sim_mode`).val().toString(),
+          1,
       );
     }
   }
@@ -313,7 +329,7 @@ class DiseasesSimulationNode {
     json.forEach((mode) => {
       const option = document.createElement('option');
 
-      option.text = mode.split('/').pop();
+      option.text  = mode.split('/').pop();
       option.value = mode;
 
       element.appendChild(option);
@@ -326,7 +342,8 @@ class DiseasesSimulationNode {
     if (typeof node !== 'undefined') {
       node.data.simMode = $(element).val();
       console.log('Set ensemble');
-      window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10), node.data.simMode);
+      window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10),
+          node.data.simMode);
     } else {
       console.error(`Node with id ${id} not found.`);
     }
@@ -339,7 +356,7 @@ class DiseasesSimulationNode {
     const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
     if (typeof node !== 'undefined') {
       node.data.fileList = [];
-      const json = JSON.parse(fileList);
+      const json         = JSON.parse(fileList);
       for (let i = 0; i < json.length; i++) {
         node.data.fileList.push(json[i]);
       }

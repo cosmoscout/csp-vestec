@@ -32,26 +32,27 @@ class TextureRenderNode {
   builder(node) {
     // Slider to control the opacity of the overlay
     const opacityControl = new D3NE.Control(
-      `<div class="row">
+        `<div class="row">
         <div class="col-6 text">Opacity:</div>
         <div class="col-6">
           <div id="texture-node_${node.id}-slider_opacity"></div>
         </div>
       </div>`,
-      (element, _control) => {
-        const slider = element.querySelector(`#texture-node_${node.id}-slider_opacity`);
-        noUiSlider.create(slider, { start: 1, animate: false, range: { min: 0, max: 1 } });
+        (element, _control) => {
+          const slider = element.querySelector(`#texture-node_${node.id}-slider_opacity`);
+          noUiSlider.create(slider, {start: 1, animate: false, range: {min: 0, max: 1}});
 
-        // Read the files for the given simulation mode and fill combobox when mode is changed
-        slider.noUiSlider.on('slide', (values, handle) => {
-          window.callNative('TextureRenderNode.setOpacityTexture', node.id, parseFloat(values[handle]));
-        });
-      },
+          // Read the files for the given simulation mode and fill combobox when mode is changed
+          slider.noUiSlider.on('slide', (values, handle) => {
+            window.callNative(
+                'TextureRenderNode.setOpacityTexture', node.id, parseFloat(values[handle]));
+          });
+        },
     );
 
     // Slider and checkbox to control time animation
     const timeControl = new D3NE.Control(
-      `<div class="row">
+        `<div class="row">
         <div class="col-2">
           <label class="checklabel">
             <input type="checkbox" id="texture-node_${node.id}-set_enable_time" />
@@ -63,29 +64,32 @@ class TextureRenderNode {
           <div id="texture-node_${node.id}-slider_time"></div>
         </div>
       </div>`,
-      (element, _control) => {
-        const slider = element.querySelector(`#texture-node_${node.id}-slider_time`);
-        noUiSlider.create(slider, { start: 6, animate: false, range: { min: 0, max: 6 } });
+        (element, _control) => {
+          const slider = element.querySelector(`#texture-node_${node.id}-slider_time`);
+          noUiSlider.create(slider, {start: 6, animate: false, range: {min: 0, max: 6}});
 
-        element.querySelector(`#texture-node_${node.id}-set_enable_time`).addEventListener('click', (event) => {
-          window.callNative('TextureRenderNode.setEnableTime', node.id, event.target.checked === true);
-        });
+          element.querySelector(`#texture-node_${node.id}-set_enable_time`)
+              .addEventListener('click', (event) => {
+                window.callNative(
+                    'TextureRenderNode.setEnableTime', node.id, event.target.checked === true);
+              });
 
-        // Set the time value for the renderer
-        slider.noUiSlider.on('slide', (values, handle) => {
-          window.callNative('TextureRenderNode.setTime', node.id, parseFloat(values[handle]));
-        });
-      },
+          // Set the time value for the renderer
+          slider.noUiSlider.on('slide', (values, handle) => {
+            window.callNative('TextureRenderNode.setTime', node.id, parseFloat(values[handle]));
+          });
+        },
     );
 
     //
     const textureSelectControl = new D3NE.Control(
-      `<select id="texture-node_${node.id}-texture-select" class="combobox"><option>none</option></select>`,
-      (element, control) => {
-        element.parentElement.classList.add('hidden');
+        `<select id="texture-node_${
+            node.id}-texture-select" class="combobox"><option>none</option></select>`,
+        (element, control) => {
+          element.parentElement.classList.add('hidden');
 
-        control.putData('textureSelectParent', element.parentElement);
-      },
+          control.putData('textureSelectParent', element.parentElement);
+        },
     );
 
     // Add control elements
@@ -117,7 +121,8 @@ class TextureRenderNode {
     if (typeof inputs[0][0] === 'string') {
       texture = inputs[0][0];
     } else if (typeof inputs[0][0] === 'object') {
-      if (typeof node.data.activeFileSet === 'undefined' || node.data.activeFileSet !== inputs[0][0]) {
+      if (typeof node.data.activeFileSet === 'undefined' ||
+          node.data.activeFileSet !== inputs[0][0]) {
         this._fillTextureSelect(inputs[0][0], node);
       }
 
@@ -183,7 +188,7 @@ class TextureRenderNode {
     textures.forEach((texture) => {
       const option = document.createElement('option');
       option.value = texture;
-      option.text = texture.split('/').pop().toString();
+      option.text  = texture.split('/').pop().toString();
 
       element.appendChild(option);
     });
