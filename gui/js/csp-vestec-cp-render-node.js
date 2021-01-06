@@ -44,8 +44,9 @@ class CriticalPointsNode {
       select.selectpicker();
       select.on('change', () => {
         window.callNative(
-          'setCriticalPointsVisualizationMode',
-          parseInt(node.id, 10), parseInt($(this).val(), 10),
+            'setCriticalPointsVisualizationMode',
+            parseInt(node.id, 10),
+            parseInt($(this).val(), 10),
         );
       });
     });
@@ -105,7 +106,7 @@ class CriticalPointsNode {
     const inputPoints = new D3NE.Input('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
     node.addInput(inputPoints);
     const inputTransferFunction =
-      new D3NE.Input('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+        new D3NE.Input('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
 
     return node;

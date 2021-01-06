@@ -65,7 +65,7 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
         pEditor->GetNode<CriticalPointsNode>(id)->SetOpacity(val);
       }));
 
-	// Callback to set a transfer function for the rendering
+  // Callback to set a transfer function for the rendering
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "CriticalPointsNode.setTransferFunction", "Sets the transfer function for rendering",
       std::function([pEditor](double id, std::string val) {

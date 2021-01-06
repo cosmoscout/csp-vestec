@@ -52,7 +52,8 @@ class CriticalPointsNode : public VNE::Node {
   CriticalPointsRenderer* GetRenderNode();
 
  private:
-  csp::vestec::Plugin::Settings mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
+  csp::vestec::Plugin::Settings
+                                  mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
   CriticalPointsRenderer* m_pRenderer =

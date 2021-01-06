@@ -26,7 +26,7 @@ class UncertaintyRenderNode {
   builder(node) {
     // Slider to control the opcity of the overlay
     const opacityControl = new D3NE.Control(
-      `<div>
+        `<div>
         <div class="row">
           <div class="col-5 text">Opacity:</div>
           <div class="col-7">
@@ -44,24 +44,27 @@ class UncertaintyRenderNode {
           </select>
         </div>
       </div>`,
-      (element, _control) => {
-        const slider = element.querySelector(`#uncertainty-node_${node.id}-slider_opacity`);
-        noUiSlider.create(slider, { start: 1, animate: false, range: { min: 0, max: 1 } });
+        (element, _control) => {
+          const slider = element.querySelector(`#uncertainty-node_${node.id}-slider_opacity`);
+          noUiSlider.create(slider, {start: 1, animate: false, range: {min: 0, max: 1}});
 
-        // Read the files for the given simulation mode and fill combobox when mode is changed
-        slider.noUiSlider.on('slide', (values, handle) => {
-          window.callNative('UncertaintyRenderNode.setOpacityUncertainty', node.id, parseFloat(values[handle]));
-        });
+          // Read the files for the given simulation mode and fill combobox when mode is changed
+          slider.noUiSlider.on('slide', (values, handle) => {
+            window.callNative(
+                'UncertaintyRenderNode.setOpacityUncertainty', node.id, parseFloat(values[handle]));
+          });
 
-        // Initialize combobox for the visualization mode
-        const select = $(element).find(`#uncertainty-node_${node.id}-vis_mode`);
-        select.selectpicker();
-        select.on('change', (event) => {
-          window.callNative(
-            'UncertaintyRenderNode.setUncertaintyVisualizationMode', parseInt(node.id, 10), parseInt(event.target.value, 10),
-          );
-        });
-      },
+          // Initialize combobox for the visualization mode
+          const select = $(element).find(`#uncertainty-node_${node.id}-vis_mode`);
+          select.selectpicker();
+          select.on('change', (event) => {
+            window.callNative(
+                'UncertaintyRenderNode.setUncertaintyVisualizationMode',
+                parseInt(node.id, 10),
+                parseInt(event.target.value, 10),
+            );
+          });
+        },
     );
 
     // Add control elements
@@ -70,11 +73,11 @@ class UncertaintyRenderNode {
     // Define the input types
     const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(inputTexture);
-    const inputTransferFunction =
-        new D3NE.Input('TRANSFER FUNCTION (average)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    const inputTransferFunction = new D3NE.Input(
+        'TRANSFER FUNCTION (average)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
-    const inputTransferFunctionUncertainty =
-      new D3NE.Input('TRANSFER FUNCTION (variance, difference)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    const inputTransferFunctionUncertainty = new D3NE.Input(
+        'TRANSFER FUNCTION (variance, difference)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunctionUncertainty);
     return node;
   }
@@ -86,8 +89,10 @@ class UncertaintyRenderNode {
    */
   worker(node, inputs, _outputs) {
     this._checkTextureInput(node, inputs[0][0]);
-    this._checkTransferFunctionInput(node, inputs[1][0], "UncertaintyRenderNode.setTransferFunction");
-    this._checkTransferFunctionInput(node, inputs[2][0], "UncertaintyRenderNode.setTransferFunctionUncertainty");
+    this._checkTransferFunctionInput(
+        node, inputs[1][0], "UncertaintyRenderNode.setTransferFunction");
+    this._checkTransferFunctionInput(
+        node, inputs[2][0], "UncertaintyRenderNode.setTransferFunctionUncertainty");
   }
 
   /**

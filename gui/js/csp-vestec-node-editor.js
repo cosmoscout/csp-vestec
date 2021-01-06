@@ -81,10 +81,10 @@
       this.container = document.getElementById('d3-node-editor');
 
       this.editor = new D3NE.NodeEditor(
-        `${this.name}NodeEditor${this._version}`,
-        this.container,
-        this.components,
-        this.menu,
+          `${this.name}NodeEditor${this._version}`,
+          this.container,
+          this.components,
+          this.menu,
       );
 
       this.engine = new D3NE.Engine(`${this.name}NodeEditor${this._version}`, this.components);
@@ -168,7 +168,7 @@
     addContextMenuContent(categoryName, node) {
       if (!Object.prototype.hasOwnProperty.call(this._contextMenuData, categoryName)) {
         console.error(`Context menu does not contain a category named ${
-          categoryName}, call 'addContextMenuCategory' first.`);
+            categoryName}, call 'addContextMenuCategory' first.`);
         return;
       }
 
@@ -189,7 +189,8 @@
       }
 
       this.editor.paths.forEach((path) => {
-        if (typeof path.connection.output.node !== 'undefined' && path.connection.output.node.id === node.id) {
+        if (typeof path.connection.output.node !== 'undefined' &&
+            path.connection.output.node.id === node.id) {
           this.editor.removeConnection(path.connection);
         }
       });
@@ -216,32 +217,32 @@
       this.editor.eventListener.on('connectioncreate', (connection, persistent) => {
         try {
           window.callNative(
-            'AddConnection',
-            parseInt(connection.output.node.id, 10),
-            parseInt(connection.input.node.id, 10),
-            connection.output.node.outputs.findIndex((output) => output === connection.output),
-            connection.input.node.inputs.findIndex((input) => input === connection.input),
+              'AddConnection',
+              parseInt(connection.output.node.id, 10),
+              parseInt(connection.input.node.id, 10),
+              connection.output.node.outputs.findIndex((output) => output === connection.output),
+              connection.input.node.inputs.findIndex((input) => input === connection.input),
           );
         } catch (e) {
           console.error(`Error: AddConnection In #${connection.input.node.id} Out #${
-            connection.output.node.id}`,
-          e);
+                            connection.output.node.id}`,
+              e);
         }
       });
 
       this.editor.eventListener.on('connectionremove', (connection, persistent) => {
         try {
           window.callNative(
-            'DeleteConnection',
-            parseInt(connection.output.node.id, 10),
-            parseInt(connection.input.node.id, 10),
-            connection.output.node.outputs.findIndex((output) => output === connection.output),
-            connection.input.node.inputs.findIndex((input) => input === connection.input),
+              'DeleteConnection',
+              parseInt(connection.output.node.id, 10),
+              parseInt(connection.input.node.id, 10),
+              connection.output.node.outputs.findIndex((output) => output === connection.output),
+              connection.input.node.inputs.findIndex((input) => input === connection.input),
           );
         } catch (e) {
           console.error(`Error: DeleteConnection In #${connection.input.node.id} Out #${
-            connection.output.node.id}`,
-          e);
+                            connection.output.node.id}`,
+              e);
         }
       });
 
@@ -261,7 +262,7 @@
     _nodeExists(node) {
       if (!Object.prototype.hasOwnProperty.call(this.nodes, node)) {
         console.error(
-          `No node with name ${node} is registered on the node editor. Call 'addNode' first.`,
+            `No node with name ${node} is registered on the node editor. Call 'addNode' first.`,
         );
         return false;
       }

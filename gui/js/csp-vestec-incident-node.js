@@ -73,58 +73,58 @@ class IncidentNode {
    */
   builder(node) {
     const incidentControl = new D3NE.Control(
-      `<select id="incident_node_select_${node.id}" class="combobox"></select>`,
-      (element, control) => {
-        $(element).selectpicker();
+        `<select id="incident_node_select_${node.id}" class="combobox"></select>`,
+        (element, control) => {
+          $(element).selectpicker();
 
-        control.putData('incidentSelect', element);
-        control.putData('incidentSelectContainer', element.parentElement.parentElement);
-        control.putData('incidentsLoaded', false);
+          control.putData('incidentSelect', element);
+          control.putData('incidentSelectContainer', element.parentElement.parentElement);
+          control.putData('incidentsLoaded', false);
 
-        element.parentElement.parentElement.classList.add('hidden');
+          element.parentElement.parentElement.classList.add('hidden');
 
-        element.addEventListener('change', async (event) => {
-          IncidentNode.unsetNodeValues(node);
-          IncidentNode.showOutputType(node, 'none', true);
+          element.addEventListener('change', async (event) => {
+            IncidentNode.unsetNodeValues(node);
+            IncidentNode.showOutputType(node, 'none', true);
 
-          node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
-            node.data.incidentDatasetSelect,
-            event.target.value,
-            node,
-          );
+            node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
+                node.data.incidentDatasetSelect,
+                event.target.value,
+                node,
+            );
 
-          // Displays output type
-          CosmoScout.vestecNE.updateEditor();
-        });
-      },
+            // Displays output type
+            CosmoScout.vestecNE.updateEditor();
+          });
+        },
     );
 
     const incidentDatasetControl = new D3NE.Control(
-      `<select id="incident_dataset_node_select_${node.id}" class="combobox"></select>`,
-      (element, control) => {
-        $(element).selectpicker();
+        `<select id="incident_dataset_node_select_${node.id}" class="combobox"></select>`,
+        (element, control) => {
+          $(element).selectpicker();
 
-        control.putData('incidentDatasetSelect', element);
-        control.putData('incidentDatasetSelectContainer', element.parentElement.parentElement);
-        control.putData('incidentDatasetLoaded', false);
+          control.putData('incidentDatasetSelect', element);
+          control.putData('incidentDatasetSelectContainer', element.parentElement.parentElement);
+          control.putData('incidentDatasetLoaded', false);
 
-        element.parentElement.parentElement.classList.add('hidden');
+          element.parentElement.parentElement.classList.add('hidden');
 
-        element.addEventListener('change', (event) => {
-          node.data.incidentDatasetSelectValue = event.target.value;
-          // Calls the worker and updates the outputs
-          CosmoScout.vestecNE.updateEditor();
-        });
-      },
+          element.addEventListener('change', (event) => {
+            node.data.incidentDatasetSelectValue = event.target.value;
+            // Calls the worker and updates the outputs
+            CosmoScout.vestecNE.updateEditor();
+          });
+        },
     );
 
     const loginMessageControl = new D3NE.Control(
-      `<strong id="incident_node_message_${node.id}">Please login first</strong>`,
-      (element, control) => {
-        control.putData('info', element.parentElement);
+        `<strong id="incident_node_message_${node.id}">Please login first</strong>`,
+        (element, control) => {
+          control.putData('info', element.parentElement);
 
-        element.parentElement.classList.add('hidden');
-      },
+          element.parentElement.classList.add('hidden');
+        },
     );
 
     node.addControl(loginMessageControl);
@@ -166,9 +166,9 @@ class IncidentNode {
 
     if (node.data.incidentsLoaded && !node.data.incidentDatasetLoaded) {
       node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
-        node.data.incidentDatasetSelect,
-        node.data.incidentSelect.value,
-        node,
+          node.data.incidentDatasetSelect,
+          node.data.incidentSelect.value,
+          node,
       );
     }
 
@@ -188,7 +188,8 @@ class IncidentNode {
 
     try {
       const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
-      window.callNative('incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+      window.callNative(
+          'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
 
       output = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
 
@@ -197,27 +198,29 @@ class IncidentNode {
       }
 
       switch (metadata.type) {
-        case 'CINEMA_DB_JSON': {
-          const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
+      case 'CINEMA_DB_JSON': {
+        const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
 
-          output = {
-            caseName,
-            timeStep,
-            uuid: datasetId,
-          };
-          break;
-        }
+        output = {
+          caseName,
+          timeStep,
+          uuid: datasetId,
+        };
+        break;
+      }
 
-        case 'PATH':
-        case 'CINEMA_DB':
-          output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${metadata.name.replace('.zip', '')}`;
-          break;
+      case 'PATH':
+      case 'CINEMA_DB':
+        output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${
+            metadata.name.replace('.zip', '')}`;
+        break;
 
-        default:
-          break;
+      default:
+        break;
       }
     } catch (e) {
-      console.error(`Error loading metadata for dataset '${datasetId}'. Incident: '${incidentId}. Message: ${e}`);
+      console.error(`Error loading metadata for dataset '${datasetId}'. Incident: '${
+          incidentId}. Message: ${e}`);
       return;
     }
 
@@ -319,7 +322,7 @@ class IncidentNode {
     node.data.incidentDatasetSelectContainer.classList.add('hidden');
     node.data.info.classList.remove('hidden');
 
-    node.data.incidentsLoaded = false;
+    node.data.incidentsLoaded       = false;
     node.data.incidentDatasetLoaded = false;
     IncidentNode.unsetNodeValues(node);
     IncidentNode.showOutputType(node, 'none', true);
@@ -338,11 +341,8 @@ class IncidentNode {
    * @return {Promise<T|{type: null|string}|undefined|null>}
    */
   static async loadIncidentDatasetMetadata(node, datasetId, incidentId) {
-    if (incidentId === null
-        || datasetId === null
-        || incidentId.length === 0
-        || datasetId.length === 0
-    ) {
+    if (incidentId === null || datasetId === null || incidentId.length === 0 ||
+        datasetId.length === 0) {
       throw Error('Required ids missing');
     }
 
@@ -350,16 +350,15 @@ class IncidentNode {
       return node.data.currentMetadata;
     }
 
-    const metadata = await CosmoScout.vestec
-      .getIncidentDatasetMetadata(datasetId, incidentId)
-      .catch(() => ({
-        type: null,
-      }));
+    const metadata =
+        await CosmoScout.vestec.getIncidentDatasetMetadata(datasetId, incidentId).catch(() => ({
+          type: null,
+        }));
 
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
       IncidentNode.showOutputType(node, IncidentNode.typeMappings[metadata.type], true);
 
-      node.data.loadedDataHash = datasetId + incidentId;
+      node.data.loadedDataHash  = datasetId + incidentId;
       node.data.currentMetadata = metadata;
 
       return metadata;
@@ -387,7 +386,7 @@ class IncidentNode {
 
     incidents.forEach((incident) => {
       const option = document.createElement('option');
-      option.text = incident.name;
+      option.text  = incident.name;
       option.value = incident.uuid;
 
       element.appendChild(option);
@@ -423,14 +422,13 @@ class IncidentNode {
 
     datasets.forEach((dataset) => {
       const option = document.createElement('option');
-      option.text = dataset.name;
+      option.text  = dataset.name;
       option.value = dataset.uuid;
 
       element.appendChild(option);
     });
 
     $(element).selectpicker();
-
 
     node.data.incidentDatasetSelectValue = element.value;
 
@@ -458,15 +456,12 @@ class IncidentNode {
     if (outputType === 'none') {
       filter = () => true;
     } else {
-      filter = (type) => type !== outputType
-          && typeof node.data[outputType] !== 'undefined';
+      filter = (type) => type !== outputType && typeof node.data[outputType] !== 'undefined';
     }
 
-    IncidentNode.outputTypes
-      .filter(filter)
-      .forEach((type) => {
-        node.data[type].el.parentElement.classList.add('hidden');
-      });
+    IncidentNode.outputTypes.filter(filter).forEach((type) => {
+      node.data[type].el.parentElement.classList.add('hidden');
+    });
 
     if (removeConnections) {
       CosmoScout.vestecNE.removeConnections(node);
@@ -487,9 +482,9 @@ class IncidentNode {
    * @param {Node} node
    */
   static unsetNodeValues(node) {
-    node.data.activeOutputType = null;
-    node.data.loadedDataHash = null;
-    node.data.currentMetadata = null;
+    node.data.activeOutputType           = null;
+    node.data.loadedDataHash             = null;
+    node.data.currentMetadata            = null;
     node.data.incidentDatasetSelectValue = '';
   }
 }
