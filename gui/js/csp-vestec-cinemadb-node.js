@@ -237,7 +237,7 @@ class CinemaDBNode {
   static fillCaseNames(id, caseNames) {
     const json = JSON.parse(caseNames);
 
-    if (json.length === 0) {
+    if (json === null || json.length === 0) {
       return;
     }
 
