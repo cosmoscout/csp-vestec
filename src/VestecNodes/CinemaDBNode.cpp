@@ -6,17 +6,23 @@
  */
 
 #include "CinemaDBNode.hpp"
+
 #include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
 
 #include <vtkHttpDataSetWriter.h>
 
+#ifdef ERROR
+#undef ERROR
+#endif
 #include <ttkCinemaProductReader.h>
 #include <ttkCinemaQuery.h>
 #include <ttkCinemaReader.h>
+
 #include <vtkGeometryFilter.h>
 #include <vtkIntArray.h>
+#include <vtkMultiBlockDataSet.h>
 #include <vtkStringArray.h>
 #include <vtkTable.h>
 
@@ -52,12 +58,12 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
   // Example callback for communication from JavaScript to C++
   pEditor->GetGuiItem()->registerCallback("CinemaDBNode.readCaseNames",
       "Returns available case names", std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id, path);
+        pEditor->GetNode<CinemaDBNode>(std::lround(id))->ReadCaseNames(std::lround(id), path);
       }));
 
   pEditor->GetGuiItem()->registerCallback("CinemaDBNode.getTimeSteps",
       "Returns time steps for a case", std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id, path);
+        pEditor->GetNode<CinemaDBNode>(std::lround(id))->GetTimeSteps(std::lround(id), path);
       }));
 
   pEditor->GetGuiItem()->registerCallback("CinemaDBNode.convertFile",
@@ -76,17 +82,18 @@ void CinemaDBNode::ConvertFile(
   /////////////////
   auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
   cinemaQuery->SetInputConnection(reader->GetOutputPort());
-  cinemaQuery->SetQueryString("SELECT * FROM InputTable WHERE CaseName == '" + caseName +
-                              "' AND TimeStep == " + (timeStep));
+  cinemaQuery->SetSQLStatement("SELECT * FROM InputTable0 WHERE CaseName == '" + caseName +
+                               "' AND TimeStep == " + (timeStep));
   cinemaQuery->Update();
 
   auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();
   cinemaProduct->SetInputConnection(cinemaQuery->GetOutputPort());
-  cinemaProduct->SetFilepathColumnName(0, 0, 0, 0, "FILE");
+  cinemaProduct->SetFilepathColumnName("FILE");
   cinemaProduct->Update();
 
   auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
-  polyFilter->SetInputData(cinemaProduct->GetOutput()->GetBlock(0));
+  polyFilter->SetInputData(
+      vtkMultiBlockDataSet::SafeDownCast(cinemaProduct->GetOutputDataObject(0))->GetBlock(0));
   polyFilter->Update();
 
   ///////////////// Dump to vtk js
@@ -110,7 +117,7 @@ void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
   reader->SetDatabasePath(path);
   reader->Update();
 
-  auto* table = vtkTable::SafeDownCast(reader->GetOutput());
+  auto* table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
 
   std::set<std::string> caseNames;
   auto* caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
@@ -136,7 +143,7 @@ void CinemaDBNode::GetTimeSteps(int id, const std::string& path) {
   reader->SetDatabasePath(path);
   reader->Update();
 
-  auto*         table = vtkTable::SafeDownCast(reader->GetOutput());
+  auto*         table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
   std::set<int> caseNames;
   auto*         timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
 
