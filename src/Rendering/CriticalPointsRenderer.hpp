@@ -48,7 +48,7 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
   /**
    * Set the opacity of the overlay
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /**
    * SetPoints

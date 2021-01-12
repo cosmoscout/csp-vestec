@@ -21,7 +21,7 @@ cs::gui::GuiItem* NodeEditor::GetGuiItem() {
   return m_pWebView;
 }
 
-int NodeEditor::GetNumberOfNodes() {
+size_t NodeEditor::GetNumberOfNodes() {
   return m_mapNodes.size();
 }
 

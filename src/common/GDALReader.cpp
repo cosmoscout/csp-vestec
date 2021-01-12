@@ -51,7 +51,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   GDALDataset* poDatasetSrc = nullptr;
 
   // Meta data storage
-  double                noDataValue = -100000;
+  float                 noDataValue = -100000;
   double                adfSrcGeoTransform[6];
   double                adfDstGeoTransform[6];
   std::array<double, 4> bounds{};

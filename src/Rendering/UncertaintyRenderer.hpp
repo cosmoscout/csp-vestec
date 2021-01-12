@@ -44,7 +44,7 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
   /**
    * Set the opacity of the overlay
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /**
    * Adding a texture used for overlay rendering

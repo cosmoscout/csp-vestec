@@ -60,33 +60,33 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "TextureRenderNode.readSimulationResults", "Reads simulation data",
       std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<TextureRenderNode>(id)->ReadSimulationResult(params);
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->ReadSimulationResult(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setOpacityTexture",
       "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
-        pEditor->GetNode<TextureRenderNode>(id)->SetOpacity(val);
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetOpacity((float)val);
       }));
 
   // Callback to adjust the simulation time used to discard pixels
   pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setTime",
       "Adjusts the simulation time used to discard pixels",
       std::function([pEditor](double id, double val) {
-        pEditor->GetNode<TextureRenderNode>(id)->SetTime(val);
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetTime((float)val);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, bool>("TextureRenderNode.setEnableTime",
       "Enables the simulation time", std::function([pEditor](double id, bool val) {
-        pEditor->GetNode<TextureRenderNode>(id)->SetUseTime(val);
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetUseTime(val);
       }));
 }
 
-void TextureRenderNode::SetOpacity(double val) {
+void TextureRenderNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
 }
 
-void TextureRenderNode::SetTime(double val) {
+void TextureRenderNode::SetTime(float val) {
   m_pRenderer->SetTime(val);
 }
 
