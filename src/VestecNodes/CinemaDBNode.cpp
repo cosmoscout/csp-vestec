@@ -6,6 +6,7 @@
  */
 
 #include "CinemaDBNode.hpp"
+
 #include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
@@ -21,6 +22,7 @@
 
 #include <vtkGeometryFilter.h>
 #include <vtkIntArray.h>
+#include <vtkMultiBlockDataSet.h>
 #include <vtkStringArray.h>
 #include <vtkTable.h>
 
@@ -56,12 +58,12 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
   // Example callback for communication from JavaScript to C++
   pEditor->GetGuiItem()->registerCallback("CinemaDBNode.readCaseNames",
       "Returns available case names", std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<CinemaDBNode>(id)->ReadCaseNames(id, path);
+        pEditor->GetNode<CinemaDBNode>(std::lround(id))->ReadCaseNames(std::lround(id), path);
       }));
 
   pEditor->GetGuiItem()->registerCallback("CinemaDBNode.getTimeSteps",
       "Returns time steps for a case", std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<CinemaDBNode>(id)->GetTimeSteps(id, path);
+        pEditor->GetNode<CinemaDBNode>(std::lround(id))->GetTimeSteps(std::lround(id), path);
       }));
 
   pEditor->GetGuiItem()->registerCallback("CinemaDBNode.convertFile",
@@ -80,7 +82,7 @@ void CinemaDBNode::ConvertFile(
   /////////////////
   auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
   cinemaQuery->SetInputConnection(reader->GetOutputPort());
-  cinemaQuery->SetSQLStatement("SELECT * FROM InputTable WHERE CaseName == '" + caseName +
+  cinemaQuery->SetSQLStatement("SELECT * FROM InputTable0 WHERE CaseName == '" + caseName +
                                "' AND TimeStep == " + (timeStep));
   cinemaQuery->Update();
 
@@ -90,7 +92,8 @@ void CinemaDBNode::ConvertFile(
   cinemaProduct->Update();
 
   auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
-  polyFilter->SetInputConnection(cinemaProduct->GetOutputPort());
+  polyFilter->SetInputData(
+      vtkMultiBlockDataSet::SafeDownCast(cinemaProduct->GetOutputDataObject(0))->GetBlock(0));
   polyFilter->Update();
 
   ///////////////// Dump to vtk js
