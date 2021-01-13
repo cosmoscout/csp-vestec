@@ -69,7 +69,7 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "CriticalPointsNode.setTransferFunction", "Sets the transfer function for rendering",
       std::function([pEditor](double id, std::string val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->SetTransferFunction(val);
+        pEditor->GetNode<CriticalPointsNode>(std::lround(id))->SetTransferFunction(val);
       }));
 
   // Callback to set the visualization mode

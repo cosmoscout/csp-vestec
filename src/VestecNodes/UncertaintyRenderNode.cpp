@@ -71,14 +71,15 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunction",
       "Sets the transfer function for rendering scalars",
       std::function([pEditor](double id, std::string val) {
-        pEditor->GetNode<UncertaintyRenderNode>(id)->SetTransferFunction(val);
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetTransferFunction(val);
       }));
 
   // Callback to set a transfer function for the rendering
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunctionUncertainty",
       "Sets the transfer function for rendering difference and variance",
       std::function([pEditor](double id, std::string val) {
-        pEditor->GetNode<UncertaintyRenderNode>(id)->SetTransferFunctionUncertainty(val);
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))
+            ->SetTransferFunctionUncertainty(val);
       }));
 
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setUncertaintyVisualizationMode",

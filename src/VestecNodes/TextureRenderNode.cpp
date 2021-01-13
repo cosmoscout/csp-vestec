@@ -73,7 +73,7 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "TextureRenderNode.setTransferFunction", "Sets the transfer function for rendering",
       std::function([pEditor](double id, std::string val) {
-        pEditor->GetNode<TextureRenderNode>(id)->SetTransferFunction(val);
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetTransferFunction(val);
       }));
 
   // Callback to adjust the simulation time used to discard pixels
