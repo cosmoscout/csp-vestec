@@ -73,11 +73,11 @@ class UncertaintyRenderNode {
     // Define the input types
     const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(inputTexture);
-    const inputTransferFunction =
-        new D3NE.Input('TRANSFER FUNCTION (average)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    const inputTransferFunction = new D3NE.Input(
+        'TRANSFER FUNCTION (average)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
-    const inputTransferFunctionUncertainty =
-      new D3NE.Input('TRANSFER FUNCTION (variance, difference)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    const inputTransferFunctionUncertainty = new D3NE.Input(
+        'TRANSFER FUNCTION (variance, difference)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunctionUncertainty);
     return node;
   }
@@ -89,8 +89,10 @@ class UncertaintyRenderNode {
    */
   worker(node, inputs, _outputs) {
     this._checkTextureInput(node, inputs[0][0]);
-    this._checkTransferFunctionInput(node, inputs[1][0], "UncertaintyRenderNode.setTransferFunction");
-    this._checkTransferFunctionInput(node, inputs[2][0], "UncertaintyRenderNode.setTransferFunctionUncertainty");
+    this._checkTransferFunctionInput(
+        node, inputs[1][0], "UncertaintyRenderNode.setTransferFunction");
+    this._checkTransferFunctionInput(
+        node, inputs[2][0], "UncertaintyRenderNode.setTransferFunctionUncertainty");
   }
 
   /**

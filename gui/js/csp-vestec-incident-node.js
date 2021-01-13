@@ -213,7 +213,8 @@ class IncidentNode {
 
       case 'PATH':
       case 'CINEMA_DB':
-        output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}`;
+        output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${
+            metadata.name.replace('.zip', '')}`;
         break;
 
       default:
