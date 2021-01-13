@@ -50,7 +50,7 @@ CriticalPointsRenderer::~CriticalPointsRenderer() {
   delete m_VBO;
 }
 
-void CriticalPointsRenderer::SetOpacity(double val) {
+void CriticalPointsRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
 
@@ -183,7 +183,7 @@ bool CriticalPointsRenderer::Do() {
       glm::normalize(glm::inverse(matWorldTransform) *
                      (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
-      sunDirection[0], sunDirection[1], sunDirection[2]);
+      (float)sunDirection[0], (float)sunDirection[1], (float)sunDirection[2]);
 
   // Draw points
   glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_vecPoints.size()));

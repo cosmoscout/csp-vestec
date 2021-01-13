@@ -40,7 +40,7 @@ class UncertaintyRenderNode : public VNE::Node {
   /**
    * Set the opacity of the overlay
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /*
    * Sets the transfer function for rendering scalar values

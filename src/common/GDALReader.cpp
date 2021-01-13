@@ -51,7 +51,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   GDALDataset* poDatasetSrc = nullptr;
 
   // Meta data storage
-  double                noDataValue = -100000;
+  float                 noDataValue = -100000;
   double                adfSrcGeoTransform[6];
   double                adfDstGeoTransform[6];
   std::array<double, 4> bounds{};
@@ -78,7 +78,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
 
   // Read geotransform from src image
   poDatasetSrc->GetGeoTransform(adfSrcGeoTransform);
-  
+
   int   bGotMin  = 0;
   int   bGotMax  = 0; // like bool if it was successful
   auto* poBand   = poDatasetSrc->GetRasterBand(1);
@@ -95,7 +95,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   OGRSpatialReference oSRS;
   oSRS.SetWellKnownGeogCS("WGS84");
   oSRS.exportToWkt(&pszDstWKT);
-  
+
   // Create the transformation object handle
   auto* hTransformArg = GDALCreateGenImgProjTransformer(
       poDatasetSrc, poDatasetSrc->GetProjectionRef(), nullptr, pszDstWKT, FALSE, 0.0, 1);
@@ -160,17 +160,15 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   GDALReader::AddTextureToCache(filename, texture);
 }
 
-void GDALReader::ClearCache()
-{
+void GDALReader::ClearCache() {
   std::map<std::string, GreyScaleTexture>::iterator it;
 
-   GDALReader::mMutex.lock();
-  //Loop over textures and delete buffer
-  for(it = TextureCache.begin(); it != TextureCache.end(); it++)
-  {
+  GDALReader::mMutex.lock();
+  // Loop over textures and delete buffer
+  for (it = TextureCache.begin(); it != TextureCache.end(); it++) {
     auto texture = it->second;
     delete texture.buffer;
   }
-  TextureCache.clear(); 
+  TextureCache.clear();
   GDALReader::mMutex.unlock();
 }

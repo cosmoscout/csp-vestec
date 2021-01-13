@@ -44,8 +44,9 @@ class CriticalPointsNode {
       select.selectpicker();
       select.on('change', () => {
         window.callNative(
-          'setCriticalPointsVisualizationMode',
-          parseInt(node.id, 10), parseInt($(this).val(), 10),
+            'setCriticalPointsVisualizationMode',
+            parseInt(node.id, 10),
+            parseInt($(this).val(), 10),
         );
       });
     });

@@ -39,7 +39,7 @@ class CriticalPointsNode : public VNE::Node {
   /**
    * Sets the opacity of the rendering
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /*
    * Sets the transfer function for the rendering

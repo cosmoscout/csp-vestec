@@ -9,13 +9,13 @@
 if (DEFINED ENV{VTK_CMAKE_CONFIG_DIR})
   SET(VTK_DIR "$ENV{VTK_CMAKE_CONFIG_DIR}")
 else()
-  SET(VTK_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake/vtk-8.1)
+  SET(VTK_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake/vtk-9.0)
 endif()
 
 if (DEFINED ENV{TTKVTK_DIR})
   SET(TTKVTK_DIR "$ENV{TTKVTK_DIR}")
 else()
-  SET(TTKVTK_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake/ttk)
+  SET(TTKVTK_DIR ${COSMOSCOUT_EXTERNALS_DIR}/lib/cmake/ttkVTK)
 endif()
 
 if (DEFINED ENV{GDAL_DIR})
@@ -23,9 +23,12 @@ if (DEFINED ENV{GDAL_DIR})
 else()
   if (MSVC)
     SET(GDAL_DIR ${COSMOSCOUT_EXTERNALS_DIR}/gdal)
-  else()
+  endif()
+
+  if(UNIX)
     SET(GDAL_DIR ${COSMOSCOUT_EXTERNALS_DIR})
     SET(GDAL_INCLUDE_DIR "${COSMOSCOUT_EXTERNALS_DIR}/include")
+    SET(GDAL_LIBRARY "${COSMOSCOUT_EXTERNALS_DIR}/lib/libgdal.so")
   endif()
 endif()
 
@@ -44,6 +47,7 @@ find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 find_package(TTKVTK REQUIRED)
 find_package(GDAL REQUIRED)
 find_package(zipper REQUIRED)
+find_package(VTK REQUIRED)
 
 # The cosmoscout vr vestec plugin project
 file(GLOB SOURCE_FILES *.cpp)
@@ -96,18 +100,22 @@ target_link_libraries(csp-vestec
         cs-core
         cs-gui
         cs-utils
-		cs-scene
+        cs-scene
         Boost::program_options
-        ttk::vtk::ttkAll
-		GDAL::GDAL
+        GDAL::GDAL
+        ${VTK_LIBRARIES}
+        ttk::vtk::ttkCinemaProductReader
+        ttk::vtk::ttkCinemaQuery
+        ttk::vtk::ttkCinemaReader
         zipper::zipper
 )
 
-# Define include direcories
+# Define include directories
 target_include_directories(csp-vestec
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/..
+        ${VTK_INCLUDE_DIRS}
 )
 
 # --------------------------------------------------------------- install plugin 

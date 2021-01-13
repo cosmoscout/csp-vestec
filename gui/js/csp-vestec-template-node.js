@@ -19,9 +19,10 @@
  * Example node
  * Use this file as a template for new nodes
  *
- * Prefix unused arguments with '_', e.g. if you don't use the inputs argument in the worker method rename it to '_inputs'
- * Write control html ids as 'class_name_type_node_id', e.g. for an input element: 'template_node_text_input_ID'
- * Each node should have a corresponding C++ file located at 'src/VestecNodes'
+ * Prefix unused arguments with '_', e.g. if you don't use the inputs argument in the worker method
+ * rename it to '_inputs' Write control html ids as 'class_name_type_node_id', e.g. for an input
+ * element: 'template_node_text_input_ID' Each node should have a corresponding C++ file located at
+ * 'src/VestecNodes'
  *
  * Write variable names in camelCase
  * Use constants where possible
@@ -45,17 +46,18 @@ class TemplateNode {
     const output = new D3NE.Output('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
 
     const exampleControl = new D3NE.Control(
-      // Write IDs as class_name_type_node_id
-      `<select id="template_node_select_${node.id}" class="combobox hidden"><option>Template 1</option></select>`,
-      (element, control) => {
-        // Element is the HTML object representation of the html string argument
-        // In this case element = HTMLSelectElement
-        element.classList.remove('hidden');
+        // Write IDs as class_name_type_node_id
+        `<select id="template_node_select_${
+            node.id}" class="combobox hidden"><option>Template 1</option></select>`,
+        (element, control) => {
+          // Element is the HTML object representation of the html string argument
+          // In this case element = HTMLSelectElement
+          element.classList.remove('hidden');
 
-        // Control is a data store in the node
-        // Data can be added through 'putData'
-        control.putData('select', element);
-      },
+          // Control is a data store in the node
+          // Data can be added through 'putData'
+          control.putData('select', element);
+        },
     );
 
     node.addInput(input);

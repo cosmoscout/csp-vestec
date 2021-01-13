@@ -38,7 +38,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   /**
    * Set the opacity of the overlay
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /*
    * Sets the transfer function for the shader
@@ -48,7 +48,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   /**
    * Set the time value passed to shader to discard
    */
-  void SetTime(double val);
+  void SetTime(float val);
 
   /**
    * Set if timing information should be used by the shader

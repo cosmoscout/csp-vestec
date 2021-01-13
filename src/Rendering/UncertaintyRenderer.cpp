@@ -85,7 +85,7 @@ UncertaintyOverlayRenderer::~UncertaintyOverlayRenderer() {
   }
 }
 
-void UncertaintyOverlayRenderer::SetOpacity(double val) {
+void UncertaintyOverlayRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
 
@@ -108,7 +108,7 @@ void UncertaintyOverlayRenderer::SetOverlayTextures(
 
 bool UncertaintyOverlayRenderer::Do() {
   mLockTextureAccess.lock();
-  int numTextures = mvecTextures.size();
+  size_t numTextures = mvecTextures.size();
 
   if (numTextures == 0) {
     mLockTextureAccess.unlock();
@@ -284,7 +284,7 @@ bool UncertaintyOverlayRenderer::Do() {
         glm::normalize(glm::inverse(matWorldTransform) *
                        (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
-        sunDirection[0], sunDirection[1], sunDirection[2]);
+        (float)sunDirection[0], (float)sunDirection[1], (float)sunDirection[2]);
 
     // provide radii to shader
     auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());
@@ -345,7 +345,8 @@ void UncertaintyOverlayRenderer::UploadTextures() {
   // Allocate texture array
   data.mColorBuffer->Bind();
   if (lBufferSize != static_cast<long>(texture0.x * texture0.y * mvecTextures.size())) {
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, texture0.x, texture0.y, mvecTextures.size());
+    glTexStorage3D(
+        GL_TEXTURE_2D_ARRAY, 1, GL_R32F, texture0.x, texture0.y, (GLsizei)mvecTextures.size());
     lBufferSize = texture0.x * texture0.y * mvecTextures.size();
   }
 

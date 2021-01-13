@@ -58,13 +58,13 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTextureFiles",
       "Reads simulation data", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<UncertaintyRenderNode>(id)->SetTextureFiles(params);
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetTextureFiles(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setOpacityUncertainty",
       "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
-        pEditor->GetNode<UncertaintyRenderNode>(id)->SetOpacity(val);
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetOpacity((float)val);
       }));
 
   // Callback to set a transfer function for the rendering
@@ -107,8 +107,9 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
           renderMode = UncertaintyOverlayRenderer::RenderMode::Average;
           break;
         }
-        pEditor->GetNode<UncertaintyRenderNode>(id)->GetRenderNode()->SetVisualizationMode(
-            renderMode);
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))
+            ->GetRenderNode()
+            ->SetVisualizationMode(renderMode);
       }));
 }
 
@@ -116,7 +117,7 @@ UncertaintyOverlayRenderer* UncertaintyRenderNode::GetRenderNode() {
   return m_pRenderer;
 }
 
-void UncertaintyRenderNode::SetOpacity(double val) {
+void UncertaintyRenderNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
 }
 

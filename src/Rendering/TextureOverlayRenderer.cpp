@@ -73,7 +73,7 @@ TextureOverlayRenderer::~TextureOverlayRenderer() {
   }
 }
 
-void TextureOverlayRenderer::SetOpacity(double val) {
+void TextureOverlayRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
 
@@ -81,7 +81,7 @@ void TextureOverlayRenderer::SetTransferFunction(std::string json) {
   mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
 }
 
-void TextureOverlayRenderer::SetTime(double val) {
+void TextureOverlayRenderer::SetTime(float val) {
   mTime = val;
 }
 
@@ -201,7 +201,7 @@ bool TextureOverlayRenderer::Do() {
       glm::normalize(glm::inverse(matWorldTransform) *
                      (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
-      sunDirection[0], sunDirection[1], sunDirection[2]);
+      (float)sunDirection[0], (float)sunDirection[1], (float)sunDirection[2]);
 
   // provide radii to shader
   auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());

@@ -45,7 +45,7 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
   /**
    * Set the opacity of the overlay
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /*
    * Sets the transfer function for the shader for rendering scalar values

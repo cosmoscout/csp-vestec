@@ -56,13 +56,13 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "setPoints", "Reads simulation data", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<CriticalPointsNode>(id)->SetPoints(params);
+        pEditor->GetNode<CriticalPointsNode>(std::lround(id))->SetPoints(params);
       }));
 
   // Callback to adjust the opacity of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>("setOpacity",
       "Adjust the opacity of the rendering", std::function([pEditor](double id, double val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->SetOpacity(val);
+        pEditor->GetNode<CriticalPointsNode>(std::lround(id))->SetOpacity((float)val);
       }));
 
 	// Callback to set a transfer function for the rendering
@@ -95,23 +95,27 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
           renderMode = CriticalPointsRenderer::RenderMode::ALL;
           break;
         }
-        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetVisualizationMode(renderMode);
+        pEditor->GetNode<CriticalPointsNode>(std::lround(id))
+            ->GetRenderNode()
+            ->SetVisualizationMode(renderMode);
       }));
 
   // Callback to adjust the height of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>("setCriticalPointsHeightScale",
       "Changes the scale of the critical points height",
       std::function([pEditor](double id, double val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetHeightScale(
-            static_cast<float>(val));
+        pEditor->GetNode<CriticalPointsNode>(std::lround(id))
+            ->GetRenderNode()
+            ->SetHeightScale(static_cast<float>(val));
       }));
 
   // Callback to adjust the width of the rendering
   pEditor->GetGuiItem()->registerCallback<double, double>("setCriticalPointsWidthScale",
       "Changes the scale of the critical points width",
       std::function([pEditor](double id, double val) {
-        pEditor->GetNode<CriticalPointsNode>(id)->GetRenderNode()->SetWidthScale(
-            static_cast<float>(val));
+        pEditor->GetNode<CriticalPointsNode>(std::lround(id))
+            ->GetRenderNode()
+            ->SetWidthScale(static_cast<float>(val));
       }));
 }
 
@@ -119,7 +123,7 @@ CriticalPointsRenderer* CriticalPointsNode::GetRenderNode() {
   return m_pRenderer;
 }
 
-void CriticalPointsNode::SetOpacity(double val) {
+void CriticalPointsNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
 }
 

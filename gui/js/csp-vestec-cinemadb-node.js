@@ -41,40 +41,41 @@ class CinemaDBNode {
     const output = new D3NE.Output('CINEMA_DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
 
     const caseNames = new D3NE.Control(
-      `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
-      (element, control) => {
-        const select = $(`#case_names_${node.id}`);
+        `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
+        (element, control) => {
+          const select = $(`#case_names_${node.id}`);
 
-        select.selectpicker();
+          select.selectpicker();
 
-        control.putData('caseName', 'none');
-        control.putData('converted', null);
-        control.putData('caseNameSelectParent', element.parentElement);
+          control.putData('caseName', 'none');
+          control.putData('converted', null);
+          control.putData('caseNameSelectParent', element.parentElement);
 
-        if (this._useVestec()) {
-          element.parentElement.classList.add('hidden');
-        } else {
-          window.callNative('CinemaDBNode.readCaseNames', node.id, CinemaDBNode.path);
-        }
+          if (this._useVestec()) {
+            element.parentElement.classList.add('hidden');
+          } else {
+            window.callNative('CinemaDBNode.readCaseNames', node.id, CinemaDBNode.path);
+          }
 
-        element.addEventListener('change', (event) => {
-          control.putData('caseName', event.target.value);
+          element.addEventListener('change', (event) => {
+            control.putData('caseName', event.target.value);
 
-          CosmoScout.vestecNE.updateEditor();
-        });
-      },
+            CosmoScout.vestecNE.updateEditor();
+          });
+        },
     );
 
     const timeSteps = new D3NE.Control(
-      `<div id="time_slider_${node.id}" class="slider"></div>`, (element, control) => {
-        control.putData('timeSliderParent', element.parentElement);
+        `<div id="time_slider_${node.id}" class="slider"></div>`,
+        (element, control) => {
+          control.putData('timeSliderParent', element.parentElement);
 
-        if (this._useVestec()) {
-          element.parentElement.classList.add('hidden');
-        } else {
-          window.callNative('CinemaDBNode.getTimeSteps', node.id, CinemaDBNode.path);
-        }
-      },
+          if (this._useVestec()) {
+            element.parentElement.classList.add('hidden');
+          } else {
+            window.callNative('CinemaDBNode.getTimeSteps', node.id, CinemaDBNode.path);
+          }
+        },
     );
 
     node.data.currentData = null;
@@ -101,7 +102,8 @@ class CinemaDBNode {
    */
   worker(node, inputs, outputs) {
     if (this._useVestec()) {
-      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' ||
+          inputs[0].length === 0) {
         node.data.caseNameSelectParent.classList.add('hidden');
         node.data.timeSliderParent.classList.add('hidden');
         return;
@@ -237,7 +239,7 @@ class CinemaDBNode {
   static fillCaseNames(id, caseNames) {
     const json = JSON.parse(caseNames);
 
-    if (json.length === 0) {
+    if (json === null || json.length === 0) {
       return;
     }
 
@@ -248,7 +250,7 @@ class CinemaDBNode {
 
     json.forEach((simulation) => {
       const option = document.createElement('option');
-      option.text = simulation;
+      option.text  = simulation;
 
       element.appendChild(option);
     });
