@@ -1,0 +1,7 @@
+Type,CaseName,TimeStep,FILE
+R0,sim_ros,0,data/sim_ros.vtu
+R0,sim_ros_proj,0,data/sim_ros_proj.vtu
+R0,sim_fl,0,data/sim_fl.vtu
+R0,sim_fi,0,data/sim_fi.vtu
+R0,sim_sc,0,data/sim_sc.vtu
+R0,acumcostal,0,data/acumcostal.vtu

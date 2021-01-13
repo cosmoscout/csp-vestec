@@ -42,11 +42,11 @@ class CriticalPointsNode {
       // Initialize combobox for the visualization mode
       const select = $(element).find(`#vis_mode_${node.id}`);
       select.selectpicker();
-      select.on('change', () => {
+      select.on('change', (event) => {
         window.callNative(
-            'setCriticalPointsVisualizationMode',
+           'setCriticalPointsVisualizationMode',
             parseInt(node.id, 10),
-            parseInt($(this).val(), 10),
+            parseInt(event.target.value, 10)
         );
       });
     });
