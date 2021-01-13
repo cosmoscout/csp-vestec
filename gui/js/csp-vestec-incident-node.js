@@ -46,6 +46,7 @@ class IncidentNode {
    * @type {{CINEMA_DB: string, POINT_ARRAY: string, "2D_FIRE": string}}
    */
   static typeMappings = {
+    TEXTURE: IncidentNode.outputTypes[0],
     '2D_FIRE': IncidentNode.outputTypes[0],
     DISEASES_TEXTURE: IncidentNode.outputTypes[0],
     CINEMA_DB: IncidentNode.outputTypes[1],
