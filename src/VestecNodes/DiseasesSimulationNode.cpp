@@ -38,12 +38,14 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.getFilesForTimeStep",
       "Returns files for a time step",
       std::function([pEditor](double id, std::string mode, double t) {
-        pEditor->GetNode<DiseasesSimulation>(id)->GetFileNamesForTimeStep(id, mode, t);
+        pEditor->GetNode<DiseasesSimulation>(std::lround(id))
+            ->GetFileNamesForTimeStep(std::lround(id), mode, t);
       }));
 
   pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.setNumberOfEnsembleMembers",
       "Sets the number of ensemble members", std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<DiseasesSimulation>(id)->SetNumberOfEnsembleMembers(id, path);
+        pEditor->GetNode<DiseasesSimulation>(std::lround(id))
+            ->SetNumberOfEnsembleMembers(std::lround(id), path);
       }));
 
   pEditor->GetGuiItem()->registerCallback("DiseasesSimulationNode.readDiseasesSimulationModes",

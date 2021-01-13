@@ -40,7 +40,8 @@ void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
   // Example callback for communication from JavaScript to C++
   pEditor->GetGuiItem()->registerCallback("DiseasesSensorInputNode.readSensorFileNames",
       "Reads sensor file names", std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<DiseasesSensorInputNode>(id)->ReadSensorFileNames(id, path);
+        pEditor->GetNode<DiseasesSensorInputNode>(std::lround(id))
+            ->ReadSensorFileNames(std::lround(id), path);
       }));
 }
 

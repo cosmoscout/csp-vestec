@@ -39,7 +39,7 @@ class CriticalPointsNode : public VNE::Node {
   /**
    * Sets the opacity of the rendering
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /**
    * Get the iunderlaying render node

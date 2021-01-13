@@ -54,7 +54,7 @@ class NodeEditor {
    */
   void DeleteConnection(int from, int to, int fromPort, int toPort);
 
-  int GetNumberOfNodes();
+  size_t GetNumberOfNodes();
 
   int GetMaxNodeID();
 

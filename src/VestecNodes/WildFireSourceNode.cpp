@@ -32,12 +32,13 @@ void WildFireSourceNode::Init(VNE::NodeEditor* pEditor) {
   // Example callback for communication from JavaScript to C++
   pEditor->GetGuiItem()->registerCallback<double, std::string>("readSimulationModes",
       "Returns available simulation modes", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<WildFireSourceNode>(id)->ReadSimulationModes(id);
+        pEditor->GetNode<WildFireSourceNode>(std::lround(id))->ReadSimulationModes(std::lround(id));
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, std::string>("readSimulationFileNames",
       "Returns simulation file names", std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<WildFireSourceNode>(id)->ReadSimulationFileNames(id, params);
+        pEditor->GetNode<WildFireSourceNode>(std::lround(id))
+            ->ReadSimulationFileNames(std::lround(id), params);
       }));
 }
 

@@ -40,12 +40,12 @@ class TextureRenderNode : public VNE::Node {
   /**
    * Set the opacity of the overlay
    */
-  void SetOpacity(double val);
+  void SetOpacity(float val);
 
   /**
    * Set the time value
    */
-  void SetTime(double val);
+  void SetTime(float val);
 
   /**
    * Set if timing information should be used by the shader
