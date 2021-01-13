@@ -170,6 +170,8 @@
         return;
       }
 
+      window.callNative('vestec.setServer', this._vestecApi.server);
+
       console.debug(`Set vestec server to ${url}`);
       document.getElementById('csp-vestec-server').innerText = this._vestecApi.server;
     }
@@ -205,6 +207,13 @@
      */
     getToken() {
       return this._vestecApi.token;
+    }
+
+    /**
+     * @returns {Vestec}
+     */
+    get api() {
+      return this._vestecApi;
     }
 
     /**
@@ -581,7 +590,17 @@
         window.callNative('vestec.removeMarks');
 
         // Incident id is in body text
-        return response.text();
+        const uuid = response.text();
+
+        const activationResponse = await this._vestecApi.activateIncident(uuid).catch(() => {
+          CosmoScout.notifications.print(
+              'Activation failed', 'Could not activate Incident', 'error');
+        });
+
+        if (activationResponse.status !== 200) {
+          CosmoScout.notifications.print(
+              'Activation failed', 'Could not activate Incident', 'error');
+        }
       }
 
       // TODO Status code currently missing in vestec response
