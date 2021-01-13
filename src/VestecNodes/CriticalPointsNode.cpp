@@ -69,7 +69,6 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback<double, double>("setCriticalPointsVisualizationMode",
       "Sets the visualization mode", std::function([pEditor](double id, double val) {
         CriticalPointsRenderer::RenderMode renderMode = CriticalPointsRenderer::RenderMode::ALL;
-        csp::vestec::logger().debug("[{}] Switching cp vis to {}", GetName(), std::to_string(val));
 
         switch (static_cast<int>(val)) {
         case 0:
