@@ -25,7 +25,9 @@
 using json = nlohmann::json;
 
 CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSystem)
-    : mSolarSystem(pSolarSystem) {
+    : mSolarSystem(pSolarSystem)
+    , mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
+          boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json"))) {
   csp::vestec::logger().debug("[CriticalPointsRenderer] Compiling shader");
   m_pSurfaceShader = nullptr;
 
@@ -50,6 +52,10 @@ CriticalPointsRenderer::~CriticalPointsRenderer() {
 
 void CriticalPointsRenderer::SetOpacity(float val) {
   mOpacity = val;
+}
+
+void CriticalPointsRenderer::SetTransferFunction(std::string json) {
+  mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
 }
 
 void CriticalPointsRenderer::SetVisualizationMode(RenderMode mode) {
@@ -147,6 +153,10 @@ bool CriticalPointsRenderer::Do() {
   m_VAO->Bind();
   m_pSurfaceShader->Bind();
 
+  mTransferFunction->bind(GL_TEXTURE0);
+
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTransferFunction"), 0);
+
   int loc = m_pSurfaceShader->GetUniformLocation("uMatP");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matProjection.GetData());
   loc = m_pSurfaceShader->GetUniformLocation("uMatMV");
@@ -177,6 +187,8 @@ bool CriticalPointsRenderer::Do() {
 
   // Draw points
   glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_vecPoints.size()));
+
+  mTransferFunction->unbind(GL_TEXTURE0);
 
   // Release shader
   m_pSurfaceShader->Release();

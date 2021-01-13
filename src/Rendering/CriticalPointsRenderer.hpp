@@ -5,6 +5,7 @@
 #include <VistaMath/VistaBoundingBox.h>
 
 #include "../../../../src/cs-core/SolarSystem.hpp"
+#include "../../../../src/cs-graphics/ColorMap.hpp"
 #include "../logger.hpp"
 
 #include <vector>
@@ -49,6 +50,11 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
    * Set the opacity of the overlay
    */
   void SetOpacity(float val);
+
+  /*
+   * Sets the transfer function for the shader
+   */
+  void SetTransferFunction(std::string json);
 
   /**
    * SetPoints
@@ -95,6 +101,8 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
 
   cs::core::SolarSystem*
       mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices
+
+  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction; //! Transfer function used in shader
 
   std::vector<CriticalPoint> m_vecPoints;
 

@@ -42,6 +42,11 @@ class TextureRenderNode : public VNE::Node {
    */
   void SetOpacity(float val);
 
+  /*
+   * Sets the transfer function for the rendering
+   */
+  void SetTransferFunction(std::string json);
+
   /**
    * Set the time value
    */

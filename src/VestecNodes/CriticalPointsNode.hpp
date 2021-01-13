@@ -41,6 +41,11 @@ class CriticalPointsNode : public VNE::Node {
    */
   void SetOpacity(float val);
 
+  /*
+   * Sets the transfer function for the rendering
+   */
+  void SetTransferFunction(std::string json);
+
   /**
    * Get the iunderlaying render node
    */

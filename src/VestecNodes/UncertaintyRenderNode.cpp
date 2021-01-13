@@ -20,7 +20,7 @@ using json = nlohmann::json;
 UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const& config,
     cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
     cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
-    : VNE::Node(pItem, id, 1, 0)
+    : VNE::Node(pItem, id, 3, 0)
     , m_pAnchor(pAnchor) {
   // Store config data for later usage
   mPluginConfig = config;
@@ -67,6 +67,21 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
         pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetOpacity((float)val);
       }));
 
+  // Callback to set a transfer function for the rendering
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunction",
+      "Sets the transfer function for rendering scalars",
+      std::function([pEditor](double id, std::string val) {
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetTransferFunction(val);
+      }));
+
+  // Callback to set a transfer function for the rendering
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunctionUncertainty",
+      "Sets the transfer function for rendering difference and variance",
+      std::function([pEditor](double id, std::string val) {
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))
+            ->SetTransferFunctionUncertainty(val);
+      }));
+
   pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setUncertaintyVisualizationMode",
       "Sets the uncertainty visualization mode", std::function([pEditor](double id, double val) {
         UncertaintyOverlayRenderer::RenderMode renderMode;
@@ -105,6 +120,14 @@ UncertaintyOverlayRenderer* UncertaintyRenderNode::GetRenderNode() {
 
 void UncertaintyRenderNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
+}
+
+void UncertaintyRenderNode::SetTransferFunction(std::string json) {
+  m_pRenderer->SetTransferFunction(json);
+}
+
+void UncertaintyRenderNode::SetTransferFunctionUncertainty(std::string json) {
+  m_pRenderer->SetTransferFunctionUncertainty(json);
 }
 
 void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
