@@ -43,11 +43,8 @@ class CriticalPointsNode {
       const select = $(element).find(`#vis_mode_${node.id}`);
       select.selectpicker();
       select.on('change', (event) => {
-        window.callNative(
-           'setCriticalPointsVisualizationMode',
-            parseInt(node.id, 10),
-            parseInt(event.target.value, 10)
-        );
+        window.callNative('setCriticalPointsVisualizationMode', parseInt(node.id, 10),
+            parseInt(event.target.value, 10));
       });
     });
 
