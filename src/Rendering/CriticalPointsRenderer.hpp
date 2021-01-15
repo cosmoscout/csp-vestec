@@ -99,10 +99,10 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
   static const std::string SURFACE_GEOM; //! Code for the geometry shader
   static const std::string SURFACE_FRAG; //! Code for the fragment shader
 
+  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction; //! Transfer function used in shader
+
   cs::core::SolarSystem*
       mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices
-
-  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction; //! Transfer function used in shader
 
   std::vector<CriticalPoint> m_vecPoints;
 

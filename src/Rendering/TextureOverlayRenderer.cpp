@@ -27,9 +27,9 @@
 using json = nlohmann::json;
 
 TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
-    : mSolarSystem(pSolarSystem)
-    , mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
-          boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json"))) {
+    : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
+          boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json")))
+    , mSolarSystem(pSolarSystem) {
   csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling shader");
 
   m_pSurfaceShader = nullptr;

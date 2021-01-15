@@ -29,11 +29,11 @@
 using json = nlohmann::json;
 
 UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
-    : mSolarSystem(pSolarSystem)
-    , mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
+    : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
           boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json")))
     , mTransferFunctionUncertainty(std::make_unique<cs::graphics::ColorMap>(
-          boost::filesystem::path("../share/resources/transferfunctions/Grayscale.json"))) {
+          boost::filesystem::path("../share/resources/transferfunctions/Grayscale.json")))
+    , mSolarSystem(pSolarSystem) {
   csp::vestec::logger().debug("[UncertaintyOverlayRenderer] Compiling shader");
 
   m_pSurfaceShader = nullptr;
