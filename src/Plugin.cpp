@@ -179,7 +179,7 @@ void Plugin::init() {
   }));
 
   mGuiManager->getGui()->registerCallback("vestec.setServer", "",
-      std::function([this](std::string server) { Plugin::vestecServer = server; }));
+      std::function([](std::string server) { Plugin::vestecServer = server; }));
 
   // Read the plugin settings from the scene config
   mPluginSettings = mAllSettings->mPlugins.at("csp-vestec");
