@@ -590,7 +590,7 @@
         window.callNative('vestec.removeMarks');
 
         // Incident id is in body text
-        const uuid = response.text();
+        const uuid = await response.text();
 
         const activationResponse = await this._vestecApi.activateIncident(uuid).catch(() => {
           CosmoScout.notifications.print(
@@ -600,6 +600,12 @@
         if (activationResponse.status !== 200) {
           CosmoScout.notifications.print(
               'Activation failed', 'Could not activate Incident', 'error');
+        } else {
+          CosmoScout.notifications.print(
+              'Incident activated',
+              'Successfully activated incident.',
+              'done',
+          );
         }
       }
 
