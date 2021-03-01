@@ -64,6 +64,7 @@ class TextureRenderNode : public VNE::Node {
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
   TextureOverlayRenderer* m_pRenderer =
       nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
+
 };
 
 #endif /* SIMPLE_TEXTURE_RENDER_NODE_HPP_ */

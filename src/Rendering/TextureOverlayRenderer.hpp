@@ -4,6 +4,7 @@
 #include "../common/GDALReader.hpp"
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 #include <VistaMath/VistaBoundingBox.h>
+#include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 
 #include "../../../../src/cs-core/SolarSystem.hpp"
 #include "../../../../src/cs-graphics/ColorMap.hpp"
@@ -19,6 +20,7 @@
 class VistaGLSLShader;
 class VistaViewport;
 class VistaTexture;
+
 
 /**
  * Class which gets a geo-referenced texture and overlays if onto the previous rendered scene.
@@ -71,6 +73,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   bool  mUseTime       = false; //!  Flag if sahder should use time information
   float mOpacity       = 1;     //! Opacity value used in shader to adjust the overlay
   float mTime          = 6;     //! Time value in hours. Used by shader to discard pixels
+  int   mMipMapLevels  = 0;     //! Count of generated MipMap levels
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 

@@ -1,5 +1,6 @@
 // Plugin Includes
 #include "TextureOverlayRenderer.hpp"
+#include "../../../../src/cs-utils/convert.hpp"
 
 // VISTA includes
 #include <VistaInterProcComm/Connections/VistaByteBufferDeSerializer.h>
@@ -104,7 +105,7 @@ bool TextureOverlayRenderer::Do() {
     return false;
   }
 
-  // save current lighting and meterial state of the OpenGL state machine
+  // save current lighting and material state of the OpenGL state machine
   glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_CULL_FACE);
@@ -134,9 +135,17 @@ bool TextureOverlayRenderer::Do() {
       iViewport[2], iViewport[3], 0);
 
   if (mUpdateTexture) {
+    std::cout << "Update tex\n";
     data.mColorBuffer->Bind();
+
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_R32F, mTexture.x, mTexture.y, 0, GL_RED, GL_FLOAT, mTexture.buffer);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    mMipMapLevels = static_cast<int>(1 + floor(log2(fmax(mTexture.x, mTexture.y))));
+
     mUpdateTexture = false;
   }
 
@@ -196,6 +205,37 @@ bool TextureOverlayRenderer::Do() {
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), mOpacity);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), mTime);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), mUseTime);
+
+  // From Application.cpp
+  auto*               pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  VistaTransformNode* pTrans =
+      dynamic_cast<VistaTransformNode*>(pSG->GetNode("Platform-User-Node"));
+
+  auto vWorldPos = glm::vec4(1);
+  pTrans->GetWorldPosition(vWorldPos.x, vWorldPos.y, vWorldPos.z);
+
+  auto polar = cs::utils::convert::cartesianToLngLatHeight(
+      (glm::inverse(mSolarSystem->pActiveBody.get()->getWorldTransform()) * vWorldPos).xyz(),
+      mSolarSystem->pActiveBody.get()->getRadii()
+      );
+  double observerHeight = polar.z / 1 - mSolarSystem->pActiveBody.get()->getHeight(polar.xy());
+
+  int lod;
+  int mipMapMaxMinHeight = 200;
+  int mipMapMinMinHeight = 1000000;
+  if (observerHeight <= mipMapMaxMinHeight) {
+    lod = 0;
+  } else if(observerHeight > mipMapMinMinHeight) {
+    lod = mMipMapLevels;
+  } else {
+    //lod = static_cast<int>(ceil(1 + (mMipMapLevels - 1) * ((log(observerHeight) - log(201)) / (log(1000000) - log(201)))));
+    lod = static_cast<int>(ceil(1 + (mMipMapLevels - 1) * ((observerHeight - mipMapMaxMinHeight) / (mipMapMinMinHeight - mipMapMaxMinHeight))));
+  }
+  std::cout << "Lod: " << std::to_string(lod) << "\n";
+
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uTexLod"),
+      lod);
 
   auto sunDirection =
       glm::normalize(glm::inverse(matWorldTransform) *
