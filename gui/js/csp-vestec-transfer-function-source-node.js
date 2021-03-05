@@ -30,7 +30,7 @@ class TransferFunctionSourceNode {
           const fn = CosmoScout.transferFunctionEditor.create(element, (transferFunction) => {
             control.putData("transferFunction", transferFunction);
             CosmoScout.vestecNE.updateEditor();
-          }, {width: 300, height: 120, defaultFunction: "BlackBody.json"});
+          }, {width: 300, height: 120, defaultFunction: "BlackBody.json", fitToData: true});
           control.putData('fn', fn);
         },
     );
@@ -64,11 +64,10 @@ class TransferFunctionSourceNode {
         if (eNode.outputs[0].connections.length > 0 && typeof eNode.outputs[0].connections[0].input.node.data.range !== 'undefined') {
           const range = eNode.outputs[0].connections[0].input.node.data.range;
 
-          console.log(eNode.outputs[0].connections);
-
           if (node.data.range !== range) {
-            node.data.range = range
-            node.data.fn.setData(range)
+            node.data.range = range;
+            node.data.fn.fitToData = true;
+            node.data.fn.setData(range);
           }
         }
       });

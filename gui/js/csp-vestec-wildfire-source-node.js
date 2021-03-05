@@ -37,6 +37,11 @@ class WildFireSourceNode {
             window.callNative('readSimulationFileNames', node.id, $(this).val());
 
             CosmoScout.vestecNE.updateEditor();
+
+            // Hack
+            setTimeout(() => {
+              CosmoScout.vestecNE.updateEditor();
+            }, 200 )
           });
 
           // Initially fill the combobox with simulation mode values (read from C++)

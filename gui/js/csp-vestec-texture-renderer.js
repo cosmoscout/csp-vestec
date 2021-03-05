@@ -151,6 +151,18 @@ class TextureRenderNode {
     this._checkTextureInput(node, inputs[0][0]);
     this._checkTransferFunctionInput(node, inputs[1][0]);
 
+    CosmoScout.vestecNE.editor.nodes.forEach((eNode) => {
+      if (eNode.id !== node.id) {
+        return;
+      }
+
+      if (typeof node.data.range !== 'undefined' &&
+          eNode.inputs[1].connections.length > 0 &&
+          typeof eNode.inputs[1].connections[0].output.node.data.fn !== 'undefined') {
+        eNode.inputs[1].connections[0].output.node.data.fn.setData(node.data.range);
+      }
+    });
+
     outputs[0] = Math.random() * 300;
   }
 
