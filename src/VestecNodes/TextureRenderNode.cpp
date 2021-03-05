@@ -87,10 +87,28 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
       "Enables the simulation time", std::function([pEditor](double id, bool val) {
         pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetUseTime(val);
       }));
+
+  pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setMipMapLevel",
+      "Enables the simulation time", std::function([pEditor](double id, double lod) {
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetMipMapLevel(lod);
+      }));
+
+  pEditor->GetGuiItem()->registerCallback<double, bool>("TextureRenderNode.setEnableManualMipMap",
+      "Enables the simulation time", std::function([pEditor](double id, bool enable) {
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->EnableManualMipMaps(enable);
+      }));
 }
 
 void TextureRenderNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
+}
+
+void TextureRenderNode::SetMipMapLevel(double val) {
+  m_pRenderer->SetMipMapLevel(val);
+}
+
+void TextureRenderNode::EnableManualMipMaps(bool val) {
+  m_pRenderer->EnableManualMipMaps(val);
 }
 
 void TextureRenderNode::SetTransferFunction(std::string json) {
@@ -110,6 +128,9 @@ void TextureRenderNode::ReadSimulationResult(std::string filename) {
   GDALReader::GreyScaleTexture texture;
   GDALReader::ReadGrayScaleTexture(texture, std::move(filename));
 
+  //m_pRenderer->SetMaxRange(texture.dataRange[1])
+
+    m_pItem->callJavascript("TextureRenderNode.setRange", GetID(), texture.dataRange[0], texture.dataRange[1]);
   // Add the new texture for rendering
   m_pRenderer->SetOverlayTexture(texture);
 }

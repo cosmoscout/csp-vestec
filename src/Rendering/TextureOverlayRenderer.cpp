@@ -78,6 +78,18 @@ void TextureOverlayRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
 
+void TextureOverlayRenderer::EnableManualMipMaps(bool val) {
+  mManualMipMaps = val;
+}
+
+void TextureOverlayRenderer::SetMipMapLevel(double val) {
+  mMipMapLevel = val;
+}
+
+int TextureOverlayRenderer::GetMipMapLevels() {
+  return mMipMapLevels;
+}
+
 void TextureOverlayRenderer::SetTransferFunction(std::string json) {
   mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
 }
@@ -138,10 +150,14 @@ bool TextureOverlayRenderer::Do() {
     std::cout << "Update tex\n";
     data.mColorBuffer->Bind();
 
+    glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_R32F, mTexture.x, mTexture.y, 0, GL_RED, GL_FLOAT, mTexture.buffer);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.0);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     mMipMapLevels = static_cast<int>(1 + floor(log2(fmax(mTexture.x, mTexture.y))));
@@ -218,24 +234,28 @@ bool TextureOverlayRenderer::Do() {
       (glm::inverse(mSolarSystem->pActiveBody.get()->getWorldTransform()) * vWorldPos).xyz(),
       mSolarSystem->pActiveBody.get()->getRadii()
       );
+
   double observerHeight = polar.z / 1 - mSolarSystem->pActiveBody.get()->getHeight(polar.xy());
-
   int lod;
-  int mipMapMaxMinHeight = 200;
-  int mipMapMinMinHeight = 1000000;
-  if (observerHeight <= mipMapMaxMinHeight) {
-    lod = 0;
-  } else if(observerHeight > mipMapMinMinHeight) {
-    lod = mMipMapLevels;
+  if (!mManualMipMaps) {
+      int mipMapMaxMinHeight = 1000;
+      int mipMapMinMinHeight = 10000;
+      if (observerHeight <= mipMapMaxMinHeight) {
+          lod = 0;
+      } else if(observerHeight > mipMapMinMinHeight) {
+          lod = mMipMapLevels;
+      } else {
+          //lod = static_cast<int>(ceil(1 + (mMipMapLevels - 1) * ((log(observerHeight) - log(201)) / (log(1000000) - log(201)))));
+          lod = static_cast<int>(floor(1 + (mMipMapLevels - 1) * ((observerHeight - mipMapMaxMinHeight) / (mipMapMinMinHeight - mipMapMaxMinHeight))));
+          std::cout << "Lod: " << std::to_string(lod) << "\n";
+      }
   } else {
-    //lod = static_cast<int>(ceil(1 + (mMipMapLevels - 1) * ((log(observerHeight) - log(201)) / (log(1000000) - log(201)))));
-    lod = static_cast<int>(ceil(1 + (mMipMapLevels - 1) * ((observerHeight - mipMapMaxMinHeight) / (mipMapMinMinHeight - mipMapMaxMinHeight))));
+      lod = static_cast<int>(fmin(mMipMapLevel, mMipMapLevels));
   }
-  std::cout << "Lod: " << std::to_string(lod) << "\n";
 
-  m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uTexLod"),
-      lod);
+    m_pSurfaceShader->SetUniform(
+            m_pSurfaceShader->GetUniformLocation("uTexLod"),
+            static_cast<int>(lod));
 
   auto sunDirection =
       glm::normalize(glm::inverse(matWorldTransform) *

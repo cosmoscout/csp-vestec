@@ -42,6 +42,16 @@ class TextureRenderNode : public VNE::Node {
    */
   void SetOpacity(float val);
 
+  /**
+   * Set the opacity of the overlay
+   */
+  void SetMipMapLevel(double val);
+
+  /**
+   * Set the opacity of the overlay
+   */
+  void EnableManualMipMaps(bool val);
+
   /*
    * Sets the transfer function for the rendering
    */

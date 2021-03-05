@@ -93,10 +93,42 @@ class TextureRenderNode {
         },
     );
 
+    // Slider and checkbox to control mip map level
+    const mipMapLevelControl = new D3NE.Control(
+        `<div class="row">
+        <div class="col-2">
+          <label class="checklabel">
+            <input type="checkbox" id="texture-node_${node.id}-set_enable_manual-mipmap" />
+            <i class="material-icons"></i>
+          </label>
+        </div>
+        <div class="col-4 text">MipMap Level:</div>
+        <div class="col-6">
+          <div id="texture-node_${node.id}-slider_mipmap"></div>
+        </div>
+      </div>`,
+        (element, _control) => {
+          const slider = element.querySelector(`#texture-node_${node.id}-slider_mipmap`);
+          noUiSlider.create(slider, {start: 0, animate: false, range: {min: 0, max: 10}, step: 1});
+
+          element.querySelector(`#texture-node_${node.id}-set_enable_manual-mipmap`)
+              .addEventListener('click', (event) => {
+                window.callNative(
+                    'TextureRenderNode.setEnableManualMipMap', node.id, event.target.checked === true);
+              });
+
+          // Set the time value for the renderer
+          slider.noUiSlider.on('slide', (values, handle) => {
+            window.callNative('TextureRenderNode.setMipMapLevel', node.id, parseInt(values[handle]));
+          });
+        },
+    );
+
     // Add control elements
     node.addControl(opacityControl);
     node.addControl(timeControl);
     node.addControl(textureSelectControl);
+    node.addControl(mipMapLevelControl);
 
     // Define the input types
     const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
@@ -113,11 +145,13 @@ class TextureRenderNode {
    *
    * @param {Node} node
    * @param {Array} inputs - Texture
-   * @param {Array} _outputs - unused
+   * @param {Array} outputs - unused
    */
-  worker(node, inputs, _outputs) {
+  worker(node, inputs, outputs) {
     this._checkTextureInput(node, inputs[0][0]);
     this._checkTransferFunctionInput(node, inputs[1][0]);
+
+    outputs[0] = Math.random() * 300;
   }
 
   /**
@@ -242,6 +276,16 @@ class TextureRenderNode {
     node.data.activeFileSet = textures;
 
     node.data.textureSelectParent.classList.remove('hidden');
+  }
+
+
+  // Fill the combobox with the different simulation modes read from disc in c++
+  static setRange(id, min, max) {
+    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
+      if (node.id == id) {
+        node.data.range = [min, max];
+      }
+    });
   }
 }
 
