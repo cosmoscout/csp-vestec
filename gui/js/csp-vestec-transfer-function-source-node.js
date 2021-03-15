@@ -61,11 +61,12 @@ class TransferFunctionSourceNode {
           return;
         }
 
-        if (eNode.outputs[0].connections.length > 0 && typeof eNode.outputs[0].connections[0].input.node.data.range !== 'undefined') {
+        if (eNode.outputs[0].connections.length > 0 &&
+            typeof eNode.outputs[0].connections[0].input.node.data.range !== 'undefined') {
           const range = eNode.outputs[0].connections[0].input.node.data.range;
 
           if (node.data.range !== range) {
-            node.data.range = range;
+            node.data.range        = range;
             node.data.fn.fitToData = true;
             node.data.fn.setData(range);
           }

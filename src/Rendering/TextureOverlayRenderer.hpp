@@ -3,8 +3,8 @@
 
 #include "../common/GDALReader.hpp"
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
-#include <VistaMath/VistaBoundingBox.h>
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
+#include <VistaMath/VistaBoundingBox.h>
 
 #include "../../../../src/cs-core/SolarSystem.hpp"
 #include "../../../../src/cs-graphics/ColorMap.hpp"
@@ -20,7 +20,6 @@
 class VistaGLSLShader;
 class VistaViewport;
 class VistaTexture;
-
 
 /**
  * Class which gets a geo-referenced texture and overlays if onto the previous rendered scene.
@@ -57,6 +56,11 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
    */
   void EnableManualMipMaps(bool val);
 
+  /**
+   * Enable manual mip map level selection
+   */
+  void SetMipMapMode(int mode);
+
   /*
    * Sets the transfer function for the shader
    */
@@ -85,18 +89,20 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
 
  private:
   bool   mUpdateTexture = false; //! Flag if a texture upload is required
-  bool   mUseTime       = false; //!  Flag if sahder should use time information
+  bool   mUseTime       = false; //! Flag if shader should use time information
   float  mOpacity       = 1;     //! Opacity value used in shader to adjust the overlay
   float  mTime          = 6;     //! Time value in hours. Used by shader to discard pixels
   int    mMipMapLevels  = 0;     //! Count of generated MipMap levels
-  double mMipMapLevel   = 0;     //! Count of generated MipMap levels
-  bool   mManualMipMaps = false;
+  bool   mManualMipMaps = false; //! Flag if manual MipMaps are active
+  double mMipMapLevel   = 0;     //! Current manual MipMap Level
+  int    mMipMapMode    = 0;     //! 0 = Max, 1 = Min, 2 = Average
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
   static const std::string SURFACE_GEOM; //! Code for the geometry shader
   static const std::string SURFACE_VERT; //! Code for the vertex shader
   static const std::string SURFACE_FRAG; //! Code for the fragment shader
+  static const std::string COMPUTE;      //! Code for the compute shader
 
   /**
    * Struct which stores the depth buffer and color buffer from the previous rendering (order)

@@ -102,24 +102,28 @@ class TextureRenderNode {
             <i class="material-icons"></i>
           </label>
         </div>
-        <div class="col-4 text">MipMap Level:</div>
-        <div class="col-6">
+        <div class="col-10 text">MipMap Level:</div>
+        <div class="col-10 offset-1">
           <div id="texture-node_${node.id}-slider_mipmap"></div>
         </div>
       </div>`,
         (element, _control) => {
-          const slider = element.querySelector(`#texture-node_${node.id}-slider_mipmap`);
-          noUiSlider.create(slider, {start: 0, animate: false, range: {min: 0, max: 10}, step: 1});
+          this._createMipMapSlider(node, element);
+        },
+    );
 
-          element.querySelector(`#texture-node_${node.id}-set_enable_manual-mipmap`)
-              .addEventListener('click', (event) => {
-                window.callNative(
-                    'TextureRenderNode.setEnableManualMipMap', node.id, event.target.checked === true);
-              });
-
-          // Set the time value for the renderer
-          slider.noUiSlider.on('slide', (values, handle) => {
-            window.callNative('TextureRenderNode.setMipMapLevel', node.id, parseInt(values[handle]));
+    // Slider and checkbox to control mip map level
+    const mipMapMode = new D3NE.Control(
+        `<select id="texture-node_${node.id}-mipmap-mode-select" class="combobox">
+          <option value="0" selected>Max</option>
+          <option value="1">Min</option>
+          <option value="2">Average</option>
+        </select>`,
+        (element, _control) => {
+          $(element).selectpicker();
+          element.addEventListener('change', event => {
+            window.callNative(
+                'TextureRenderNode.setMipMapMode', node.id, Number.parseInt(event.target.value));
           });
         },
     );
@@ -128,6 +132,7 @@ class TextureRenderNode {
     node.addControl(opacityControl);
     node.addControl(timeControl);
     node.addControl(textureSelectControl);
+    node.addControl(mipMapMode);
     node.addControl(mipMapLevelControl);
 
     // Define the input types
@@ -156,12 +161,15 @@ class TextureRenderNode {
         return;
       }
 
-      if (typeof node.data.range !== 'undefined' &&
-          eNode.inputs[1].connections.length > 0 &&
+      if (typeof node.data.range !== 'undefined' && eNode.inputs[1].connections.length > 0 &&
           typeof eNode.inputs[1].connections[0].output.node.data.fn !== 'undefined') {
         eNode.inputs[1].connections[0].output.node.data.fn.setData(node.data.range);
       }
     });
+
+    if (typeof node.data.levels !== 'undefined' && node.data.levels > 0) {
+      this._createMipMapSlider(node, document);
+    }
 
     outputs[0] = Math.random() * 300;
   }
@@ -290,12 +298,74 @@ class TextureRenderNode {
     node.data.textureSelectParent.classList.remove('hidden');
   }
 
+  /**
+   * Creates the MipMapSlider
+   * @param {Node} node Node
+   * @param {HTMLElement|Document} parent
+   * @private
+   */
+  _createMipMapSlider(node, parent) {
+    if (typeof parent === 'undefined' || parent === null) {
+      parent = document
+    }
+
+    const slider = parent.querySelector(`#texture-node_${node.id}-slider_mipmap`);
+
+    if (slider === null) {
+      return;
+    }
+
+    if (typeof node.data.levels === 'undefined' || node.data.levels === null) {
+      node.data.levels = 10
+    }
+
+    if (typeof node.data.prevLevels !== 'undefined' && node.data.levels === node.data.prevLevels) {
+      return;
+    }
+
+    node.data.prevLevels = node.data.levels;
+
+    if (typeof slider.noUiSlider !== 'undefined') {
+      slider.noUiSlider.destroy();
+    } else {
+      slider.setAttribute('disabled', true);
+      slider.classList.add('unresponsive');
+    }
+
+    noUiSlider.create(
+        slider, {start: 0, animate: false, range: {min: 0, max: node.data.levels}, step: 1});
+
+    parent.querySelector(`#texture-node_${node.id}-set_enable_manual-mipmap`)
+        .addEventListener('click', (event) => {
+          event.target.checked === true
+              ? (slider.removeAttribute('disabled'), slider.classList.remove('unresponsive'))
+              : (slider.setAttribute('disabled', true), slider.classList.add('unresponsive'));
+
+          window.callNative(
+              'TextureRenderNode.setEnableManualMipMap', node.id, event.target.checked === true);
+        });
+
+    // Set the time value for the renderer
+    slider.noUiSlider.on('slide', (values, handle) => {
+      window.callNative('TextureRenderNode.setMipMapLevel', node.id, parseInt(values[handle]));
+    });
+  }
 
   // Fill the combobox with the different simulation modes read from disc in c++
   static setRange(id, min, max) {
     CosmoScout.vestecNE.editor.nodes.forEach((node) => {
       if (node.id == id) {
         node.data.range = [min, max];
+      }
+    });
+  }
+
+  // Fill the combobox with the different simulation modes read from disc in c++
+  static setMipMapLevels(id, levels) {
+    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
+      if (node.id == id) {
+        node.data.levels = levels;
+        CosmoScout.vestecNE.updateEditor();
       }
     });
   }

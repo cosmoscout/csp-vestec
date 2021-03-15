@@ -241,3 +241,82 @@ void main()
     }
 }
 )";
+
+const std::string TextureOverlayRenderer::COMPUTE = R"(
+#version 430
+layout (local_size_x = 16, local_size_y = 16) in;
+
+layout (r32f, binding = 0) readonly uniform image2D uInLevel0;
+
+layout (r32f, binding = 1) readonly uniform image2D uInPrevLevel;
+layout (r32f, binding = 2) writeonly uniform image2D uOut;
+
+uniform int uLevel;
+uniform int uMipMapMode;
+
+void sampleLevel0(inout float oOutputValue, ivec2 offset) {
+    float val = imageLoad(uInLevel0, ivec2(gl_GlobalInvocationID.xy + offset)).r;
+    oOutputValue = max(oOutputValue, val);
+}
+
+void samplePyramid(inout float oOutputValue, ivec2 offset) {
+    float value = imageLoad(uInPrevLevel, ivec2(gl_GlobalInvocationID.xy*2 + offset)).r;
+
+    if (uMipMapMode == 0) {
+        oOutputValue = max(oOutputValue, value);
+    }
+
+    if (uMipMapMode == 1) {
+        oOutputValue = max(0, value);
+    }
+
+    if (uMipMapMode == 2) {
+        oOutputValue += value;
+    }
+}
+
+void main() {
+    ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size     = imageSize(uOut);
+
+    if (storePos.x >= size.x || storePos.y >= size.y) {
+        return;
+    }
+
+    float oOutputValue = 0;
+
+    if (uLevel == 0) {
+        sampleLevel0(oOutputValue, ivec2(0, 0));
+        sampleLevel0(oOutputValue, ivec2(0, 1));
+        sampleLevel0(oOutputValue, ivec2(1, 0));
+        sampleLevel0(oOutputValue, ivec2(1, 1));
+    } else {
+        samplePyramid(oOutputValue, ivec2(0, 0));
+        samplePyramid(oOutputValue, ivec2(0, 1));
+        samplePyramid(oOutputValue, ivec2(1, 0));
+        samplePyramid(oOutputValue, ivec2(1, 1));
+
+        if (uMipMapMode == 2) {
+            oOutputValue /= 4;
+        }
+
+        // handle cases close to right and top edge
+        ivec2 maxCoords = imageSize(uInPrevLevel) - ivec2(1);
+        if (gl_GlobalInvocationID.x*2 == maxCoords.x - 2) {
+            samplePyramid(oOutputValue, ivec2(2, 0));
+            samplePyramid(oOutputValue, ivec2(2, 1));
+        }
+
+        if (gl_GlobalInvocationID.y*2 == maxCoords.y - 2) {
+            samplePyramid(oOutputValue, ivec2(0, 2));
+            samplePyramid(oOutputValue, ivec2(1, 2));
+
+            if (gl_GlobalInvocationID.x*2 == maxCoords.x - 2) {
+                samplePyramid(oOutputValue, ivec2(2, 2));
+            }
+        }
+    }
+
+    imageStore(uOut, storePos, vec4(oOutputValue, 0, 0, 0));
+}
+)";

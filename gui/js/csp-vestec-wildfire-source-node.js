@@ -41,7 +41,7 @@ class WildFireSourceNode {
             // Hack
             setTimeout(() => {
               CosmoScout.vestecNE.updateEditor();
-            }, 200 )
+            }, 200)
           });
 
           // Initially fill the combobox with simulation mode values (read from C++)

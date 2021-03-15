@@ -97,6 +97,11 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
       "Enables the simulation time", std::function([pEditor](double id, bool enable) {
         pEditor->GetNode<TextureRenderNode>(std::lround(id))->EnableManualMipMaps(enable);
       }));
+
+  pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setMipMapMode",
+      "Enables the simulation time", std::function([pEditor](double id, double mode) {
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetMipMapMode(static_cast<int>(mode));
+      }));
 }
 
 void TextureRenderNode::SetOpacity(float val) {
@@ -105,6 +110,10 @@ void TextureRenderNode::SetOpacity(float val) {
 
 void TextureRenderNode::SetMipMapLevel(double val) {
   m_pRenderer->SetMipMapLevel(val);
+}
+
+void TextureRenderNode::SetMipMapMode(int mode) {
+  m_pRenderer->SetMipMapMode(mode);
 }
 
 void TextureRenderNode::EnableManualMipMaps(bool val) {
@@ -128,9 +137,12 @@ void TextureRenderNode::ReadSimulationResult(std::string filename) {
   GDALReader::GreyScaleTexture texture;
   GDALReader::ReadGrayScaleTexture(texture, std::move(filename));
 
-  //m_pRenderer->SetMaxRange(texture.dataRange[1])
+  // m_pRenderer->SetMaxRange(texture.dataRange[1])
 
-    m_pItem->callJavascript("TextureRenderNode.setRange", GetID(), texture.dataRange[0], texture.dataRange[1]);
+  m_pItem->callJavascript(
+      "TextureRenderNode.setRange", GetID(), texture.dataRange[0], texture.dataRange[1]);
   // Add the new texture for rendering
   m_pRenderer->SetOverlayTexture(texture);
+  m_pItem->callJavascript(
+      "TextureRenderNode.setMipMapLevels", GetID(), m_pRenderer->GetMipMapLevels());
 }
