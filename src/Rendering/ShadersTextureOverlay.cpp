@@ -252,7 +252,9 @@ layout (r32f, binding = 1) readonly uniform image2D uInPrevLevel;
 layout (r32f, binding = 2) writeonly uniform image2D uOut;
 
 uniform int uLevel;
-uniform int uMipMapMode;
+uniform int uMipMapReduceMode;
+
+int sampleCounter = 0;
 
 void sampleLevel0(inout float oOutputValue, ivec2 offset) {
     float val = imageLoad(uInLevel0, ivec2(gl_GlobalInvocationID.xy + offset)).r;
@@ -260,18 +262,26 @@ void sampleLevel0(inout float oOutputValue, ivec2 offset) {
 }
 
 void samplePyramid(inout float oOutputValue, ivec2 offset) {
-    float value = imageLoad(uInPrevLevel, ivec2(gl_GlobalInvocationID.xy*2 + offset)).r;
+    float value = imageLoad(uInPrevLevel, ivec2(gl_GlobalInvocationID.xy * 2 + offset)).r;
 
-    if (uMipMapMode == 0) {
+    // Only use maximum
+    if (uMipMapReduceMode == 0) {
         oOutputValue = max(oOutputValue, value);
     }
 
-    if (uMipMapMode == 1) {
-        oOutputValue = max(0, value);
+    // Only use minimum
+    if (uMipMapReduceMode == 1) {
+        if (!isnan(value)) {
+            oOutputValue = min(1, value);
+        }
     }
 
-    if (uMipMapMode == 2) {
-        oOutputValue += value;
+    // Add all values, they are averaged later
+    if (uMipMapReduceMode == 2) {
+        if (!isnan(value)) {
+            oOutputValue += value;
+            sampleCounter += 1;
+        }
     }
 }
 
@@ -283,6 +293,7 @@ void main() {
         return;
     }
 
+    sampleCounter = 0;
     float oOutputValue = 0;
 
     if (uLevel == 0) {
@@ -296,27 +307,29 @@ void main() {
         samplePyramid(oOutputValue, ivec2(1, 0));
         samplePyramid(oOutputValue, ivec2(1, 1));
 
-        if (uMipMapMode == 2) {
-            oOutputValue /= 4;
-        }
-
         // handle cases close to right and top edge
         ivec2 maxCoords = imageSize(uInPrevLevel) - ivec2(1);
-        if (gl_GlobalInvocationID.x*2 == maxCoords.x - 2) {
+        if (gl_GlobalInvocationID.x * 2 == maxCoords.x - 2) {
             samplePyramid(oOutputValue, ivec2(2, 0));
             samplePyramid(oOutputValue, ivec2(2, 1));
         }
 
-        if (gl_GlobalInvocationID.y*2 == maxCoords.y - 2) {
+        if (gl_GlobalInvocationID.y * 2 == maxCoords.y - 2) {
             samplePyramid(oOutputValue, ivec2(0, 2));
             samplePyramid(oOutputValue, ivec2(1, 2));
 
-            if (gl_GlobalInvocationID.x*2 == maxCoords.x - 2) {
+            if (gl_GlobalInvocationID.x * 2 == maxCoords.x - 2) {
                 samplePyramid(oOutputValue, ivec2(2, 2));
             }
         }
+
+        if (uMipMapReduceMode == 2) {
+            oOutputValue /= sampleCounter;
+        }
+
     }
 
-    imageStore(uOut, storePos, vec4(oOutputValue, 0, 0, 0));
+    // We only use the red channel
+    imageStore(uOut, storePos, vec4(oOutputValue, 0.0, 0.0, 0.0));
 }
 )";
