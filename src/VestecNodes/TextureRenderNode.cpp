@@ -98,9 +98,10 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
         pEditor->GetNode<TextureRenderNode>(std::lround(id))->EnableManualMipMaps(enable);
       }));
 
-  pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setMipMapMode",
+  pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setMipMapReduceMode",
       "Enables the simulation time", std::function([pEditor](double id, double mode) {
-        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetMipMapMode(static_cast<int>(mode));
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))
+            ->SetMipMapReduceMode(static_cast<int>(mode));
       }));
 }
 
@@ -112,7 +113,7 @@ void TextureRenderNode::SetMipMapLevel(double val) {
   m_pRenderer->SetMipMapLevel(val);
 }
 
-void TextureRenderNode::SetMipMapMode(int mode) {
+void TextureRenderNode::SetMipMapReduceMode(int mode) {
   m_pRenderer->SetMipMapMode(mode);
 }
 

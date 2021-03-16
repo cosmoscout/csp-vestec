@@ -91,7 +91,7 @@ int TextureOverlayRenderer::GetMipMapLevels() {
 }
 
 void TextureOverlayRenderer::SetMipMapMode(int mode) {
-  mMipMapMode = mode;
+  mMipMapReduceMode = mode;
   if (mTexture.buffer) {
     mUpdateTexture = true;
   }
@@ -164,6 +164,7 @@ bool TextureOverlayRenderer::Do() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glTexStorage2D(GL_TEXTURE_2D, mMipMapLevels, GL_R32F, mTexture.x, mTexture.y);
+    // Hacky, update error can occur when mode changes, catch this here so nothing gets displayed
     int error = glGetError();
     glTexSubImage2D(
         GL_TEXTURE_2D, 0, 0, 0, mTexture.x, mTexture.y, GL_RED, GL_FLOAT, mTexture.buffer);
@@ -186,13 +187,15 @@ bool TextureOverlayRenderer::Do() {
     glBindImageTexture(0, data.mColorBuffer->GetId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
     for (int i(0); i < mMipMapLevels; ++i) {
+      // Calculates the width and height for the current MipMap Level
+      // This also sets the number of dispatched compute groups
       int width  = static_cast<int>(std::max(
           1.0, std::floor(static_cast<double>(static_cast<int>(mTexture.x)) / std::pow(2, i))));
       int height = static_cast<int>(std::max(
           1.0, std::floor(static_cast<double>(static_cast<int>(mTexture.y)) / std::pow(2, i))));
 
       glUniform1i(glGetUniformLocation(computeProgram, "uLevel"), i);
-      glUniform1i(glGetUniformLocation(computeProgram, "uMipMapMode"), mMipMapMode);
+      glUniform1i(glGetUniformLocation(computeProgram, "uMipMapReduceMode"), mMipMapReduceMode);
       glBindImageTexture(2, data.mColorBuffer->GetId(), i, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 
       if (i > 0) {

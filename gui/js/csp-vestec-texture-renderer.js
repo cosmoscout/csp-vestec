@@ -113,7 +113,7 @@ class TextureRenderNode {
     );
 
     // Slider and checkbox to control mip map level
-    const mipMapMode = new D3NE.Control(
+    const mipMapReduceMode = new D3NE.Control(
         `<select id="texture-node_${node.id}-mipmap-mode-select" class="combobox">
           <option value="0" selected>Max</option>
           <option value="1">Min</option>
@@ -122,8 +122,8 @@ class TextureRenderNode {
         (element, _control) => {
           $(element).selectpicker();
           element.addEventListener('change', event => {
-            window.callNative(
-                'TextureRenderNode.setMipMapMode', node.id, Number.parseInt(event.target.value));
+            window.callNative('TextureRenderNode.setMipMapReduceMode', node.id,
+                Number.parseInt(event.target.value));
           });
         },
     );
@@ -132,7 +132,7 @@ class TextureRenderNode {
     node.addControl(opacityControl);
     node.addControl(timeControl);
     node.addControl(textureSelectControl);
-    node.addControl(mipMapMode);
+    node.addControl(mipMapReduceMode);
     node.addControl(mipMapLevelControl);
 
     // Define the input types

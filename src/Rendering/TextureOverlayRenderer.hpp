@@ -88,14 +88,14 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   virtual bool GetBoundingBox(VistaBoundingBox& bb);
 
  private:
-  bool   mUpdateTexture = false; //! Flag if a texture upload is required
-  bool   mUseTime       = false; //! Flag if shader should use time information
-  float  mOpacity       = 1;     //! Opacity value used in shader to adjust the overlay
-  float  mTime          = 6;     //! Time value in hours. Used by shader to discard pixels
-  int    mMipMapLevels  = 0;     //! Count of generated MipMap levels
-  bool   mManualMipMaps = false; //! Flag if manual MipMaps are active
-  double mMipMapLevel   = 0;     //! Current manual MipMap Level
-  int    mMipMapMode    = 0;     //! 0 = Max, 1 = Min, 2 = Average
+  bool   mUpdateTexture    = false; //! Flag if a texture upload is required
+  bool   mUseTime          = false; //! Flag if shader should use time information
+  float  mOpacity          = 1;     //! Opacity value used in shader to adjust the overlay
+  float  mTime             = 6;     //! Time value in hours. Used by shader to discard pixels
+  int    mMipMapLevels     = 0;     //! Count of generated MipMap levels
+  bool   mManualMipMaps    = false; //! Flag if manual MipMaps are active
+  double mMipMapLevel      = 0;     //! Current manual MipMap Level
+  int    mMipMapReduceMode = 0;     //! 0 = Max, 1 = Min, 2 = Average
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
