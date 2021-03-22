@@ -17,7 +17,6 @@
 #include <VistaOGLExt/VistaTexture.h>
 
 // Standard includes
-#include <boost/filesystem.hpp>
 #include <functional>
 #include <glm/gtc/type_ptr.hpp>
 #include <json.hpp>
@@ -114,6 +113,10 @@ void TextureOverlayRenderer::SetOverlayTexture(GDALReader::GreyScaleTexture& tex
   mUpdateTexture = true;
 }
 
+void TextureOverlayRenderer::UnloadTexture() {
+    mTexture.buffer = nullptr;
+}
+
 bool TextureOverlayRenderer::Do() {
 
   // get active planet
@@ -122,6 +125,10 @@ bool TextureOverlayRenderer::Do() {
     csp::vestec::logger().info("[TextureOverlayRenderer::Do] No active planet set");
 
     return false;
+  }
+
+  if (!mTexture.buffer) {
+      return false;
   }
 
   // save current lighting and material state of the OpenGL state machine
@@ -285,19 +292,17 @@ bool TextureOverlayRenderer::Do() {
   double observerHeight = polar.z / 1 - mSolarSystem->pActiveBody.get()->getHeight(polar.xy());
   int    lod;
   if (!mManualMipMaps) {
-    int mipMapMaxMinHeight = 1000;
-    int mipMapMinMinHeight = 10000;
-    if (observerHeight <= mipMapMaxMinHeight) {
+    int heightMipMapLevel0   = 1500;
+    int heightMipMapLevelMax = 80000;
+    if (observerHeight <= heightMipMapLevel0) {
       lod = 0;
-    } else if (observerHeight > mipMapMinMinHeight) {
+    } else if (observerHeight > heightMipMapLevelMax) {
       lod = mMipMapLevels;
     } else {
-      // lod = static_cast<int>(ceil(1 + (mMipMapLevels - 1) * ((log(observerHeight) - log(201)) /
-      // (log(1000000) - log(201)))));
       lod = static_cast<int>(
-          floor(1 + (mMipMapLevels - 1) * ((observerHeight - mipMapMaxMinHeight) /
-                                              (mipMapMinMinHeight - mipMapMaxMinHeight))));
-      std::cout << "Lod: " << std::to_string(lod) << "\n";
+          floor(1 + (mMipMapLevels - 1) *
+                        ((std::log(observerHeight) - std::log(heightMipMapLevel0)) /
+                            (std::log(heightMipMapLevelMax) - std::log(heightMipMapLevel0)))));
     }
   } else {
     lod = static_cast<int>(fmin(mMipMapLevel, mMipMapLevels));

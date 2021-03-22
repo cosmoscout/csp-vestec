@@ -271,14 +271,14 @@ void samplePyramid(inout float oOutputValue, ivec2 offset) {
 
     // Only use minimum
     if (uMipMapReduceMode == 1) {
-        if (!isnan(value)) {
-            oOutputValue = min(1, value);
+        if (value > 0) {
+            oOutputValue = min(oOutputValue, value);
         }
     }
 
     // Add all values, they are averaged later
     if (uMipMapReduceMode == 2) {
-        if (!isnan(value)) {
+        if (value > 0) {
             oOutputValue += value;
             sampleCounter += 1;
         }

@@ -170,8 +170,6 @@ class TextureRenderNode {
     if (typeof node.data.levels !== 'undefined' && node.data.levels > 0) {
       this._createMipMapSlider(node, document);
     }
-
-    outputs[0] = Math.random() * 300;
   }
 
   /**
@@ -210,6 +208,7 @@ class TextureRenderNode {
    */
   _checkTextureInput(node, textureInput) {
     if (typeof textureInput === 'undefined') {
+      window.callNative('TextureRenderNode.unloadTexture', node.id);
       return;
     }
 

@@ -61,7 +61,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
    */
   void SetMipMapMode(int mode);
 
-  /*
+  /**
    * Sets the transfer function for the shader
    */
   void SetTransferFunction(std::string json);
@@ -80,6 +80,11 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
    * Adding a texture used for overlay rendering
    */
   void SetOverlayTexture(GDALReader::GreyScaleTexture& texture);
+
+  /**
+   * Unloads the currently active texture
+   */
+  void UnloadTexture();
 
   // ---------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw

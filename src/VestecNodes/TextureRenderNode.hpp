@@ -57,7 +57,7 @@ class TextureRenderNode : public VNE::Node {
    */
   void SetMipMapReduceMode(int mode);
 
-  /*
+  /**
    * Sets the transfer function for the rendering
    */
   void SetTransferFunction(std::string json);
@@ -71,6 +71,11 @@ class TextureRenderNode : public VNE::Node {
    * Set if timing information should be used by the shader
    */
   void SetUseTime(bool use);
+
+  /**
+   * Unloads the currently used texture
+   */
+  void UnloadTexture();
 
  private:
   csp::vestec::Plugin::Settings
