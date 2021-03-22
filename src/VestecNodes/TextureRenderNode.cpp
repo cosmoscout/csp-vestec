@@ -94,20 +94,22 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, bool>("TextureRenderNode.setEnableManualMipMap",
-      "Enables setting the mip map level manually", std::function([pEditor](double id, bool enable) {
+      "Enables setting the mip map level manually",
+      std::function([pEditor](double id, bool enable) {
         pEditor->GetNode<TextureRenderNode>(std::lround(id))->EnableManualMipMaps(enable);
       }));
 
   pEditor->GetGuiItem()->registerCallback<double, double>("TextureRenderNode.setMipMapReduceMode",
-      "Changes the mode used for creating the mip maps", std::function([pEditor](double id, double mode) {
+      "Changes the mode used for creating the mip maps",
+      std::function([pEditor](double id, double mode) {
         pEditor->GetNode<TextureRenderNode>(std::lround(id))
             ->SetMipMapReduceMode(static_cast<int>(mode));
       }));
 
   pEditor->GetGuiItem()->registerCallback<double>("TextureRenderNode.unloadTexture",
-      "Unloads the currently active texture. Called by the texture node automatically", std::function([pEditor](double id) {
-        pEditor->GetNode<TextureRenderNode>(std::lround(id))
-            ->UnloadTexture();
+      "Unloads the currently active texture. Called by the texture node automatically",
+      std::function([pEditor](double id) {
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->UnloadTexture();
       }));
 }
 

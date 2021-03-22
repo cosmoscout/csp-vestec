@@ -114,7 +114,7 @@ void TextureOverlayRenderer::SetOverlayTexture(GDALReader::GreyScaleTexture& tex
 }
 
 void TextureOverlayRenderer::UnloadTexture() {
-    mTexture.buffer = nullptr;
+  mTexture.buffer = nullptr;
 }
 
 bool TextureOverlayRenderer::Do() {
@@ -128,7 +128,7 @@ bool TextureOverlayRenderer::Do() {
   }
 
   if (!mTexture.buffer) {
-      return false;
+    return false;
   }
 
   // save current lighting and material state of the OpenGL state machine

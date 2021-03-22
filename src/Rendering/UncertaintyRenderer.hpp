@@ -67,6 +67,11 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
    */
   void SetVisualizationMode(RenderMode mode);
 
+  /**
+   * Unloads the currently active texture
+   */
+  void UnloadTexture();
+
   // ---------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
   // ---------------------------------------

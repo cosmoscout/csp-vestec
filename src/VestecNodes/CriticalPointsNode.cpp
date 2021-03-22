@@ -175,6 +175,8 @@ void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
     vecPoints.push_back(lower);
   }
 
+  m_pItem->callJavascript("CriticalPointsNode.setRange", GetID(), minPersistence, maxPersistence);
+
   // Pass min max persistence values to the end of the vector
   CriticalPointsRenderer::CriticalPoint minP{};
   CriticalPointsRenderer::CriticalPoint maxP{};

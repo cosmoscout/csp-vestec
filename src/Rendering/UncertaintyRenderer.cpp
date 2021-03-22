@@ -372,3 +372,7 @@ bool UncertaintyOverlayRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) 
 
   return true;
 }
+
+void UncertaintyOverlayRenderer::UnloadTexture() {
+  mvecTextures.clear();
+}

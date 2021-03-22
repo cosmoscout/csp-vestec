@@ -93,6 +93,17 @@ class UncertaintyRenderNode {
         node, inputs[1][0], "UncertaintyRenderNode.setTransferFunction");
     this._checkTransferFunctionInput(
         node, inputs[2][0], "UncertaintyRenderNode.setTransferFunctionUncertainty");
+
+    CosmoScout.vestecNE.editor.nodes.forEach((eNode) => {
+      if (eNode.id !== node.id) {
+        return;
+      }
+
+      if (typeof node.data.range !== 'undefined' && eNode.inputs[1].connections.length > 0 &&
+          typeof eNode.inputs[1].connections[0].output.node.data.fn !== 'undefined') {
+        eNode.inputs[1].connections[0].output.node.data.fn.setData(node.data.range);
+      }
+    });
   }
 
   /**
@@ -173,6 +184,15 @@ class UncertaintyRenderNode {
     this.lastTransferFunction = transferFunction;
 
     window.callNative(callback, node.id, transferFunction);
+  }
+
+  // Set the min and max range of the added textures
+  static setRange(id, min, max) {
+    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
+      if (node.id == id) {
+        node.data.range = [min, max];
+      }
+    });
   }
 }
 

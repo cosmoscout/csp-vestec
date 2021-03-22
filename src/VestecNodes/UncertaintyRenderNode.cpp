@@ -131,8 +131,11 @@ void UncertaintyRenderNode::SetTransferFunctionUncertainty(std::string json) {
 }
 
 void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
+  double min = 100000;
+  double max = 0;
+
   // Create a thead to load the data and do not block main thread
-  std::thread threadLoad([=]() {
+  std::thread threadLoad([=, &min, &max]() {
     // Forward to OGL renderer
     json args = json::parse(jsonFilenames);
 
@@ -145,9 +148,22 @@ void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
       GDALReader::GreyScaleTexture texture;
       GDALReader::ReadGrayScaleTexture(texture, filename);
       vecTextures.push_back(texture);
+      if (texture.dataRange[0] < min) {
+        min = texture.dataRange[0];
+      }
+
+      if (texture.dataRange[1] > max) {
+        max = texture.dataRange[1];
+      }
     }
     // Add the new texture for rendering
     m_pRenderer->SetOverlayTextures(vecTextures);
   });
   threadLoad.detach();
+
+  m_pItem->callJavascript("UncertaintyRenderNode.setRange", GetID(), min, max);
+}
+
+void UncertaintyRenderNode::UnloadTexture() {
+  m_pRenderer->UnloadTexture();
 }

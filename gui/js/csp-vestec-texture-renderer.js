@@ -208,6 +208,10 @@ class TextureRenderNode {
    */
   _checkTextureInput(node, textureInput) {
     if (typeof textureInput === 'undefined') {
+      // TODO: Should we reset everything?
+      // Or do we want to keep the state for current mipmap mode / level etc.
+      delete node.data.activeTexture;
+      delete this.lastFile;
       window.callNative('TextureRenderNode.unloadTexture', node.id);
       return;
     }
@@ -350,7 +354,7 @@ class TextureRenderNode {
     });
   }
 
-  // Fill the combobox with the different simulation modes read from disc in c++
+  // Set the min and max range of the texture
   static setRange(id, min, max) {
     CosmoScout.vestecNE.editor.nodes.forEach((node) => {
       if (node.id == id) {
@@ -359,7 +363,7 @@ class TextureRenderNode {
     });
   }
 
-  // Fill the combobox with the different simulation modes read from disc in c++
+  // Set maximum mip map level supported
   static setMipMapLevels(id, levels) {
     CosmoScout.vestecNE.editor.nodes.forEach((node) => {
       if (node.id == id) {
