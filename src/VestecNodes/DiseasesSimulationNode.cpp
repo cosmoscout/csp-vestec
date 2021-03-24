@@ -3,11 +3,8 @@
 
 #include "../../../../src/cs-utils/filesystem.hpp"
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <set>
-
-// for convenience
-using json = nlohmann::json;
 
 DiseasesSimulation::DiseasesSimulation(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
@@ -55,7 +52,7 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
 
         std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));
 
-        json args(lDirs);
+        nlohmann::json args(lDirs);
 
         pEditor->GetGuiItem()->callJavascript(
             "DiseasesSimulationNode.fillSimModes", id, args.dump());
@@ -78,7 +75,7 @@ void DiseasesSimulation::GetFileNamesForTimeStep(int id, const std::string& mode
     }
   }
 
-  json args(listOfFiles);
+  nlohmann::json args(listOfFiles);
   m_pItem->callJavascript("DiseasesSimulationNode.setFileListForTimeStep", id, args.dump());
 }
 
@@ -96,7 +93,7 @@ void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, const std::string& p
 void DiseasesSimulation::SetSimulationModes(int id, const std::string& path) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));
 
-  json args(lDirs);
+  nlohmann::json args(lDirs);
 
   m_pItem->callJavascript("DiseasesSimulationNode.fillSimModes", id, args.dump());
 }

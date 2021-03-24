@@ -11,9 +11,6 @@
 #include <thread>
 #include <vector>
 
-// for convenience
-using json = nlohmann::json;
-
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
@@ -137,7 +134,7 @@ void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
   // Create a thead to load the data and do not block main thread
   std::thread threadLoad([=, &min, &max]() {
     // Forward to OGL renderer
-    json args = json::parse(jsonFilenames);
+    nlohmann::json args = nlohmann::json::parse(jsonFilenames);
 
     // Create textures
     std::vector<GDALReader::GreyScaleTexture> vecTextures;

@@ -11,9 +11,6 @@
 #include <limits>
 #include <set>
 
-// for convenience
-using json = nlohmann::json;
-
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
@@ -132,7 +129,7 @@ void CriticalPointsNode::SetTransferFunction(std::string json) {
 
 void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
   // Forward to OGL renderer
-  json args = json::parse(jsonObj);
+  nlohmann::json args = nlohmann::json::parse(jsonObj);
 
   // Point store
   std::vector<CriticalPointsRenderer::CriticalPoint> vecPoints;

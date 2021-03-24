@@ -26,12 +26,9 @@
 #include <vtkStringArray.h>
 #include <vtkTable.h>
 
-#include <json.hpp>
 #include <limits>
+#include <nlohmann/json.hpp>
 #include <set>
-
-// for convenience
-using json = nlohmann::json;
 
 CinemaDBNode::CinemaDBNode(cs::gui::GuiItem* pItem, int id)
     : VNE::Node(pItem, id, 1, 1) {
@@ -107,7 +104,7 @@ void CinemaDBNode::ConvertFile(
 }
 
 void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
-  json args;
+  nlohmann::json args;
 
   csp::vestec::logger().debug(
       "[{}::ReadCaseNames] Reading case names from cinema database: {}", GetName(), path);
@@ -133,7 +130,7 @@ void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
 }
 
 void CinemaDBNode::GetTimeSteps(int id, const std::string& path) {
-  json args;
+  nlohmann::json args;
 
   csp::vestec::logger().debug(
       "[{}::GetTimeSteps] Reading time info from cinema database: {}", GetName(), path);

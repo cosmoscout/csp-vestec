@@ -18,11 +18,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <functional>
-#include <json.hpp>
+//#include <json.hpp>
 #include <sstream>
 
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
-using json = nlohmann::json;
+// using json = nlohmann::json;
 
 CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSystem)
     : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(

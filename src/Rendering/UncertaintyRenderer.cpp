@@ -21,12 +21,8 @@
 #include <algorithm>
 #include <functional>
 #include <glm/gtc/type_ptr.hpp>
-#include <json.hpp>
 #include <sstream>
 #include <vector>
-
-#define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
-using json = nlohmann::json;
 
 UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
     : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(

@@ -3,11 +3,8 @@
 
 #include "../../../../src/cs-utils/filesystem.hpp"
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <set>
-
-// for convenience
-using json = nlohmann::json;
 
 WildFireSourceNode::WildFireSourceNode(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
@@ -44,12 +41,12 @@ void WildFireSourceNode::Init(VNE::NodeEditor* pEditor) {
 
 void WildFireSourceNode::ReadSimulationModes(int id) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(mPluginConfig.mFireDir));
-  json                  args(lDirs);
+  nlohmann::json        args(lDirs);
   m_pItem->callJavascript("WildFireSourceNode.fillSimulationModes", id, args.dump());
 }
 
 void WildFireSourceNode::ReadSimulationFileNames(int id, std::string simMode) {
   std::set<std::string> lFiles(cs::utils::filesystem::listFiles(simMode));
-  json                  args(lFiles);
+  nlohmann::json        args(lFiles);
   m_pItem->callJavascript("WildFireSourceNode.fillSimulationOutputs", id, args.dump());
 }

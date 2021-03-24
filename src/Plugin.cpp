@@ -55,7 +55,7 @@ namespace csp::vestec {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
   cs::core::Settings::deserialize(j, "vestec-topo-dir", o.mVestecDataDir);
   cs::core::Settings::deserialize(j, "vestec-fire-dir", o.mFireDir);
   cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);

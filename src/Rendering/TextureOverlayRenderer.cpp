@@ -19,12 +19,8 @@
 // Standard includes
 #include <functional>
 #include <glm/gtc/type_ptr.hpp>
-#include <json.hpp>
 
 #include <cmath>
-
-#define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
-using json = nlohmann::json;
 
 TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
     : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
