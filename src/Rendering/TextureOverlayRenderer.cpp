@@ -1,6 +1,7 @@
 // Plugin Includes
 #include "TextureOverlayRenderer.hpp"
 #include "../../../../src/cs-utils/convert.hpp"
+#include "../../../src/cs-utils/FrameTimings.hpp"
 
 // VISTA includes
 #include <VistaInterProcComm/Connections/VistaByteBufferDeSerializer.h>
@@ -26,7 +27,7 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
     : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
           boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json")))
     , mSolarSystem(pSolarSystem) {
-  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling shader");
+  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling computeShader");
 
   m_pSurfaceShader = nullptr;
   m_pSurfaceShader = new VistaGLSLShader();
@@ -34,6 +35,19 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
   m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
   m_pSurfaceShader->InitGeometryShaderFromString(SURFACE_GEOM);
   m_pSurfaceShader->Link();
+
+  auto        computeShader = glCreateShader(GL_COMPUTE_SHADER);
+  const char* pSource       = COMPUTE.c_str();
+  glShaderSource(computeShader, 1, &pSource, nullptr);
+  glCompileShader(computeShader);
+
+  GLint success = 0;
+  glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
+
+  m_pComputeShader = glCreateProgram();
+  glAttachShader(m_pComputeShader, computeShader);
+  glLinkProgram(m_pComputeShader);
+  glDeleteShader(computeShader);
 
   // create textures ---------------------------------------------------------
   for (auto const& viewport : GetVistaSystem()->GetDisplayManager()->GetViewports()) {
@@ -59,7 +73,7 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
 
     mGBufferData[viewport.second] = bufferData;
   }
-  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling shader done");
+  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling computeShader done");
 }
 
 TextureOverlayRenderer::~TextureOverlayRenderer() {
@@ -114,6 +128,7 @@ void TextureOverlayRenderer::UnloadTexture() {
 }
 
 bool TextureOverlayRenderer::Do() {
+  cs::utils::FrameTimings::ScopedTimer timer("Render Texture");
 
   // get active planet
   if (mSolarSystem->pActiveBody.get() == nullptr ||
@@ -157,6 +172,8 @@ bool TextureOverlayRenderer::Do() {
       iViewport[2], iViewport[3], 0);
 
   if (mUpdateTexture) {
+    cs::utils::FrameTimings::ScopedTimer timer("Compute LOD");
+
     data.mColorBuffer->Bind();
 
     mMipMapLevels = static_cast<int>(
@@ -172,21 +189,7 @@ bool TextureOverlayRenderer::Do() {
     glTexSubImage2D(
         GL_TEXTURE_2D, 0, 0, 0, mTexture.x, mTexture.y, GL_RED, GL_FLOAT, mTexture.buffer);
 
-    // Create the compute shader.
-    auto        shader  = glCreateShader(GL_COMPUTE_SHADER);
-    const char* pSource = COMPUTE.c_str();
-    glShaderSource(shader, 1, &pSource, nullptr);
-    glCompileShader(shader);
-
-    GLint success = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    auto computeProgram = glCreateProgram();
-    glAttachShader(computeProgram, shader);
-    glLinkProgram(computeProgram);
-    glDeleteShader(shader);
-
-    glUseProgram(computeProgram);
+    glUseProgram(m_pComputeShader);
     glBindImageTexture(0, data.mColorBuffer->GetId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
     for (int i(0); i < mMipMapLevels; ++i) {
@@ -197,8 +200,8 @@ bool TextureOverlayRenderer::Do() {
       int height = static_cast<int>(std::max(
           1.0, std::floor(static_cast<double>(static_cast<int>(mTexture.y)) / std::pow(2, i))));
 
-      glUniform1i(glGetUniformLocation(computeProgram, "uLevel"), i);
-      glUniform1i(glGetUniformLocation(computeProgram, "uMipMapReduceMode"), mMipMapReduceMode);
+      glUniform1i(glGetUniformLocation(m_pComputeShader, "uLevel"), i);
+      glUniform1i(glGetUniformLocation(m_pComputeShader, "uMipMapReduceMode"), mMipMapReduceMode);
       glBindImageTexture(2, data.mColorBuffer->GetId(), i, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 
       if (i > 0) {

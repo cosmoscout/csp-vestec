@@ -103,6 +103,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   int    mMipMapReduceMode = 0;     //! 0 = Max, 1 = Min, 2 = Average
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
+  GLuint           m_pComputeShader;           //! Vista GLSL shader object used for computing lod
 
   static const std::string SURFACE_GEOM; //! Code for the geometry shader
   static const std::string SURFACE_VERT; //! Code for the vertex shader
