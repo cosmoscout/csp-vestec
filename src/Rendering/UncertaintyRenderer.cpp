@@ -103,6 +103,8 @@ void UncertaintyOverlayRenderer::SetOverlayTextures(
 }
 
 bool UncertaintyOverlayRenderer::Do() {
+  cs::utils::FrameTimings::ScopedTimer timer("Render Uncertainty");
+
   mLockTextureAccess.lock();
   size_t numTextures = mvecTextures.size();
 

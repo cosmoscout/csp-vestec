@@ -15,14 +15,15 @@
 #include <VistaOGLExt/VistaGLSLShader.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
+// CosmoScout includes
+#include "../../../../src/cs-utils/FrameTimings.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include <functional>
-//#include <json.hpp>
 #include <sstream>
 
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
-// using json = nlohmann::json;
 
 CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSystem)
     : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
@@ -111,6 +112,8 @@ bool CriticalPointsRenderer::Do() {
   if (m_vecPoints.empty()) {
     return false;
   }
+
+  cs::utils::FrameTimings::ScopedTimer timer("Render Critical Points");
 
   // get active planet
   if (mSolarSystem->pActiveBody.get() == nullptr ||
