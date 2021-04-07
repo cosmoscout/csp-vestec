@@ -186,6 +186,10 @@ bool TextureOverlayRenderer::Do() {
     glTexStorage2D(GL_TEXTURE_2D, mMipMapLevels, GL_R32F, mTexture.x, mTexture.y);
     // Hacky, update error can occur when mode changes, catch this here so nothing gets displayed
     int error = glGetError();
+    if (error != 0) {
+      csp::vestec::logger().debug(
+          "[TextureOverlayRenderer] Error after texture change: {}", std::to_string(error));
+    }
     glTexSubImage2D(
         GL_TEXTURE_2D, 0, 0, 0, mTexture.x, mTexture.y, GL_RED, GL_FLOAT, mTexture.buffer);
 
