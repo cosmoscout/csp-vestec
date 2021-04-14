@@ -51,7 +51,7 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
    */
   void SetOpacity(float val);
 
-  /*
+  /**
    * Sets the transfer function for the shader
    */
   void SetTransferFunction(std::string json);

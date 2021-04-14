@@ -47,12 +47,12 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
    */
   void SetOpacity(float val);
 
-  /*
+  /**
    * Sets the transfer function for the shader for rendering scalar values
    */
   void SetTransferFunction(std::string json);
 
-  /*
+  /**
    * Sets the transfer function for the shader for rendering difference and variance values
    */
   void SetTransferFunctionUncertainty(std::string json);
