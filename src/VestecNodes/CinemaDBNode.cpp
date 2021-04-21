@@ -26,23 +26,26 @@
 #include <vtkStringArray.h>
 #include <vtkTable.h>
 
-#include <json.hpp>
 #include <limits>
+#include <nlohmann/json.hpp>
 #include <set>
-
-// for convenience
-using json = nlohmann::json;
 
 CinemaDBNode::CinemaDBNode(cs::gui::GuiItem* pItem, int id)
     : VNE::Node(pItem, id, 1, 1) {
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 CinemaDBNode::~CinemaDBNode() {
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::string CinemaDBNode::GetName() {
   return "CinemaDBNode";
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
@@ -72,6 +75,8 @@ void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
         CinemaDBNode::ConvertFile(caseName, timeStep, path);
       }));
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CinemaDBNode::ConvertFile(
     const std::string& caseName, const std::string& timeStep, const std::string& path) {
@@ -106,8 +111,10 @@ void CinemaDBNode::ConvertFile(
       "[{}::ConvertFile] JSON written to: {}/converted/{}_{}", GetName(), path, caseName, timeStep);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
-  json args;
+  nlohmann::json args;
 
   csp::vestec::logger().debug(
       "[{}::ReadCaseNames] Reading case names from cinema database: {}", GetName(), path);
@@ -132,8 +139,10 @@ void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
   m_pItem->callJavascript("CinemaDBNode.fillCaseNames", id, args.dump());
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CinemaDBNode::GetTimeSteps(int id, const std::string& path) {
-  json args;
+  nlohmann::json args;
 
   csp::vestec::logger().debug(
       "[{}::GetTimeSteps] Reading time info from cinema database: {}", GetName(), path);

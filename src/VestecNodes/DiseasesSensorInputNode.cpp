@@ -3,11 +3,8 @@
 
 #include "../../../../src/cs-utils/filesystem.hpp"
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <set>
-
-// for convenience
-using json = nlohmann::json;
 
 DiseasesSensorInputNode::DiseasesSensorInputNode(
     csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
@@ -15,12 +12,18 @@ DiseasesSensorInputNode::DiseasesSensorInputNode(
   mPluginConfig = config;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 DiseasesSensorInputNode::~DiseasesSensorInputNode() {
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::string DiseasesSensorInputNode::GetName() {
   return "DiseasesSensorInput";
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
@@ -45,8 +48,10 @@ void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
       }));
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void DiseasesSensorInputNode::ReadSensorFileNames(int id, const std::string& path) {
   std::set<std::string> lFiles(cs::utils::filesystem::listFiles(path));
-  json                  args(lFiles);
+  nlohmann::json        args(lFiles);
   m_pItem->callJavascript("DiseasesSensorInputNode.fillWithSensorFiles", id, args.dump());
 }

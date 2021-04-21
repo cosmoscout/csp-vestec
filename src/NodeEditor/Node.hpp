@@ -17,16 +17,42 @@ class Node {
   Node(cs::gui::GuiItem* pItem, int id, int inportCount, int outportCount);
   virtual ~Node();
 
+  /**
+   * Set the ID of the Node
+   */
   void SetID(int ID);
-  int  GetID();
 
+  /**
+   * Get the Node ID
+   */
+  int GetID();
+
+  /**
+   * Add an input connection to the node
+   */
   void AddInportNode(int id, Node* pNode, int outport, int inport);
+  /**
+   * Remove a specified input connection
+   */
   void RemoveInputNode(int id, int outport, int inport);
 
+  /**
+   * Connect the node to another node
+   */
   void AddOutportNode(int id, Node* pNode, int outport, int inport);
+  /**
+   * Remove an output connection
+   */
   void RemoveOutputNode(int id, int outport, int inport);
 
+  /**
+   * Retrieve all input ports
+   */
   std::vector<std::map<std::pair<int, int>, Node*>>& GetInputPorts();
+
+  /**
+   * Retrieve all output ports
+   */
   std::vector<std::map<std::pair<int, int>, Node*>>& GetOutputPorts();
 
  protected:

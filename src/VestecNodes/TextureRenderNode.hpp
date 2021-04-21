@@ -14,6 +14,16 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The Texture Render Node draws arbitrary textures that are readable by the GDALReader
+ * For each texture mip maps are generated which are drawn based on the observer distance to
+ * the currently active body
+ *
+ * MipMap levels can optionally be toggled through the node editor
+ * An additional reduction mode (min / max / average) can also be set
+ *
+ * @see GDALReader
+ */
 class TextureRenderNode : public VNE::Node {
  public:
   TextureRenderNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
@@ -42,7 +52,22 @@ class TextureRenderNode : public VNE::Node {
    */
   void SetOpacity(float val);
 
-  /*
+  /**
+   * Set the current mipmap level, only active if manual mipmaps are enabled
+   */
+  void SetMipMapLevel(double val);
+
+  /**
+   * Set the state for enabling or disabling manual mipmaps
+   */
+  void EnableManualMipMaps(bool val);
+
+  /**
+   * Set the mode for mipmap reduction
+   */
+  void SetMipMapReduceMode(int mode);
+
+  /**
    * Sets the transfer function for the rendering
    */
   void SetTransferFunction(std::string json);
@@ -56,6 +81,11 @@ class TextureRenderNode : public VNE::Node {
    * Set if timing information should be used by the shader
    */
   void SetUseTime(bool use);
+
+  /**
+   * Unloads the currently used texture
+   */
+  void UnloadTexture();
 
  private:
   csp::vestec::Plugin::Settings

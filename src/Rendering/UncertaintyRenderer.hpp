@@ -47,12 +47,12 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
    */
   void SetOpacity(float val);
 
-  /*
+  /**
    * Sets the transfer function for the shader for rendering scalar values
    */
   void SetTransferFunction(std::string json);
 
-  /*
+  /**
    * Sets the transfer function for the shader for rendering difference and variance values
    */
   void SetTransferFunctionUncertainty(std::string json);
@@ -67,9 +67,14 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
    */
   void SetVisualizationMode(RenderMode mode);
 
-  // ---------------------------------------
+  /**
+   * Unloads the currently active texture
+   */
+  void UnloadTexture();
+
+  // --------------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
-  // ---------------------------------------
+  // --------------------------------------------
   virtual bool Do();
   virtual bool GetBoundingBox(VistaBoundingBox& bb);
 

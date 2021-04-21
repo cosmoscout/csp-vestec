@@ -1,5 +1,7 @@
 // Plugin Includes
 #include "TextureOverlayRenderer.hpp"
+#include "../../../../src/cs-utils/convert.hpp"
+#include "../../../src/cs-utils/FrameTimings.hpp"
 
 // VISTA includes
 #include <VistaInterProcComm/Connections/VistaByteBufferDeSerializer.h>
@@ -16,21 +18,16 @@
 #include <VistaOGLExt/VistaTexture.h>
 
 // Standard includes
-#include <boost/filesystem.hpp>
 #include <functional>
 #include <glm/gtc/type_ptr.hpp>
-#include <json.hpp>
 
 #include <cmath>
-
-#define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
-using json = nlohmann::json;
 
 TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
     : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
           boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json")))
     , mSolarSystem(pSolarSystem) {
-  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling shader");
+  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling computeShader");
 
   m_pSurfaceShader = nullptr;
   m_pSurfaceShader = new VistaGLSLShader();
@@ -38,6 +35,19 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
   m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
   m_pSurfaceShader->InitGeometryShaderFromString(SURFACE_GEOM);
   m_pSurfaceShader->Link();
+
+  auto        computeShader = glCreateShader(GL_COMPUTE_SHADER);
+  const char* pSource       = COMPUTE.c_str();
+  glShaderSource(computeShader, 1, &pSource, nullptr);
+  glCompileShader(computeShader);
+
+  GLint success = 0;
+  glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
+
+  m_pComputeShader = glCreateProgram();
+  glAttachShader(m_pComputeShader, computeShader);
+  glLinkProgram(m_pComputeShader);
+  glDeleteShader(computeShader);
 
   // create textures ---------------------------------------------------------
   for (auto const& viewport : GetVistaSystem()->GetDisplayManager()->GetViewports()) {
@@ -57,14 +67,16 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
     bufferData.mColorBuffer->Bind();
     bufferData.mColorBuffer->SetWrapS(GL_CLAMP);
     bufferData.mColorBuffer->SetWrapT(GL_CLAMP);
-    bufferData.mColorBuffer->SetMinFilter(GL_LINEAR);
-    bufferData.mColorBuffer->SetMagFilter(GL_LINEAR);
+    bufferData.mColorBuffer->SetMinFilter(GL_NEAREST);
+    bufferData.mColorBuffer->SetMagFilter(GL_NEAREST);
     bufferData.mColorBuffer->Unbind();
 
     mGBufferData[viewport.second] = bufferData;
   }
-  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling shader done");
+  csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling computeShader done");
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TextureOverlayRenderer::~TextureOverlayRenderer() {
   for (auto data : mGBufferData) {
@@ -73,28 +85,72 @@ TextureOverlayRenderer::~TextureOverlayRenderer() {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TextureOverlayRenderer::EnableManualMipMaps(bool val) {
+  mManualMipMaps = val;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TextureOverlayRenderer::SetMipMapLevel(double val) {
+  mMipMapLevel = val;
+}
+
+int TextureOverlayRenderer::GetMipMapLevels() {
+  return mMipMapLevels;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TextureOverlayRenderer::SetMipMapMode(int mode) {
+  mMipMapReduceMode = mode;
+  if (mTexture.buffer) {
+    mUpdateTexture = true;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void TextureOverlayRenderer::SetTransferFunction(std::string json) {
   mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::SetTime(float val) {
   mTime = val;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::SetUseTime(bool use) {
   mUseTime = use;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void TextureOverlayRenderer::SetOverlayTexture(GDALReader::GreyScaleTexture& texture) {
   mTexture       = texture;
   mUpdateTexture = true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TextureOverlayRenderer::UnloadTexture() {
+  mTexture.buffer = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool TextureOverlayRenderer::Do() {
+  cs::utils::FrameTimings::ScopedTimer timer("Render Texture");
 
   // get active planet
   if (mSolarSystem->pActiveBody.get() == nullptr ||
@@ -104,7 +160,11 @@ bool TextureOverlayRenderer::Do() {
     return false;
   }
 
-  // save current lighting and meterial state of the OpenGL state machine
+  if (!mTexture.buffer) {
+    return false;
+  }
+
+  // save current lighting and material state of the OpenGL state machine
   glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_CULL_FACE);
@@ -134,9 +194,54 @@ bool TextureOverlayRenderer::Do() {
       iViewport[2], iViewport[3], 0);
 
   if (mUpdateTexture) {
+    cs::utils::FrameTimings::ScopedTimer timer("Compute LOD");
+
     data.mColorBuffer->Bind();
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_R32F, mTexture.x, mTexture.y, 0, GL_RED, GL_FLOAT, mTexture.buffer);
+
+    mMipMapLevels = static_cast<int>(
+        std::max(1.0, std::floor(std::log2(std::max(mTexture.x, mTexture.y))) + 1));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexStorage2D(GL_TEXTURE_2D, mMipMapLevels, GL_R32F, mTexture.x, mTexture.y);
+    // Hacky, update error can occur when mode changes, catch this here so nothing gets displayed
+    int error = glGetError();
+    if (error != 0) {
+      csp::vestec::logger().debug(
+          "[TextureOverlayRenderer] Error after texture change: {}", std::to_string(error));
+    }
+    glTexSubImage2D(
+        GL_TEXTURE_2D, 0, 0, 0, mTexture.x, mTexture.y, GL_RED, GL_FLOAT, mTexture.buffer);
+
+    glUseProgram(m_pComputeShader);
+    glBindImageTexture(0, data.mColorBuffer->GetId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+
+    for (int i(0); i < mMipMapLevels; ++i) {
+      // Calculates the width and height for the current MipMap Level
+      // This also sets the number of dispatched compute groups
+      int width  = static_cast<int>(std::max(
+          1.0, std::floor(static_cast<double>(static_cast<int>(mTexture.x)) / std::pow(2, i))));
+      int height = static_cast<int>(std::max(
+          1.0, std::floor(static_cast<double>(static_cast<int>(mTexture.y)) / std::pow(2, i))));
+
+      glUniform1i(glGetUniformLocation(m_pComputeShader, "uLevel"), i);
+      glUniform1i(glGetUniformLocation(m_pComputeShader, "uMipMapReduceMode"), mMipMapReduceMode);
+      glBindImageTexture(2, data.mColorBuffer->GetId(), i, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+
+      if (i > 0) {
+        glBindImageTexture(
+            1, data.mColorBuffer->GetId(), i - 1, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+      }
+
+      // Make sure writing has finished.
+      glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+      glDispatchCompute(static_cast<uint32_t>(std::ceil(1.0 * width / 16)),
+          static_cast<uint32_t>(std::ceil(1.0 * height / 16)), 1);
+    }
+
     mUpdateTexture = false;
   }
 
@@ -197,6 +302,40 @@ bool TextureOverlayRenderer::Do() {
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTime"), mTime);
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uUseTime"), mUseTime);
 
+  // From Application.cpp
+  auto*               pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  VistaTransformNode* pTrans =
+      dynamic_cast<VistaTransformNode*>(pSG->GetNode("Platform-User-Node"));
+
+  auto vWorldPos = glm::vec4(1);
+  pTrans->GetWorldPosition(vWorldPos.x, vWorldPos.y, vWorldPos.z);
+
+  auto polar = cs::utils::convert::cartesianToLngLatHeight(
+      (glm::inverse(mSolarSystem->pActiveBody.get()->getWorldTransform()) * vWorldPos).xyz(),
+      mSolarSystem->pActiveBody.get()->getRadii());
+
+  double observerHeight = polar.z / 1 - mSolarSystem->pActiveBody.get()->getHeight(polar.xy());
+  int    lod;
+  if (!mManualMipMaps) {
+    int heightMipMapLevel0   = 1500;
+    int heightMipMapLevelMax = 80000;
+    if (observerHeight <= heightMipMapLevel0) {
+      lod = 0;
+    } else if (observerHeight > heightMipMapLevelMax) {
+      lod = mMipMapLevels;
+    } else {
+      lod = static_cast<int>(
+          floor(1 + (mMipMapLevels - 1) *
+                        ((std::log(observerHeight) - std::log(heightMipMapLevel0)) /
+                            (std::log(heightMipMapLevelMax) - std::log(heightMipMapLevel0)))));
+    }
+  } else {
+    lod = static_cast<int>(fmin(mMipMapLevel, mMipMapLevels));
+  }
+
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uTexLod"), static_cast<int>(lod));
+
   auto sunDirection =
       glm::normalize(glm::inverse(matWorldTransform) *
                      (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
@@ -227,6 +366,8 @@ bool TextureOverlayRenderer::Do() {
   glPopAttrib();
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool TextureOverlayRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) {
   float fMin[3] = {-6371000.0f, -6371000.0f, -6371000.0f};

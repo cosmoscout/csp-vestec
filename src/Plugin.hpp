@@ -39,6 +39,9 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
     std::string mVestecDownloadDir; ///< Vestec Downloaded files location
   };
 
+  // ------------------------------------------------
+  // INTERFACE IMPLEMENTATION OF cs::core::PluginBase
+  // ------------------------------------------------
   void init() override;
   void deInit() override;
   void update() override;

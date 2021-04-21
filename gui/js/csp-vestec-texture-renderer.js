@@ -93,10 +93,47 @@ class TextureRenderNode {
         },
     );
 
+    // Slider and checkbox to control mip map level
+    const mipMapLevelControl = new D3NE.Control(
+        `<div class="row">
+        <div class="col-2">
+          <label class="checklabel">
+            <input type="checkbox" id="texture-node_${node.id}-set_enable_manual-mipmap" />
+            <i class="material-icons"></i>
+          </label>
+        </div>
+        <div class="col-10 text">MipMap Level:</div>
+        <div class="col-10 offset-1">
+          <div id="texture-node_${node.id}-slider_mipmap"></div>
+        </div>
+      </div>`,
+        (element, _control) => {
+          this._createMipMapSlider(node, element);
+        },
+    );
+
+    // Slider and checkbox to control mip map level
+    const mipMapReduceMode = new D3NE.Control(
+        `<select id="texture-node_${node.id}-mipmap-mode-select" class="combobox">
+          <option value="0" selected>Max</option>
+          <option value="1">Min</option>
+          <option value="2">Average</option>
+        </select>`,
+        (element, _control) => {
+          $(element).selectpicker();
+          element.addEventListener('change', event => {
+            window.callNative('TextureRenderNode.setMipMapReduceMode', node.id,
+                Number.parseInt(event.target.value));
+          });
+        },
+    );
+
     // Add control elements
     node.addControl(opacityControl);
     node.addControl(timeControl);
     node.addControl(textureSelectControl);
+    node.addControl(mipMapReduceMode);
+    node.addControl(mipMapLevelControl);
 
     // Define the input types
     const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
@@ -113,11 +150,26 @@ class TextureRenderNode {
    *
    * @param {Node} node
    * @param {Array} inputs - Texture
-   * @param {Array} _outputs - unused
+   * @param {Array} outputs - unused
    */
-  worker(node, inputs, _outputs) {
+  worker(node, inputs, outputs) {
     this._checkTextureInput(node, inputs[0][0]);
     this._checkTransferFunctionInput(node, inputs[1][0]);
+
+    CosmoScout.vestecNE.editor.nodes.forEach((eNode) => {
+      if (eNode.id !== node.id) {
+        return;
+      }
+
+      if (typeof node.data.range !== 'undefined' && eNode.inputs[1].connections.length > 0 &&
+          typeof eNode.inputs[1].connections[0].output.node.data.fn !== 'undefined') {
+        eNode.inputs[1].connections[0].output.node.data.fn.setData(node.data.range);
+      }
+    });
+
+    if (typeof node.data.levels !== 'undefined' && node.data.levels > 0) {
+      this._createMipMapSlider(node, document);
+    }
   }
 
   /**
@@ -156,6 +208,11 @@ class TextureRenderNode {
    */
   _checkTextureInput(node, textureInput) {
     if (typeof textureInput === 'undefined') {
+      // TODO: Should we reset everything?
+      // Or do we want to keep the state for current mipmap mode / level etc.
+      delete node.data.activeTexture;
+      delete this.lastFile;
+      window.callNative('TextureRenderNode.unloadTexture', node.id);
       return;
     }
 
@@ -242,6 +299,78 @@ class TextureRenderNode {
     node.data.activeFileSet = textures;
 
     node.data.textureSelectParent.classList.remove('hidden');
+  }
+
+  /**
+   * Creates the MipMapSlider
+   * @param {Node} node Node
+   * @param {HTMLElement|Document} parent
+   * @private
+   */
+  _createMipMapSlider(node, parent) {
+    if (typeof parent === 'undefined' || parent === null) {
+      parent = document
+    }
+
+    const slider = parent.querySelector(`#texture-node_${node.id}-slider_mipmap`);
+
+    if (slider === null) {
+      return;
+    }
+
+    if (typeof node.data.levels === 'undefined' || node.data.levels === null) {
+      node.data.levels = 10
+    }
+
+    if (typeof node.data.prevLevels !== 'undefined' && node.data.levels === node.data.prevLevels) {
+      return;
+    }
+
+    node.data.prevLevels = node.data.levels;
+
+    if (typeof slider.noUiSlider !== 'undefined') {
+      slider.noUiSlider.destroy();
+    } else {
+      slider.setAttribute('disabled', true);
+      slider.classList.add('unresponsive');
+    }
+
+    noUiSlider.create(
+        slider, {start: 0, animate: false, range: {min: 0, max: node.data.levels}, step: 1});
+
+    parent.querySelector(`#texture-node_${node.id}-set_enable_manual-mipmap`)
+        .addEventListener('click', (event) => {
+          event.target.checked === true
+              ? (slider.removeAttribute('disabled'), slider.classList.remove('unresponsive'))
+              : (slider.setAttribute('disabled', true), slider.classList.add('unresponsive'));
+
+          window.callNative(
+              'TextureRenderNode.setEnableManualMipMap', node.id, event.target.checked === true);
+        });
+
+    // Set the time value for the renderer
+    slider.noUiSlider.on('slide', (values, handle) => {
+      window.callNative('TextureRenderNode.setMipMapLevel', node.id, parseInt(values[handle]));
+    });
+  }
+
+  // Set the min and max range of the texture
+  static setRange(id, min, max) {
+    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
+      if (node.id == id) {
+        node.data.range = [min, max];
+      }
+    });
+  }
+
+  // Set maximum mip map level supported
+  static setMipMapLevels(id, levels) {
+    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
+      if (node.id == id) {
+        node.data.levels = levels;
+        CosmoScout.vestecNE.updateEditor();
+      }
+    });
   }
 }
 

@@ -15,14 +15,15 @@
 #include <VistaOGLExt/VistaGLSLShader.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
+// CosmoScout includes
+#include "../../../../src/cs-utils/FrameTimings.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include <functional>
-#include <json.hpp>
 #include <sstream>
 
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
-using json = nlohmann::json;
 
 CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSystem)
     : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
@@ -44,31 +45,45 @@ CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSyst
   csp::vestec::logger().debug("[CriticalPointsRenderer] Compiling shader done");
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 CriticalPointsRenderer::~CriticalPointsRenderer() {
   delete m_pSurfaceShader;
   delete m_VAO;
   delete m_VBO;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CriticalPointsRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CriticalPointsRenderer::SetTransferFunction(std::string json) {
   mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CriticalPointsRenderer::SetVisualizationMode(RenderMode mode) {
   mRenderMode = mode;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CriticalPointsRenderer::SetHeightScale(float scale) {
   mHeightScale = scale;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CriticalPointsRenderer::SetWidthScale(float scale) {
   mWidthScale = scale;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
   csp::vestec::logger().debug(
@@ -107,10 +122,14 @@ void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
   csp::vestec::logger().debug("[CriticalPointsRenderer] Configure VAO done");
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool CriticalPointsRenderer::Do() {
   if (m_vecPoints.empty()) {
     return false;
   }
+
+  cs::utils::FrameTimings::ScopedTimer timer("Render Critical Points");
 
   // get active planet
   if (mSolarSystem->pActiveBody.get() == nullptr ||
@@ -198,6 +217,8 @@ bool CriticalPointsRenderer::Do() {
   glPopAttrib();
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool CriticalPointsRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) {
   float fMin[3] = {-6371000.0f, -6371000.0f, -6371000.0f};

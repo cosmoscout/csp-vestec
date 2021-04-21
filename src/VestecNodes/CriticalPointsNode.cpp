@@ -11,9 +11,6 @@
 #include <limits>
 #include <set>
 
-// for convenience
-using json = nlohmann::json;
-
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
@@ -36,14 +33,20 @@ CriticalPointsNode::CriticalPointsNode(csp::vestec::Plugin::Settings const& conf
       m_pNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 CriticalPointsNode::~CriticalPointsNode() {
   m_pAnchor->DisconnectChild(m_pNode.get());
   delete m_pRenderer;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 std::string CriticalPointsNode::GetName() {
   return "CriticalPointsNode";
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
@@ -118,21 +121,29 @@ void CriticalPointsNode::Init(VNE::NodeEditor* pEditor) {
       }));
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 CriticalPointsRenderer* CriticalPointsNode::GetRenderNode() {
   return m_pRenderer;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CriticalPointsNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CriticalPointsNode::SetTransferFunction(std::string json) {
   m_pRenderer->SetTransferFunction(json);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
   // Forward to OGL renderer
-  json args = json::parse(jsonObj);
+  nlohmann::json args = nlohmann::json::parse(jsonObj);
 
   // Point store
   std::vector<CriticalPointsRenderer::CriticalPoint> vecPoints;
@@ -174,6 +185,8 @@ void CriticalPointsNode::SetPoints(const std::string& jsonObj) {
     vecPoints.push_back(upper);
     vecPoints.push_back(lower);
   }
+
+  m_pItem->callJavascript("CriticalPointsNode.setRange", GetID(), minPersistence, maxPersistence);
 
   // Pass min max persistence values to the end of the vector
   CriticalPointsRenderer::CriticalPoint minP{};

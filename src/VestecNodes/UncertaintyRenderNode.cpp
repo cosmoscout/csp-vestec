@@ -11,9 +11,6 @@
 #include <thread>
 #include <vector>
 
-// for convenience
-using json = nlohmann::json;
-
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
@@ -39,14 +36,20 @@ UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const
   GDALReader::InitGDAL();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 UncertaintyRenderNode::~UncertaintyRenderNode() {
   m_pAnchor->DisconnectChild(m_pNode.get());
   delete m_pRenderer;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 std::string UncertaintyRenderNode::GetName() {
   return "UncertaintyRenderNode";
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file which defines the node
@@ -114,27 +117,40 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
       }));
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 UncertaintyOverlayRenderer* UncertaintyRenderNode::GetRenderNode() {
   return m_pRenderer;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyRenderNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyRenderNode::SetTransferFunction(std::string json) {
   m_pRenderer->SetTransferFunction(json);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyRenderNode::SetTransferFunctionUncertainty(std::string json) {
   m_pRenderer->SetTransferFunctionUncertainty(json);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
+  double min = 100000;
+  double max = 0;
+
   // Create a thead to load the data and do not block main thread
-  std::thread threadLoad([=]() {
+  std::thread threadLoad([=, &min, &max]() {
     // Forward to OGL renderer
-    json args = json::parse(jsonFilenames);
+    nlohmann::json args = nlohmann::json::parse(jsonFilenames);
 
     // Create textures
     std::vector<GDALReader::GreyScaleTexture> vecTextures;
@@ -145,9 +161,24 @@ void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
       GDALReader::GreyScaleTexture texture;
       GDALReader::ReadGrayScaleTexture(texture, filename);
       vecTextures.push_back(texture);
+      if (texture.dataRange[0] < min) {
+        min = texture.dataRange[0];
+      }
+
+      if (texture.dataRange[1] > max) {
+        max = texture.dataRange[1];
+      }
     }
     // Add the new texture for rendering
     m_pRenderer->SetOverlayTextures(vecTextures);
   });
   threadLoad.detach();
+
+  m_pItem->callJavascript("UncertaintyRenderNode.setRange", GetID(), min, max);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void UncertaintyRenderNode::UnloadTexture() {
+  m_pRenderer->UnloadTexture();
 }

@@ -9,6 +9,14 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The Transfer Function Source Node allows to add transfer functions to texture render nodes
+ *
+ * Texture visibility is modified based on set function parameters
+ *
+ * Min- and max-ranges of the transfer function are limited to the values found in the connected
+ * texture
+ */
 class TransferFunctionSourceNode : public VNE::Node {
  public:
   TransferFunctionSourceNode(

@@ -9,6 +9,11 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The Diseases Simulation Node computes texture outputs for a one year period
+ *
+ * Textures are then fed to a texture or uncertainty renderer
+ */
 class DiseasesSimulation : public VNE::Node {
  public:
   DiseasesSimulation(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);

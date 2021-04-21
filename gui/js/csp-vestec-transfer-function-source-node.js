@@ -27,10 +27,11 @@ class TransferFunctionSourceNode {
     const transferFunction = new D3NE.Control(
         `<div id="tf-editor-${node.id}" class="container-fluid"></div>`,
         (element, control) => {
-          CosmoScout.transferFunctionEditor.create(element, (transferFunction) => {
+          const fn = CosmoScout.transferFunctionEditor.create(element, (transferFunction) => {
             control.putData("transferFunction", transferFunction);
             CosmoScout.vestecNE.updateEditor();
-          }, {width: 300, height: 120, defaultFunction: "BlackBody.json"});
+          }, {width: 300, height: 120, defaultFunction: "BlackBody.json", fitToData: true});
+          control.putData('fn', fn);
         },
     );
 
@@ -48,12 +49,29 @@ class TransferFunctionSourceNode {
    * Node Editor Worker function
    *
    * @param {Node} node
-   * @param {Array} _inputs - unused
+   * @param {Array} _inputs - Unused
    * @param {Array} outputs - Transfer Function
    */
   worker(node, _inputs, outputs) {
     if (typeof node.data.transferFunction !== 'undefined') {
       outputs[0] = node.data.transferFunction;
+
+      CosmoScout.vestecNE.editor.nodes.forEach((eNode) => {
+        if (eNode.id !== node.id) {
+          return;
+        }
+
+        if (eNode.outputs[0].connections.length > 0 &&
+            typeof eNode.outputs[0].connections[0].input.node.data.range !== 'undefined') {
+          const range = eNode.outputs[0].connections[0].input.node.data.range;
+
+          if (node.data.range !== range) {
+            node.data.range        = range;
+            node.data.fn.fitToData = true;
+            node.data.fn.setData(range);
+          }
+        }
+      });
     }
   }
 

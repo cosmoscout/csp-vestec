@@ -13,17 +13,25 @@ NodeEditor::NodeEditor(cs::gui::GuiItem* pWebView) {
   m_pWebView = pWebView;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 NodeEditor::~NodeEditor() {
   // TODO Auto-generated destructor stub
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 cs::gui::GuiItem* NodeEditor::GetGuiItem() {
   return m_pWebView;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 size_t NodeEditor::GetNumberOfNodes() {
   return m_mapNodes.size();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int NodeEditor::GetMaxNodeID() {
   int maxID = 0;
@@ -37,6 +45,8 @@ int NodeEditor::GetMaxNodeID() {
   return maxID;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void NodeEditor::RegisterNodeType(const std::string& name, std::string category,
     std::function<Node*(cs::gui::GuiItem*, int id)> fFactory,
     std::function<void(NodeEditor*)>                fInit) {
@@ -45,9 +55,13 @@ void NodeEditor::RegisterNodeType(const std::string& name, std::string category,
   m_mapCategories[category].push_back(name);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void NodeEditor::RegisterSocketType(const std::string& name) {
   m_vecSockets.push_back(name);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void NodeEditor::AddNewNode(int id, const std::string& name) {
   auto it = m_mapCreatorFunctions.find(name);
@@ -62,6 +76,8 @@ void NodeEditor::AddNewNode(int id, const std::string& name) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void NodeEditor::DeleteNode(int id) {
   auto it = m_mapNodes.find(id);
   if (it != m_mapNodes.end()) {
@@ -70,6 +86,8 @@ void NodeEditor::DeleteNode(int id) {
     csp::vestec::logger().info("[NodeEditor::DeleteNode] Delete node with id {}", id);
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void NodeEditor::AddConnection(int from, int to, int fromPort, int toPort) {
   auto it1 = m_mapNodes.find(from);
@@ -89,6 +107,8 @@ void NodeEditor::AddConnection(int from, int to, int fromPort, int toPort) {
         "[NodeEditor::AddConnection] Error in node editor! Nodes for connection are not found");
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
   auto it1 = m_mapNodes.find(from);
@@ -115,6 +135,8 @@ void NodeEditor::DeleteConnection(int from, int to, int fromPort, int toPort) {
         "[NodeEditor::DeleteConnection] Only removed input ports of node {}", to);
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void NodeEditor::InitNodeEditor() {
   // Loop over sockets and add them to the editor

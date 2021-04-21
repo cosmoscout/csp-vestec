@@ -192,6 +192,15 @@ class CriticalPointsNode {
 
     window.callNative('CriticalPointsNode.setTransferFunction', node.id, transferFunction);
   }
+
+  // Set the min and max range of the added points
+  static setRange(id, min, max) {
+    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
+      if (node.id == id) {
+        node.data.range = [min, max];
+      }
+    });
+  }
 }
 
 (() => {

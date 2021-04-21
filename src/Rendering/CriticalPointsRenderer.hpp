@@ -18,14 +18,17 @@ class VistaBufferObject;
 class VistaVertexArrayObject;
 
 /**
- * TODO
+ * The Critical Points Renderer renders point found in .vtu files
+ *
+ * Points are drawn as pyramids, the apex is set to the center of the active body
+ * The height and width can be scaled through the node editor
  */
 class CriticalPointsRenderer : public IVistaOpenGLDraw {
  public:
   enum RenderMode {
     MINIMA     = 0, //! Render only points with type minima
-    ONE_SADDLE = 1, //! Render only points with type 1-sadlle
-    TWO_SADDLE = 2, //! Render only points with type 2-sadlle
+    ONE_SADDLE = 1, //! Render only points with type 1-saddle
+    TWO_SADDLE = 2, //! Render only points with type 2-saddle
     MAXIMA     = 3, //! Render only points with type maxima
     ALL        = 4, //! Render all points
   };
@@ -51,7 +54,7 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
    */
   void SetOpacity(float val);
 
-  /*
+  /**
    * Sets the transfer function for the shader
    */
   void SetTransferFunction(std::string json);
@@ -79,19 +82,19 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
    */
   void SetWidthScale(float scale);
 
-  // ---------------------------------------
+  // --------------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
-  // ---------------------------------------
+  // --------------------------------------------
   virtual bool Do();
   virtual bool GetBoundingBox(VistaBoundingBox& bb);
 
  private:
   float      mOpacity        = 1; //! Opacity value used in shader to adjust the overlay
-  float      mMinPersistence = 0; //! Persistance range min
-  float      mMaxPersistence = 1; //! Persistance range max
+  float      mMinPersistence = 0; //! Persistence range min
+  float      mMaxPersistence = 1; //! Persistence range max
   RenderMode mRenderMode     = RenderMode::ALL; //! Render all points
-  float      mHeightScale    = 1;
-  float      mWidthScale     = 1;
+  float      mHeightScale    = 1;               //! Current height scale
+  float      mWidthScale     = 1;               //! Current width scale
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 
