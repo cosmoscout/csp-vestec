@@ -18,12 +18,16 @@ void GDALReader::InitGDAL() {
   GDALReader::mIsInitialized = true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void GDALReader::AddTextureToCache(const std::string& path, GreyScaleTexture& texture) {
   GDALReader::mMutex.lock();
   // Cache the texture
   TextureCache.insert(std::make_pair(path, texture));
   GDALReader::mMutex.unlock();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename) {
   if (!GDALReader::mIsInitialized) {
@@ -159,6 +163,8 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
 
   GDALReader::AddTextureToCache(filename, texture);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void GDALReader::ClearCache() {
   std::map<std::string, GreyScaleTexture>::iterator it;

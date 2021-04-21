@@ -54,12 +54,24 @@ class NodeEditor {
    */
   void DeleteConnection(int from, int to, int fromPort, int toPort);
 
+  /**
+   * Returns the number of nodes in this editor
+   */
   size_t GetNumberOfNodes();
 
+  /**
+   * ID of the latest node
+   */
   int GetMaxNodeID();
 
+  /**
+   * The Gui item
+   */
   cs::gui::GuiItem* GetGuiItem();
 
+  /**
+   * Retrieve a vestec node by id
+   */
   template <typename T>
   T* GetNode(int id) const {
     auto it = m_mapNodes.find(id);

@@ -14,6 +14,10 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The critical points node renders points found in .vtu files
+ * It works in conjunction with the js based persistence renderer
+ */
 class CriticalPointsNode : public VNE::Node {
  public:
   CriticalPointsNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
@@ -47,7 +51,7 @@ class CriticalPointsNode : public VNE::Node {
   void SetTransferFunction(std::string json);
 
   /**
-   * Get the iunderlaying render node
+   * Get the underlaying render node
    */
   CriticalPointsRenderer* GetRenderNode();
 

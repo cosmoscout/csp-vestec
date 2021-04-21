@@ -12,12 +12,18 @@ DiseasesSensorInputNode::DiseasesSensorInputNode(
   mPluginConfig = config;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 DiseasesSensorInputNode::~DiseasesSensorInputNode() {
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::string DiseasesSensorInputNode::GetName() {
   return "DiseasesSensorInput";
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
@@ -41,6 +47,8 @@ void DiseasesSensorInputNode::Init(VNE::NodeEditor* pEditor) {
             ->ReadSensorFileNames(std::lround(id), path);
       }));
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DiseasesSensorInputNode::ReadSensorFileNames(int id, const std::string& path) {
   std::set<std::string> lFiles(cs::utils::filesystem::listFiles(path));

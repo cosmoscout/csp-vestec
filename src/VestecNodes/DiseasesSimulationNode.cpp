@@ -12,12 +12,18 @@ DiseasesSimulation::DiseasesSimulation(
   mPluginConfig = config;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 DiseasesSimulation::~DiseasesSimulation() {
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::string DiseasesSimulation::GetName() {
   return "DiseasesSimulation";
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file
@@ -59,6 +65,8 @@ void DiseasesSimulation::Init(VNE::NodeEditor* pEditor) {
       }));
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void DiseasesSimulation::GetFileNamesForTimeStep(int id, const std::string& mode, double t) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(mode));
   std::set<std::string> listOfFiles;
@@ -89,6 +97,8 @@ void DiseasesSimulation::SetNumberOfEnsembleMembers(int id, const std::string& p
   m_pItem->callJavascript(
       "DiseasesSimulationNode.setNumberOfEnsembleMembers", id, lDirs.size(), lFiles.size());
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DiseasesSimulation::SetSimulationModes(int id, const std::string& path) {
   std::set<std::string> lDirs(cs::utils::filesystem::listDirs(path));

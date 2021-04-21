@@ -72,9 +72,9 @@ class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
    */
   void UnloadTexture();
 
-  // ---------------------------------------
+  // --------------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
-  // ---------------------------------------
+  // --------------------------------------------
   virtual bool Do();
   virtual bool GetBoundingBox(VistaBoundingBox& bb);
 

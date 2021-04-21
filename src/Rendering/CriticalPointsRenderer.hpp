@@ -79,19 +79,19 @@ class CriticalPointsRenderer : public IVistaOpenGLDraw {
    */
   void SetWidthScale(float scale);
 
-  // ---------------------------------------
+  // --------------------------------------------
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
-  // ---------------------------------------
+  // --------------------------------------------
   virtual bool Do();
   virtual bool GetBoundingBox(VistaBoundingBox& bb);
 
  private:
   float      mOpacity        = 1; //! Opacity value used in shader to adjust the overlay
-  float      mMinPersistence = 0; //! Persistance range min
-  float      mMaxPersistence = 1; //! Persistance range max
+  float      mMinPersistence = 0; //! Persistence range min
+  float      mMaxPersistence = 1; //! Persistence range max
   RenderMode mRenderMode     = RenderMode::ALL; //! Render all points
-  float      mHeightScale    = 1;
-  float      mWidthScale     = 1;
+  float      mHeightScale    = 1;               //! Current height scale
+  float      mWidthScale     = 1;               //! Current width scale
 
   VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
 

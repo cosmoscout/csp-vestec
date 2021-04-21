@@ -45,7 +45,14 @@ class Node {
    */
   void RemoveOutputNode(int id, int outport, int inport);
 
+  /**
+   * Retrieve all input ports
+   */
   std::vector<std::map<std::pair<int, int>, Node*>>& GetInputPorts();
+
+  /**
+   * Retrieve all output ports
+   */
   std::vector<std::map<std::pair<int, int>, Node*>>& GetOutputPorts();
 
  protected:

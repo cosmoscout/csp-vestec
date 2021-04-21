@@ -14,6 +14,11 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The CinemaDB Node converts .vtu files to json
+ * The resulting json files are saved to a path on the disk specified in the plugin
+ * @see csp::vestec::Plugin::dataDir
+ */
 class CinemaDBNode : public VNE::Node {
  public:
   CinemaDBNode(cs::gui::GuiItem* pItem, int id);
@@ -40,6 +45,9 @@ class CinemaDBNode : public VNE::Node {
    */
   void GetTimeSteps(int id, const std::string& path);
 
+  /**
+   * Converts a vtu file to json
+   */
   void static ConvertFile(
       const std::string& caseName, const std::string& timeStep, const std::string& path);
 };

@@ -14,6 +14,16 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The Texture Render Node draws arbitrary textures that are readable by the GDALReader
+ * For each texture mip maps are generated which are drawn based on the observer distance to
+ * the currently active body
+ *
+ * MipMap levels can optionally be toggled through the node editor
+ * An additional reduction mode (min / max / average) can also be set
+ *
+ * @see GDALReader
+ */
 class TextureRenderNode : public VNE::Node {
  public:
   TextureRenderNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,

@@ -76,6 +76,8 @@ TextureOverlayRenderer::TextureOverlayRenderer(cs::core::SolarSystem* pSolarSyst
   csp::vestec::logger().debug("[TextureOverlayRenderer] Compiling computeShader done");
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 TextureOverlayRenderer::~TextureOverlayRenderer() {
   for (auto data : mGBufferData) {
     delete data.second.mDepthBuffer;
@@ -83,13 +85,19 @@ TextureOverlayRenderer::~TextureOverlayRenderer() {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::EnableManualMipMaps(bool val) {
   mManualMipMaps = val;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void TextureOverlayRenderer::SetMipMapLevel(double val) {
   mMipMapLevel = val;
@@ -99,6 +107,8 @@ int TextureOverlayRenderer::GetMipMapLevels() {
   return mMipMapLevels;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::SetMipMapMode(int mode) {
   mMipMapReduceMode = mode;
   if (mTexture.buffer) {
@@ -106,26 +116,38 @@ void TextureOverlayRenderer::SetMipMapMode(int mode) {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::SetTransferFunction(std::string json) {
   mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void TextureOverlayRenderer::SetTime(float val) {
   mTime = val;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::SetUseTime(bool use) {
   mUseTime = use;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void TextureOverlayRenderer::SetOverlayTexture(GDALReader::GreyScaleTexture& texture) {
   mTexture       = texture;
   mUpdateTexture = true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureOverlayRenderer::UnloadTexture() {
   mTexture.buffer = nullptr;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool TextureOverlayRenderer::Do() {
   cs::utils::FrameTimings::ScopedTimer timer("Render Texture");
@@ -344,6 +366,8 @@ bool TextureOverlayRenderer::Do() {
   glPopAttrib();
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool TextureOverlayRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) {
   float fMin[3] = {-6371000.0f, -6371000.0f, -6371000.0f};

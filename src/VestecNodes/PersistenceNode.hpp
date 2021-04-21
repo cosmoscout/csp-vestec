@@ -11,6 +11,12 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The persistence node draws persistence data on a modifiable canvas
+ * Inputs to the node are handled as paths to json files on the local filesystem
+ *
+ * @see https://github.com/octfx/PersistenceRenderer
+ */
 class PersistenceNode : public VNE::Node {
  public:
   PersistenceNode(cs::gui::GuiItem* pItem, int id);

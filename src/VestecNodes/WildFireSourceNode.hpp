@@ -9,6 +9,9 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * Read Wildfire textures to be displayed by the TextureRenderNode
+ */
 class WildFireSourceNode : public VNE::Node {
  public:
   WildFireSourceNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);

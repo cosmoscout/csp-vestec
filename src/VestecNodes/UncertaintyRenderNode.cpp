@@ -36,14 +36,20 @@ UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const
   GDALReader::InitGDAL();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 UncertaintyRenderNode::~UncertaintyRenderNode() {
   m_pAnchor->DisconnectChild(m_pNode.get());
   delete m_pRenderer;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 std::string UncertaintyRenderNode::GetName() {
   return "UncertaintyRenderNode";
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file which defines the node
@@ -111,21 +117,31 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
       }));
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 UncertaintyOverlayRenderer* UncertaintyRenderNode::GetRenderNode() {
   return m_pRenderer;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyRenderNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyRenderNode::SetTransferFunction(std::string json) {
   m_pRenderer->SetTransferFunction(json);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyRenderNode::SetTransferFunctionUncertainty(std::string json) {
   m_pRenderer->SetTransferFunctionUncertainty(json);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
   double min = 100000;
@@ -160,6 +176,8 @@ void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
 
   m_pItem->callJavascript("UncertaintyRenderNode.setRange", GetID(), min, max);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyRenderNode::UnloadTexture() {
   m_pRenderer->UnloadTexture();

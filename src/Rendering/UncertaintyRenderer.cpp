@@ -74,6 +74,8 @@ UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pS
   csp::vestec::logger().debug("[UncertaintyOverlayRenderer] Compiling shader done");
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 UncertaintyOverlayRenderer::~UncertaintyOverlayRenderer() {
   for (auto data : mGBufferData) {
     delete data.second.mDepthBuffer;
@@ -81,17 +83,25 @@ UncertaintyOverlayRenderer::~UncertaintyOverlayRenderer() {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyOverlayRenderer::SetOpacity(float val) {
   mOpacity = val;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyOverlayRenderer::SetTransferFunction(std::string json) {
   mTransferFunction = std::make_unique<cs::graphics::ColorMap>(json);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyOverlayRenderer::SetTransferFunctionUncertainty(std::string json) {
   mTransferFunctionUncertainty = std::make_unique<cs::graphics::ColorMap>(json);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyOverlayRenderer::SetOverlayTextures(
     std::vector<GDALReader::GreyScaleTexture>& vecTextures) {
@@ -101,6 +111,8 @@ void UncertaintyOverlayRenderer::SetOverlayTextures(
   mUpdateTextures = true;
   mLockTextureAccess.unlock();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool UncertaintyOverlayRenderer::Do() {
   cs::utils::FrameTimings::ScopedTimer timer("Render Uncertainty");
@@ -316,6 +328,8 @@ bool UncertaintyOverlayRenderer::Do() {
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyOverlayRenderer::getGLError(std::string name) {
   int error = glGetError();
   if (error != 0) {
@@ -323,6 +337,8 @@ void UncertaintyOverlayRenderer::getGLError(std::string name) {
         "[UncertaintyOverlayRenderer]  Error in {} Error code: {}", name, std::to_string(error));
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyOverlayRenderer::UploadTextures() {
   auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
@@ -358,9 +374,13 @@ void UncertaintyOverlayRenderer::UploadTextures() {
   data.mColorBuffer->Unbind();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void UncertaintyOverlayRenderer::SetVisualizationMode(RenderMode mode) {
   mRenderMode = mode;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool UncertaintyOverlayRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) {
   float fMin[3] = {-6371000.0f, -6371000.0f, -6371000.0f};
@@ -370,6 +390,8 @@ bool UncertaintyOverlayRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) 
 
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyOverlayRenderer::UnloadTexture() {
   mvecTextures.clear();

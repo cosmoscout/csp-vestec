@@ -13,6 +13,12 @@ namespace VNE {
 class NodeEditor;
 }
 
+/**
+ * The Incident Node connects the Node Editor to a Vestec instance
+ * Incidents registered on the vestec instance can be downloaded, converted and displayed
+ * Different outputs are visible, based on the type of the incident
+ * @see https://github.com/cosmoscout/csp-vestec/wiki/Incident-Node
+ */
 class IncidentNode : public VNE::Node {
  public:
   IncidentNode(cs::gui::GuiItem* pItem, int id);
