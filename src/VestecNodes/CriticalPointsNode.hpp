@@ -17,6 +17,8 @@ class NodeEditor;
 /**
  * The critical points node renders points found in .vtu files
  * It works in conjunction with the js based persistence renderer
+ *
+ * @see csp::vestec::Rendering::CriticalPointsRenderer
  */
 class CriticalPointsNode : public VNE::Node {
  public:
