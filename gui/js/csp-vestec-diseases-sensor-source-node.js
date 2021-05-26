@@ -143,6 +143,7 @@ class DiseasesSensorInputNode {
    * @param {string} path
    */
   static setPath(path) {
+    // TODO: Drop Input
     DiseasesSensorInputNode.path = `${path}/input/`;
   }
 

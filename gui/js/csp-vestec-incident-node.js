@@ -32,6 +32,7 @@ class IncidentNode {
    * @type {[string, string, string]}
    */
   static outputTypes = [
+    'INCIDENT',
     'TEXTURES',
     'CINEMA_DB',
     'PATH',
@@ -87,6 +88,8 @@ class IncidentNode {
           element.addEventListener('change', async (event) => {
             IncidentNode.unsetNodeValues(node);
             IncidentNode.showOutputType(node, 'none', true);
+            node.data.activeIncident = event.target.value;
+            IncidentNode.updateControlVisibility(node);
 
             node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
                 node.data.incidentDatasetSelect,
@@ -119,8 +122,74 @@ class IncidentNode {
         },
     );
 
+    const startIncidentControl = new D3NE.Control(
+        `<button id="incident_node_${node.id}_incident_start_button" class="btn glass">Start Incident</button>`,
+        (element, control) => {
+          control.putData('incidentStartButton', element);
+          element.parentElement.classList.add('hidden');
+
+          element.addEventListener('click', async () => {
+            const activationResponse = await CosmoScout.vestec.api.activateIncident(node.data.activeIncident).catch(() => {
+              CosmoScout.notifications.print(
+                  'Activation failed', 'Could not activate Incident', 'error');
+            });
+
+            if (activationResponse.status !== 200) {
+              CosmoScout.notifications.print(
+                  'Activation failed', 'Could not activate Incident', 'error');
+            } else {
+              CosmoScout.notifications.print(
+                  'Incident activated',
+                  'Successfully activated incident.',
+                  'done',
+              );
+
+              node.data.incidents.find(incident => incident.uuid === node.data.activeIncident).status = 'ACTIVE';
+              IncidentNode.updateControlVisibility(node);
+            }
+          });
+        }
+    );
+
+    const deleteIncidentControl = new D3NE.Control(
+        `<button id="incident_node_${node.id}_incident_delete_button" class="btn glass">Delete Incident</button>`,
+        (element, control) => {
+          control.putData('incidentDeleteButton', element);
+          element.parentElement.classList.add('hidden');
+
+          element.addEventListener('click', async () => {
+            const deletionResponse = await CosmoScout.vestec.api.deleteIncident(node.data.activeIncident).catch(() => {
+              CosmoScout.notifications.print(
+                  'Deletion failed', 'Could not delete Incident', 'error');
+            });
+
+            // TODO as of 25.05.2021 deletion does not work, possible upstream bug
+            if (typeof deletionResponse === 'undefined' || deletionResponse.status !== 200) {
+              CosmoScout.notifications.print(
+                  'Deletion failed', 'Could not delete Incident', 'error');
+            } else {
+              CosmoScout.notifications.print(
+                  'Incident deleted',
+                  'Successfully deleted incident.',
+                  'done',
+              );
+
+              IncidentNode.loadIncidents(node.data.incidentSelect, node);
+            }
+          });
+        }
+    );
+
+    const incidentStatusControl = new D3NE.Control(
+        `<span id="incident_node_${node.id}_incident_status" class="text"></span>`,
+        (element, control) => {
+          control.putData('incidentStatusText', element);
+          element.parentElement.classList.add('hidden');
+        }
+    );
+
     const loginMessageControl = new D3NE.Control(
-        `<strong id="incident_node_message_${node.id}">Please login first</strong>`,
+        `<strong id="incident_node_message_${node.id}">Please login</strong>`,
         (element, control) => {
           control.putData('info', element.parentElement);
 
@@ -129,8 +198,12 @@ class IncidentNode {
     );
 
     node.addControl(loginMessageControl);
+
     node.addControl(incidentControl);
+    node.addControl(incidentStatusControl);
     node.addControl(incidentDatasetControl);
+    node.addControl(startIncidentControl);
+    node.addControl(deleteIncidentControl);
 
     IncidentNode.addOutputs(node);
 
@@ -160,12 +233,13 @@ class IncidentNode {
     }
 
     IncidentNode.handleAuthorized(node);
+    IncidentNode.updateControlVisibility(node);
 
-    if (!node.data.incidentsLoaded) {
-      node.data.incidentsLoaded = await IncidentNode.loadIncidents(node.data.incidentSelect);
-    }
+    node.data.incidentsLoaded = await IncidentNode.loadIncidents(node.data.incidentSelect, node);
 
-    if (node.data.incidentsLoaded && !node.data.incidentDatasetLoaded) {
+    const incidentId = node.data.incidentSelect.value;
+
+    if (node.data.incidentsLoaded) {
       node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
           node.data.incidentDatasetSelect,
           node.data.incidentSelect.value,
@@ -177,11 +251,11 @@ class IncidentNode {
       return;
     }
 
-    const incidentId = node.data.incidentSelect.value;
-    // const datasetId = node.data.incidentDatasetSelect.value;
-    const datasetId = node.data.incidentDatasetSelectValue;
+    const datasetId = node.data.incidentDatasetSelectValue ?? null;
+    // 0 = Incident output
+    outputs[IncidentNode.outputTypes.indexOf('INCIDENT')] = node.data.activeIncident;
 
-    if (incidentId.length === 0 || datasetId.length === 0) {
+    if (incidentId.length === 0 || ( datasetId.length ?? '' ) === 0) {
       return;
     }
 
@@ -189,8 +263,11 @@ class IncidentNode {
 
     try {
       const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
-      window.callNative(
-          'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+
+      (async () => {
+        window.callNative(
+            'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+      })();
 
       output = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
 
@@ -214,8 +291,7 @@ class IncidentNode {
 
       case 'PATH':
       case 'CINEMA_DB':
-        output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${
-            metadata.name.replace('.zip', '')}`;
+        output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${metadata.name.replace('.zip', '')}`;
         break;
 
       default:
@@ -229,11 +305,13 @@ class IncidentNode {
 
     const outputIndex = IncidentNode.outputTypes.indexOf(node.data.activeOutputType);
 
-    outputs.filter((_, index) => index !== outputIndex).forEach((value, index) => {
-      delete outputs[index];
-    });
+    if (outputIndex > 0) {
+      outputs.filter((_, index) => index !== outputIndex).forEach((value, index) => {
+        delete outputs[index];
+      });
 
-    outputs[outputIndex] = output;
+      outputs[outputIndex] = output;
+    }
   }
 
   /**
@@ -313,6 +391,8 @@ class IncidentNode {
     node.data.incidentSelectContainer.classList.remove('hidden');
     node.data.incidentDatasetSelectContainer.classList.remove('hidden');
     node.data.info.classList.add('hidden');
+
+    node.data['INCIDENT'].el.parentElement.classList.remove('hidden');
   }
 
   /**
@@ -329,6 +409,8 @@ class IncidentNode {
     node.data.incidentDatasetLoaded = false;
     IncidentNode.unsetNodeValues(node);
     IncidentNode.showOutputType(node, 'none', true);
+
+    node.data['INCIDENT'].el.parentElement.classList.add('hidden');
   }
 
   /**
@@ -375,15 +457,28 @@ class IncidentNode {
    * Load vestec incidents into the select control
    *
    * @param {HTMLSelectElement} element
+   * @param {Node} node
    * @returns true on success
    */
-  static async loadIncidents(element) {
+  static async loadIncidents(element, node) {
     if (!CosmoScout.vestec.isAuthorized()) {
       console.warn('User not authorized, aborting.');
       return false;
     }
 
     const incidents = await CosmoScout.vestec.getIncidents();
+
+    if (incidents.length === 0) {
+      return false;
+    }
+
+    // Don't load if incidents are the same
+    if (typeof node.data.incidents !== 'undefined' && node.data.incidents.length === incidents.length) {
+      return true;
+    }
+
+    node.data.incidents = incidents;
+    node.data.activeIncident = incidents[0].uuid;
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -397,6 +492,8 @@ class IncidentNode {
     });
 
     $(element).selectpicker();
+
+    IncidentNode.updateControlVisibility(node);
 
     return true;
   }
@@ -420,6 +517,13 @@ class IncidentNode {
     }
 
     const datasets = await CosmoScout.vestec.getIncidentDatasets(id);
+
+    // Don't load if incidents are the same
+    if (typeof node.data.incidentDatasets !== 'undefined' && node.data.incidentDatasets.length === datasets.length) {
+      return true;
+    }
+
+    node.data.incidentDatasets = datasets;
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -460,7 +564,7 @@ class IncidentNode {
     if (outputType === 'none') {
       filter = () => true;
     } else {
-      filter = (type) => type !== outputType && typeof node.data[outputType] !== 'undefined';
+      filter = (type) => (type !== outputType && typeof node.data[outputType] !== 'undefined');
     }
 
     IncidentNode.outputTypes.filter(filter).forEach((type) => {
@@ -490,6 +594,46 @@ class IncidentNode {
     node.data.loadedDataHash             = null;
     node.data.currentMetadata            = null;
     node.data.incidentDatasetSelectValue = '';
+  }
+
+  /**
+   *
+   * @param {Node} node
+   */
+  static updateControlVisibility(node) {
+    if (typeof node.data.incidents === 'undefined') {
+      return;
+    }
+
+    const activeIncident = node.data.incidents.find(incident => incident.uuid === node.data.activeIncident);
+
+    if (typeof activeIncident === 'undefined') {
+      return;
+    }
+
+    node.data.incidentStatusText.parentElement.classList.remove('hidden');
+
+    switch (activeIncident.status) {
+      case 'ACTIVE':
+        node.data.incidentStatusText.innerText = 'Incident Active';
+        node.data.incidentStartButton.parentElement.classList.add('hidden');
+        node.data.incidentDeleteButton.parentElement.classList.remove('hidden');
+        break;
+
+      case 'PENDING':
+        node.data.incidentStatusText.innerText = 'Incident Pending';
+        node.data.incidentStartButton.parentElement.classList.remove('hidden');
+        break;
+
+      case 'COMPLETED':
+        node.data.incidentStatusText.innerText = 'Incident Completed';
+        // No break in order to fallthrough to default
+
+      default:
+        node.data.incidentDeleteButton.parentElement.classList.add('hidden');
+        node.data.incidentStartButton.parentElement.classList.add('hidden');
+        break;
+    }
   }
 }
 

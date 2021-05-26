@@ -29,6 +29,7 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
   static std::string vestecServer;      ///< Vestec Server
   static std::string vestecDownloadDir; ///< Downloaded files location
   static std::string vestecDiseasesDir; ///< Diseases
+  static std::string vestecTexturesDir; ///< Textures to be loaded by the texture loader node
 
   struct Settings {
     std::string mVestecDataDir; ///< Directory where cinemaDB is stored
@@ -37,6 +38,8 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
 
     std::string mVestecServer;      ///< Vestec Server - Login / Workflows
     std::string mVestecDownloadDir; ///< Vestec Downloaded files location
+
+    std::string mVestecTexturesDir; ///< Vestec Textures
   };
 
   // ------------------------------------------------

@@ -25,6 +25,8 @@
 #include "VestecNodes/IncidentNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureRenderNode.hpp"
+#include "VestecNodes/TextureLoaderNode.hpp"
+#include "VestecNodes/TextureUploadNode.hpp"
 #include "VestecNodes/TransferFunctionSourceNode.hpp"
 #include "VestecNodes/UncertaintyRenderNode.hpp"
 #include "VestecNodes/WildFireSourceNode.hpp"
@@ -48,6 +50,7 @@ std::string csp::vestec::Plugin::dataDir;
 std::string csp::vestec::Plugin::vestecServer;
 std::string csp::vestec::Plugin::vestecDownloadDir;
 std::string csp::vestec::Plugin::vestecDiseasesDir;
+std::string csp::vestec::Plugin::vestecTexturesDir;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +64,7 @@ void from_json(nlohmann::json const& j, Plugin::Settings& o) {
   cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
   cs::core::Settings::deserialize(j, "vestec-server", o.mVestecServer);
   cs::core::Settings::deserialize(j, "vestec-download-dir", o.mVestecDownloadDir);
+  cs::core::Settings::deserialize(j, "vestec-textures-dir", o.mVestecTexturesDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +198,7 @@ void Plugin::init() {
   Plugin::vestecServer      = mPluginSettings.mVestecServer;
   Plugin::vestecDownloadDir = mPluginSettings.mVestecDownloadDir;
   Plugin::vestecDiseasesDir = mPluginSettings.mDiseasesDir;
+  Plugin::vestecTexturesDir = mPluginSettings.mVestecTexturesDir;
 
   if (!boost::filesystem::exists(mPluginSettings.mVestecDownloadDir)) {
     cs::utils::filesystem::createDirectoryRecursively(
@@ -239,6 +244,18 @@ void Plugin::init() {
         return new DiseasesSimulation(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { DiseasesSimulation::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(TextureUploadNode::GetName(), "Sources",
+                                  [this](cs::gui::GuiItem* webView, int id) {
+                                    return new TextureUploadNode(webView, id);
+                                  },
+                                  [](VNE::NodeEditor* editor) { TextureUploadNode::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(TextureLoaderNode::GetName(), "Sources",
+                                  [this](cs::gui::GuiItem* webView, int id) {
+                                    return new TextureLoaderNode(webView, id);
+                                  },
+                                  [](VNE::NodeEditor* editor) { TextureLoaderNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(IncidentNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new IncidentNode(webView, id); },
