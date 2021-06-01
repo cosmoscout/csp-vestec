@@ -22,14 +22,16 @@ class TextureUploadNode {
    * @returns {Node}
    */
   builder(node) {
-    const uploadWrap = (event) => {
-      if (event.target.classList.contains('disabled') === false) {
-        this._upload(node);
-      }
-    }
+    const uploadWrap =
+        (event) => {
+          if (event.target.classList.contains('disabled') === false) {
+            this._upload(node);
+          }
+        }
 
     const uploadButtonControl = new D3NE.Control(
-        `<button type="submit" class="btn glass disabled" id="texture_upload_node_upload_button_${node.id}" disabled>Upload Texture</button>`,
+        `<button type="submit" class="btn glass disabled" id="texture_upload_node_upload_button_${
+            node.id}" disabled>Upload Texture</button>`,
         (element, control) => {
           element.addEventListener('click', uploadWrap);
           element.parentElement.classList.add('hidden');
@@ -41,12 +43,12 @@ class TextureUploadNode {
     node.addControl(uploadButtonControl);
 
     const incidentInput = new D3NE.Input('Incident', CosmoScout.vestecNE.sockets.INCIDENT);
-    const textureInput = new D3NE.Input('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
+    const textureInput  = new D3NE.Input('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
 
     node.addInput(incidentInput);
     node.addInput(textureInput);
 
-    node.data.inputTextures = [];
+    node.data.inputTextures    = [];
     node.data.uploadedTextures = [];
 
     return node;
@@ -58,12 +60,13 @@ class TextureUploadNode {
    * @param {Array} _outputs - Unused
    */
   async worker(node, inputs, _outputs) {
-    if (typeof inputs[0] === 'undefined' || typeof inputs[1] === 'undefined' || inputs[0].length === 0 || inputs[1].length === 0) {
+    if (typeof inputs[0] === 'undefined' || typeof inputs[1] === 'undefined' ||
+        inputs[0].length === 0 || inputs[1].length === 0) {
       return;
     }
 
     node.data.activeIncident = inputs[0];
-    node.data.inputTextures = inputs[1];
+    node.data.inputTextures  = inputs[1];
 
     node.data.button.removeAttribute('disabled');
     node.data.button.classList.remove('disabled');
@@ -104,31 +107,44 @@ class TextureUploadNode {
    * @private
    */
   async _upload(node) {
-    node.data.inputTextures.forEach(textures => {
-      textures.forEach(texturePath => {
-        if (node.data.uploadedTextures.includes(texturePath)) {
-          CosmoScout.notifications.print('Skipping Upload', 'Texture already uploaded', 'info');
-          return;
-        }
+    node.data.inputTextures.flat().forEach(texturePath => {
+      if (node.data.uploadedTextures.includes(texturePath)) {
+        CosmoScout.notifications.print('Skipping Upload', 'Texture already uploaded', 'info');
+        return;
+      }
 
-        window.callNative('TextureUploadNode.uploadDataSet', texturePath, node.data.activeIncident[0], node.id)
-      })
+      window.callNative(
+          'TextureUploadNode.uploadDataSet', texturePath, node.data.activeIncident[0], node.id);
     })
   }
 
-  static async doUpload(base64Data, incidentUUID, nodeId) {
-    const response = await CosmoScout.vestec.api.uploadDataset('add_data_simple', incidentUUID, {
-      filename: `File_${Math.floor((Math.random() * 1000000))}`,
-      filetype: 'TEXTURES',
-      filecomment: 'CosmoScout VR Upload',
-      // TODO Mimetype may be changed
-      payload: `data:application/octet-stream;base64,${base64Data}`,
-    }).catch(() => {
-      CosmoScout.notifications.print(
-          'Upload failed', 'Could not upload texture', 'error');
-    });
+  /**
+   * Uploads a dataset to the vestec system
+   * Filetype is hardcoded to 'TEXTURE'
+   *
+   * @param {String} base64Data
+   * @param {String} filePath
+   * @param {String} incidentUUID
+   * @param {Number} nodeId
+   * @returns {Promise<void>}
+   */
+  static async doUpload(base64Data, filePath, incidentUUID, nodeId) {
+    // Splits a string by / and \ and returns the last entry (the filename)
+    const filename = filePath.split('/').flatMap(part => part.split('\\')).pop()
 
-    if (response.status <= 500) {
+    const response =
+        await CosmoScout.vestec.api
+            .uploadDataset('add_data_simple', incidentUUID, {
+              filename,
+              filetype: 'TEXTURE',
+              filecomment: 'CosmoScout VR Upload',
+              payload: `data:application/octet-stream;base64,${base64Data}`,
+            })
+            .catch(() => {
+              CosmoScout.notifications.print('Upload failed', 'Is the incident active?', 'error');
+            });
+
+    if (typeof response !== 'undefined' && response.status <= 500) {
       const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === nodeId);
 
       if (typeof node !== 'undefined') {

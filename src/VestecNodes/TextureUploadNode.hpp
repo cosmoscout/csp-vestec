@@ -30,8 +30,6 @@ class TextureUploadNode : public VNE::Node {
    * Returns the unique identifier for the node as string
    */
   static std::string GetName();
-  static char* b64_encode(const char *in, size_t len);
-  static size_t b64_encoded_size(size_t inlen);
 };
 
 #endif // COSMOSCOUT_VR_TEXTUREUPLOADNODE_HPP
