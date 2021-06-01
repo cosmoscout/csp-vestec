@@ -281,7 +281,7 @@ class TextureRenderNode {
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
 
-    textures.forEach((texture) => {
+    (textures ?? []).forEach((texture) => {
       const option = document.createElement('option');
       option.value = texture;
       option.text  = texture.split('/').pop().toString();

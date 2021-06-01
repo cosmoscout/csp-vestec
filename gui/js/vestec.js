@@ -332,7 +332,7 @@ class Vestec {
    * }}
    * @returns {Promise<Response>}
    */
-  async createIncident( incident ) {
+  async createIncident(incident) {
     const response = await fetch(
         this._buildRequest('createincident', {
           name: incident.name,
@@ -669,7 +669,8 @@ class Vestec {
    * // Failure
    * TODO
    *
-   * Based on: https://github.com/EPCCed/vestec-wp5/blob/abbfa69768534f752d5c6eb75005b117ef28ee80/Nginx/static/js/script.js#L514
+   * Based on:
+   * https://github.com/EPCCed/vestec-wp5/blob/abbfa69768534f752d5c6eb75005b117ef28ee80/Nginx/static/js/script.js#L514
    *
    * @param queue {string} Queue name e.g. add_data for simple
    * @param incidentId {string} UUID of the incident
