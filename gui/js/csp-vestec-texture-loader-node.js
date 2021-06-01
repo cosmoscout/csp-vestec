@@ -27,7 +27,8 @@ class TextureLoaderNode {
   builder(node) {
     // Combobox for file selection
     const texture = new D3NE.Control(
-        `<select id="texture_loader_node_${node.id}_texture_select" class="combobox"><option>none</option></select>`,
+        `<select id="texture_loader_node_${
+            node.id}_texture_select" class="combobox"><option>none</option></select>`,
         (element, control) => {
           const select = $(element);
           select.selectpicker();
@@ -106,9 +107,7 @@ class TextureLoaderNode {
    * @returns void
    */
   static fillTextureSelect(textures, id) {
-    const node = CosmoScout.vestecNE.editor.nodes.find((eNode) => {
-      return eNode.id === id
-    });
+    const node = CosmoScout.vestecNE.editor.nodes.find((eNode) => {return eNode.id === id});
 
     if (typeof node === 'undefined') {
       return;
@@ -117,7 +116,7 @@ class TextureLoaderNode {
     textures = JSON.parse(textures);
 
     node.data.textures = textures;
-    const element = document.getElementById(`texture_loader_node_${node.id}_texture_select`);
+    const element      = document.getElementById(`texture_loader_node_${node.id}_texture_select`);
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
