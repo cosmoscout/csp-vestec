@@ -1,7 +1,7 @@
 // Plugin Includes
 #include "TextureOverlayRenderer.hpp"
 #include "../../../../src/cs-utils/convert.hpp"
-#include "../../../src/cs-utils/FrameTimings.hpp"
+#include "../../../../src/cs-utils/FrameTimings.hpp"
 
 // VISTA includes
 #include <VistaInterProcComm/Connections/VistaByteBufferDeSerializer.h>
@@ -187,7 +187,7 @@ bool TextureOverlayRenderer::Do() {
   glGetIntegerv(GL_VIEWPORT, iViewport);
 
   auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
-  auto const& data     = mGBufferData[viewport];
+  auto        & data     = mGBufferData[viewport];
 
   data.mDepthBuffer->Bind();
   glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0], iViewport[1],
@@ -195,6 +195,15 @@ bool TextureOverlayRenderer::Do() {
 
   if (mUpdateTexture) {
     cs::utils::FrameTimings::ScopedTimer timer("Compute LOD");
+
+    delete data.mColorBuffer;
+    data.mColorBuffer = new VistaTexture(GL_TEXTURE_2D);
+    data.mColorBuffer->Bind();
+    data.mColorBuffer->SetWrapS(GL_CLAMP);
+    data.mColorBuffer->SetWrapT(GL_CLAMP);
+    data.mColorBuffer->SetMinFilter(GL_NEAREST);
+    data.mColorBuffer->SetMagFilter(GL_NEAREST);
+    data.mColorBuffer->Unbind();
 
     data.mColorBuffer->Bind();
 
@@ -218,18 +227,17 @@ bool TextureOverlayRenderer::Do() {
     glUseProgram(m_pComputeShader);
     glBindImageTexture(0, data.mColorBuffer->GetId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
-    for (int i(0); i < mMipMapLevels; ++i) {
+    for (int i(1); i < mMipMapLevels; ++i) {
       // Calculates the width and height for the current MipMap Level
       // This also sets the number of dispatched compute groups
       int width  = static_cast<int>(std::max(
           1.0, std::floor(static_cast<double>(static_cast<int>(mTexture.x)) / std::pow(2, i))));
       int height = static_cast<int>(std::max(
           1.0, std::floor(static_cast<double>(static_cast<int>(mTexture.y)) / std::pow(2, i))));
-
       glUniform1i(glGetUniformLocation(m_pComputeShader, "uLevel"), i);
       glUniform1i(glGetUniformLocation(m_pComputeShader, "uMipMapReduceMode"), mMipMapReduceMode);
       glBindImageTexture(2, data.mColorBuffer->GetId(), i, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-
+      
       if (i > 0) {
         glBindImageTexture(
             1, data.mColorBuffer->GetId(), i - 1, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
@@ -237,7 +245,6 @@ bool TextureOverlayRenderer::Do() {
 
       // Make sure writing has finished.
       glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
       glDispatchCompute(static_cast<uint32_t>(std::ceil(1.0 * width / 16)),
           static_cast<uint32_t>(std::ceil(1.0 * height / 16)), 1);
     }
