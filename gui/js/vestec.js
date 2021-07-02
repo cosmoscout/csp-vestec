@@ -683,10 +683,45 @@ class Vestec {
    * @returns {Promise<Response>}
    */
   async uploadDataset(queue, incidentId, data) {
+    if (typeof data === 'undefined') {
+      data = {}
+    }
+
     data.incidentId = incidentId;
 
     const response = await fetch(
         this._buildRequest(`EDI/${queue}${incidentId}`, data, 'POST'),
+    );
+
+    if (!response.ok) {
+      return Vestec.buildResponse(response);
+    }
+
+    return response;
+  }
+
+  /**
+   * TODO
+   * Runs the test stage of an incident
+   *
+   * // Success
+   * TODO
+   *
+   * // Failure
+   * TODO
+   *
+   * Based on:
+   * https://github.com/EPCCed/vestec-wp5/blob/09ea36bf4e6447bd357882e22374ed501cbcabb2/Nginx/static/js/script.js#L548
+   *
+   * @param incidentId {string} UUID of the incident
+   * @param data {{
+   *     data: String,
+   * }}
+   * @returns {Promise<Response>}
+   */
+  async testIncident(incidentId, data) {
+    const response = await fetch(
+        this._buildRequest(`EDI/test_stage_${incidentId}`, data, 'POST'),
     );
 
     if (!response.ok) {
