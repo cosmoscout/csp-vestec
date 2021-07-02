@@ -192,6 +192,33 @@ class IncidentNode {
           });
         });
 
+    // Button to start the test stage of an active incident
+    const startTestStageControl = new D3NE.Control(
+        `<button id="incident_node_${
+            node.id}_incident_test_stage_button" class="btn glass">Start Test Stage</button>`,
+        (element, control) => {
+          control.putData('incidentTestStageButton', element);
+          element.parentElement.classList.add('hidden');
+
+          element.addEventListener('click', async () => {
+            const testStageResponse =
+                await CosmoScout.vestec.api.testIncident(node.data.activeIncident).catch(() => {
+                  CosmoScout.notifications.print(
+                      'Test failed', 'Could not run Test Stage', 'error');
+                });
+
+            if (testStageResponse.status !== 200) {
+              CosmoScout.notifications.print('Test failed', 'Could not run Test Stage', 'error');
+            } else {
+              CosmoScout.notifications.print(
+                  'Test started',
+                  'Successfully started test stage.',
+                  'done',
+              );
+            }
+          });
+        });
+
     // Status text displaying the incident state, e.g. active, pending, etc.
     const incidentStatusControl =
         new D3NE.Control(`<span id="incident_node_${node.id}_incident_status" class="text"></span>`,
@@ -224,6 +251,7 @@ class IncidentNode {
     node.addControl(incidentDatasetControl);
     node.addControl(startIncidentControl);
     node.addControl(deleteIncidentControl);
+    node.addControl(startTestStageControl);
 
     IncidentNode.addOutputs(node);
 
@@ -484,7 +512,7 @@ class IncidentNode {
     node.data.incidentDatasetSelectContainer.classList.add('hidden');
     node.data.incidentStartButton.classList.add('hidden');
     node.data.incidentDeleteButton.classList.add('hidden');
-    node.data.incidentStatusText.classList.add('hidden');
+    node.data.incidentStatusText.parentElement.classList.add('hidden');
 
     node.data.info.classList.remove('hidden');
 
@@ -711,6 +739,13 @@ class IncidentNode {
 
     if (typeof activeIncident === 'undefined') {
       return;
+    }
+
+    if (typeof activeIncident.test_workflow !== 'undefined' &&
+        activeIncident.test_workflow === true) {
+      node.data.incidentTestStageButton.parentElement.classList.remove('hidden');
+    } else {
+      node.data.incidentTestStageButton.parentElement.classList.add('hidden');
     }
 
     node.data.incidentStatusText.parentElement.classList.remove('hidden');
