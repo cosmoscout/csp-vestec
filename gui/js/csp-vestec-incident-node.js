@@ -14,10 +14,13 @@
  *   incidentDatasetSelectContainer: HTMLDivElement,
  *   incidentDatasetSelectValue: string,
  *
+ *   incidentButtonContainer: HTMLDivElement
+ *
  *   info: HTMLDivElement,
  *
  *   incidentStartButton: HTMLButtonElement,
  *   incidentDeleteButton: HTMLButtonElement,
+ *   incidentTestStageButton: HTMLButtonElement,
  *   incidentStatusText: HTMLSpanElement,
  *
  *   loadedDataHash: string|null,
@@ -108,33 +111,74 @@ class IncidentNode {
 
     // Dropdown for selecting different datasets on the active incident
     const incidentDatasetControl = new D3NE.Control(
-        `<select id="incident_dataset_node_select_${node.id}" class="combobox"></select>`,
+        `<div class="row">
+<div class="col-10"><select id="incident_dataset_node_select_${
+            node.id}" class="combobox"></select></div>
+<div class="col-2"><i class="material-icons" style="font-size: 22px;" id="incident_node_${
+            node.id}_dataset_created_date">info</i></div>
+</div>
+`,
         (element, control) => {
           $(element).selectpicker();
 
-          control.putData('incidentDatasetSelect', element);
-          control.putData('incidentDatasetSelectContainer', element.parentElement.parentElement);
+          const container = element.parentElement;
+
+          control.putData('incidentDatasetSelect',
+              element.querySelector(`#incident_dataset_node_select_${node.id}`));
+          control.putData('incidentInfo',
+              element.querySelector(`#incident_node_${node.id}_dataset_created_date`));
+          control.putData('incidentDatasetSelectContainer', container);
           control.putData('incidentDatasetLoaded', false);
 
-          element.parentElement.parentElement.classList.add('hidden');
+          container.classList.add('hidden');
 
           element.addEventListener('change', (event) => {
             node.data.incidentDatasetSelectValue = event.target.value;
+
+            const activeDataset =
+                node.data.incidentDatasets.find(dataset => dataset.uuid === event.target.value);
+
+            if (typeof activeDataset.date_created !== 'undefined') {
+              $(`#incident_node_${node.id}_dataset_created_date`)
+                  .tooltip({placement: 'top'})
+                  .attr('data-original-title', activeDataset.date_created);
+            }
+
             // Calls the worker and updates the outputs
             CosmoScout.vestecNE.updateEditor();
           });
         },
     );
 
-    // Button to activate an incident
-    const startIncidentControl = new D3NE.Control(
-        `<button id="incident_node_${
-            node.id}_incident_start_button" class="btn glass">Start Incident</button>`,
+    const incidentButtonControl = new D3NE.Control(
+        `<div class="btn-group">
+<button id="incident_node_${
+            node.id}_incident_start_button" class="btn glass">Start Incident</button>
+<button id="incident_node_${
+            node.id}_incident_delete_button" class="btn glass">Delete Incident</button>
+<button id="incident_node_${
+            node.id}_incident_test_stage_button" class="btn glass">Start Test Stage</button>
+</div>`,
         (element, control) => {
-          control.putData('incidentStartButton', element);
+          const incidentStartButton =
+              element.querySelector(`#incident_node_${node.id}_incident_start_button`);
+          const incidentDeleteButton =
+              element.querySelector(`#incident_node_${node.id}_incident_delete_button`);
+          const incidentTestStageButton =
+              element.querySelector(`#incident_node_${node.id}_incident_test_stage_button`);
+
+          control.putData('incidentButtonContainer', element.parentElement);
+          control.putData('incidentStartButton', incidentStartButton);
+          control.putData('incidentDeleteButton', incidentDeleteButton);
+          control.putData('incidentTestStageButton', incidentTestStageButton);
+
           element.parentElement.classList.add('hidden');
 
-          element.addEventListener('click', async () => {
+          incidentStartButton.classList.add('hidden');
+          incidentDeleteButton.classList.add('hidden');
+          incidentTestStageButton.classList.add('hidden');
+
+          incidentStartButton.addEventListener('click', async () => {
             const activationResponse =
                 await CosmoScout.vestec.api.activateIncident(node.data.activeIncident).catch(() => {
                   CosmoScout.notifications.print(
@@ -156,17 +200,8 @@ class IncidentNode {
               IncidentNode.updateControlVisibility(node);
             }
           });
-        });
 
-    // Button to delete an active incident
-    const deleteIncidentControl = new D3NE.Control(
-        `<button id="incident_node_${
-            node.id}_incident_delete_button" class="btn glass">Delete Incident</button>`,
-        (element, control) => {
-          control.putData('incidentDeleteButton', element);
-          element.parentElement.classList.add('hidden');
-
-          element.addEventListener('click', async () => {
+          incidentDeleteButton.addEventListener('click', async () => {
             const deletionResponse =
                 await CosmoScout.vestec.api.deleteIncident(node.data.activeIncident).catch(() => {
                   CosmoScout.notifications.print(
@@ -177,7 +212,6 @@ class IncidentNode {
               return;
             }
 
-            // TODO as of 25.05.2021 deletion does not work, possible upstream bug
             if (deletionResponse.status !== 200) {
               CosmoScout.notifications.print(
                   'Deletion failed', 'Could not delete Incident', 'error');
@@ -191,17 +225,8 @@ class IncidentNode {
               IncidentNode.loadIncidents(node.data.incidentSelect, node);
             }
           });
-        });
 
-    // Button to start the test stage of an active incident
-    const startTestStageControl = new D3NE.Control(
-        `<button id="incident_node_${
-            node.id}_incident_test_stage_button" class="btn glass">Start Test Stage</button>`,
-        (element, control) => {
-          control.putData('incidentTestStageButton', element);
-          element.parentElement.classList.add('hidden');
-
-          element.addEventListener('click', async () => {
+          incidentTestStageButton.addEventListener('click', async () => {
             const testStageResponse =
                 await CosmoScout.vestec.api.testIncident(node.data.activeIncident).catch(() => {
                   CosmoScout.notifications.print(
@@ -250,9 +275,7 @@ class IncidentNode {
     node.addControl(incidentControl);
     node.addControl(incidentStatusControl);
     node.addControl(incidentDatasetControl);
-    node.addControl(startIncidentControl);
-    node.addControl(deleteIncidentControl);
-    node.addControl(startTestStageControl);
+    node.addControl(incidentButtonControl);
 
     IncidentNode.addOutputs(node);
 
@@ -519,9 +542,9 @@ class IncidentNode {
   static handleUnauthorized(node) {
     node.data.incidentSelectContainer.classList.add('hidden');
     node.data.incidentDatasetSelectContainer.classList.add('hidden');
+
     node.data.incidentStartButton.parentElement.classList.add('hidden');
-    node.data.incidentDeleteButton.parentElement.classList.add('hidden');
-    node.data.incidentStatusText.parentElement.classList.add('hidden');
+    +node.data.incidentStatusText.parentElement.classList.add('hidden');
 
     node.data.info.classList.remove('hidden');
 
@@ -658,7 +681,7 @@ class IncidentNode {
 
     datasets.forEach((dataset) => {
       const option = document.createElement('option');
-      option.text  = dataset.name;
+      option.text  = `${dataset.name} - ${dataset.date_created}`;
       option.value = dataset.uuid;
 
       element.appendChild(option);
@@ -668,6 +691,12 @@ class IncidentNode {
 
     node.data.incidentDatasets           = datasets;
     node.data.incidentDatasetSelectValue = datasets[0].uuid;
+
+    if (typeof datasets[0].date_created !== 'undefined') {
+      $(`#incident_node_${node.id}_dataset_created_date`)
+          .tooltip({placement: 'top'})
+          .attr('data-original-title', datasets[0].date_created);
+    }
 
     return true;
   }
@@ -752,9 +781,11 @@ class IncidentNode {
 
     if (typeof activeIncident.test_workflow !== 'undefined' &&
         activeIncident.test_workflow === true) {
-      node.data.incidentTestStageButton.parentElement.classList.remove('hidden');
+      node.data.incidentButtonContainer.classList.remove('hidden');
+      node.data.incidentTestStageButton.classList.remove('hidden');
     } else {
-      node.data.incidentTestStageButton.parentElement.classList.add('hidden');
+      node.data.incidentTestStageButton.classList.add('hidden');
+      node.data.incidentButtonContainer.classList.add('hidden');
     }
 
     node.data.incidentStatusText.parentElement.classList.remove('hidden');
@@ -762,13 +793,19 @@ class IncidentNode {
     switch (activeIncident.status) {
     case 'ACTIVE':
       node.data.incidentStatusText.innerText = 'Incident Active';
-      node.data.incidentStartButton.parentElement.classList.add('hidden');
-      node.data.incidentDeleteButton.parentElement.classList.remove('hidden');
+      node.data.incidentButtonContainer.classList.remove('hidden');
+
+      node.data.incidentStartButton.classList.add('hidden');
+      node.data.incidentDeleteButton.classList.remove('hidden');
       break;
 
     case 'PENDING':
       node.data.incidentStatusText.innerText = 'Incident Pending';
-      node.data.incidentStartButton.parentElement.classList.remove('hidden');
+
+      node.data.incidentButtonContainer.classList.remove('hidden');
+
+      node.data.incidentStartButton.classList.remove('hidden');
+      node.data.incidentDeleteButton.classList.remove('hidden');
       break;
 
     case 'COMPLETED':
@@ -776,8 +813,10 @@ class IncidentNode {
       // No break in order to fallthrough to default
 
     default:
-      node.data.incidentDeleteButton.parentElement.classList.add('hidden');
-      node.data.incidentStartButton.parentElement.classList.add('hidden');
+      node.data.incidentButtonContainer.classList.add('hidden');
+
+      node.data.incidentDeleteButton.classList.add('hidden');
+      node.data.incidentStartButton.classList.add('hidden');
       break;
     }
   }
