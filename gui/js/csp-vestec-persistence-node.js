@@ -184,12 +184,12 @@ class PersistenceNode {
     if (typeof inputs[0][0].path !== 'undefined') {
       path = `/${inputs[0][0].path}/converted/${fileName}`;
     }
-    //HACKY We have to wait until file writing from CinemaDB node is finished
+    // HACKY We have to wait until file writing from CinemaDB node is finished
     setTimeout(() => renderer.load(path).then(() => {
       node.data.activeFile = fileName;
       renderer.update();
-    }), 250);
-    
+    }),
+        250);
   }
 
   /**

@@ -87,8 +87,8 @@ void CinemaDBNode::ConvertFile(
   /////////////////
   auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
   cinemaQuery->SetInputConnection(reader->GetOutputPort());
-  cinemaQuery->SetSQLStatement("SELECT * FROM InputTable0 WHERE Area == '" + caseName +
-                               "' AND Month == " + (timeStep));
+  cinemaQuery->SetSQLStatement(
+      "SELECT * FROM InputTable0 WHERE Area == '" + caseName + "' AND Month == " + (timeStep));
   cinemaQuery->Update();
 
   auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();

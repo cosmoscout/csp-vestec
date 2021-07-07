@@ -29,14 +29,13 @@ void GDALReader::AddTextureToCache(const std::string& path, GreyScaleTexture& te
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int GDALReader::ReadNumberOfLayers(std::string filename)
-{
+int GDALReader::ReadNumberOfLayers(std::string filename) {
   if (!GDALReader::mIsInitialized) {
     csp::vestec::logger().error(
         "[GDALReader] GDAL not initialized! Call GDALReader::InitGDAL() first");
     return -1;
   }
- 
+
   GDALReader::mMutex.lock();
   GDALDataset* poDatasetSrc = static_cast<GDALDataset*>(GDALOpen(filename.data(), GA_ReadOnly));
   GDALReader::mMutex.unlock();
@@ -45,7 +44,7 @@ int GDALReader::ReadNumberOfLayers(std::string filename)
     csp::vestec::logger().error("[GDALReader::ReadNumberOfLayers] Failed to load {}", filename);
     return -1;
   }
-  int bands =  poDatasetSrc->GetRasterCount();
+  int bands = poDatasetSrc->GetRasterCount();
   GDALClose(poDatasetSrc);
 
   csp::vestec::logger().info("Reading number of layers from {} : {}", filename, bands);
@@ -188,7 +187,6 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   texture.lnglatBounds = bounds;
   std::memcpy(texture.buffer, &bufferData[0], bufferSize);
 
-  
   GDALReader::AddTextureToCache(str.str(), texture);
 }
 

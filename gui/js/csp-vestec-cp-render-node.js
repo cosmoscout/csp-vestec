@@ -83,16 +83,16 @@ class CriticalPointsNode {
                 </div>
             </div>`;
 
-      const sliderWidthOptions = {
-        start: 0.01,
-        step: 0.01,
-        snap: false,
-        animate: false,
-        range: {
-          min: 0.01,
-          max: 1,
-        },
-      };
+    const sliderWidthOptions = {
+      start: 0.01,
+      step: 0.01,
+      snap: false,
+      animate: false,
+      range: {
+        min: 0.01,
+        max: 1,
+      },
+    };
 
     const widthControl = new D3NE.Control(widthControlHTML, (element, _control) => {
       const widthScale = element.querySelector(`#width_scale_${node.id}`);

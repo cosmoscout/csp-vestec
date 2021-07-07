@@ -194,7 +194,7 @@ bool TextureOverlayRenderer::Do() {
       iViewport[2], iViewport[3], 0);
 
   if (mUpdateTexture) {
-     csp::vestec::logger().debug("[TextureOverlayRenderer] Update texture");
+    csp::vestec::logger().debug("[TextureOverlayRenderer] Update texture");
     cs::utils::FrameTimings::ScopedTimer timer("Compute LOD");
 
     delete data.mColorBuffer;

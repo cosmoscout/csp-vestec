@@ -59,8 +59,7 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
       "../share/resources/gui/js/csp-vestec-texture-renderer.js");
   pEditor->GetGuiItem()->executeJavascript(code);
 
-  
-   pEditor->GetGuiItem()->registerCallback("TextureRenderNode.getNumberOfTextureLayers",
+  pEditor->GetGuiItem()->registerCallback("TextureRenderNode.getNumberOfTextureLayers",
       "Get the number of layers in the texture",
       std::function([pEditor](double id, std::string filePath) {
         pEditor->GetNode<TextureRenderNode>(std::lround(id))->GetNumerOfTextureLayers(filePath);
@@ -69,7 +68,8 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback("TextureRenderNode.setTextureLayer",
       "Sets the texture layer to be visualized",
       std::function([pEditor](double id, double layerID) {
-        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetTextureLayerID(std::lround(layerID));
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))
+            ->SetTextureLayerID(std::lround(layerID));
       }));
 
   // Callback which reads simulation data (path+x is given from JavaScript)
@@ -131,16 +131,14 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TextureRenderNode::GetNumerOfTextureLayers(std::string filePath)
-{
-    int bands = GDALReader::ReadNumberOfLayers(filePath);
-    m_pItem->callJavascript("TextureRenderNode.setNumberOfTextureLayers", GetID(), bands);
+void TextureRenderNode::GetNumerOfTextureLayers(std::string filePath) {
+  int bands = GDALReader::ReadNumberOfLayers(filePath);
+  m_pItem->callJavascript("TextureRenderNode.setNumberOfTextureLayers", GetID(), bands);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TextureRenderNode::SetTextureLayerID(int layerID)
-{
+void TextureRenderNode::SetTextureLayerID(int layerID) {
   m_iLayerID = layerID;
   std::cout << "Changed layer ----------->" << layerID << std::endl;
 }
