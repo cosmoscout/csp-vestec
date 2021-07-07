@@ -112,7 +112,7 @@ class IncidentNode {
     // Dropdown for selecting different datasets on the active incident
     const incidentDatasetControl = new D3NE.Control(
         `<div class="row">
-<div class="col-10"><select id="incident_dataset_node_select_${
+<div class="col-10" style="max-width: 200px;"><select id="incident_dataset_node_select_${
             node.id}" class="combobox"></select></div>
 <div class="col-2"><i class="material-icons" style="font-size: 22px;" id="incident_node_${
             node.id}_dataset_created_date">info</i></div>
