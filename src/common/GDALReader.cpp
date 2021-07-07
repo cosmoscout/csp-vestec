@@ -29,23 +29,50 @@ void GDALReader::AddTextureToCache(const std::string& path, GreyScaleTexture& te
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename) {
+int GDALReader::ReadNumberOfLayers(std::string filename)
+{
+  if (!GDALReader::mIsInitialized) {
+    csp::vestec::logger().error(
+        "[GDALReader] GDAL not initialized! Call GDALReader::InitGDAL() first");
+    return -1;
+  }
+ 
+  GDALReader::mMutex.lock();
+  GDALDataset* poDatasetSrc = static_cast<GDALDataset*>(GDALOpen(filename.data(), GA_ReadOnly));
+  GDALReader::mMutex.unlock();
+
+  if (poDatasetSrc == nullptr) {
+    csp::vestec::logger().error("[GDALReader::ReadNumberOfLayers] Failed to load {}", filename);
+    return -1;
+  }
+  int bands =  poDatasetSrc->GetRasterCount();
+  GDALClose(poDatasetSrc);
+
+  csp::vestec::logger().info("Reading number of layers from {} : {}", filename, bands);
+  return bands;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename, int layer) {
   if (!GDALReader::mIsInitialized) {
     csp::vestec::logger().error(
         "[GDALReader] GDAL not initialized! Call GDALReader::InitGDAL() first");
     return;
   }
 
-  csp::vestec::logger().debug("Reading filename {}", filename);
+  csp::vestec::logger().info("Reading filename {} and layer {}", filename, layer);
+  std::stringstream str;
+  str << filename << layer;
 
   // Check for texture in cache
   GDALReader::mMutex.lock();
-  auto it = TextureCache.find(filename);
+  auto it = TextureCache.find(str.str());
   if (it != TextureCache.end()) {
     texture = it->second;
 
     GDALReader::mMutex.unlock();
-    csp::vestec::logger().debug("Found {} in gdal cache.", filename);
+    csp::vestec::logger().debug("Found {} in gdal cache.", str.str());
 
     return;
   }
@@ -85,7 +112,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
 
   int   bGotMin  = 0;
   int   bGotMax  = 0; // like bool if it was successful
-  auto* poBand   = poDatasetSrc->GetRasterBand(1);
+  auto* poBand   = poDatasetSrc->GetRasterBand(layer);
   d_dataRange[0] = poBand->GetMinimum(&bGotMin);
   d_dataRange[1] = poBand->GetMaximum(&bGotMax);
   if (!(bGotMin && bGotMax)) {
@@ -121,7 +148,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
       180;
 
   // Store the data type of the raster band
-  auto eDT = GDALGetRasterDataType(GDALGetRasterBand(poDatasetSrc, 1));
+  auto eDT = GDALGetRasterDataType(GDALGetRasterBand(poDatasetSrc, layer));
 
   // Setup the warping parameters
   GDALWarpOptions* psWarpOptions = GDALCreateWarpOptions();
@@ -130,7 +157,7 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   psWarpOptions->nBandCount      = 1;
   psWarpOptions->panSrcBands =
       static_cast<int*>(CPLMalloc(sizeof(int) * psWarpOptions->nBandCount));
-  psWarpOptions->panSrcBands[0] = 1;
+  psWarpOptions->panSrcBands[0] = layer;
   psWarpOptions->panDstBands =
       static_cast<int*>(CPLMalloc(sizeof(int) * psWarpOptions->nBandCount));
   psWarpOptions->panDstBands[0] = 1;
@@ -161,7 +188,8 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture& texture, std::string fil
   texture.lnglatBounds = bounds;
   std::memcpy(texture.buffer, &bufferData[0], bufferSize);
 
-  GDALReader::AddTextureToCache(filename, texture);
+  
+  GDALReader::AddTextureToCache(str.str(), texture);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

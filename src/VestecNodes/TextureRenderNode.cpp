@@ -59,6 +59,19 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
       "../share/resources/gui/js/csp-vestec-texture-renderer.js");
   pEditor->GetGuiItem()->executeJavascript(code);
 
+  
+   pEditor->GetGuiItem()->registerCallback("TextureRenderNode.getNumberOfTextureLayers",
+      "Get the number of layers in the texture",
+      std::function([pEditor](double id, std::string filePath) {
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->GetNumerOfTextureLayers(filePath);
+      }));
+
+  pEditor->GetGuiItem()->registerCallback("TextureRenderNode.setTextureLayer",
+      "Sets the texture layer to be visualized",
+      std::function([pEditor](double id, double layerID) {
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetTextureLayerID(std::lround(layerID));
+      }));
+
   // Callback which reads simulation data (path+x is given from JavaScript)
   pEditor->GetGuiItem()->registerCallback<double, std::string>(
       "TextureRenderNode.readSimulationResults", "Reads simulation data",
@@ -118,6 +131,22 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void TextureRenderNode::GetNumerOfTextureLayers(std::string filePath)
+{
+    int bands = GDALReader::ReadNumberOfLayers(filePath);
+    m_pItem->callJavascript("TextureRenderNode.setNumberOfTextureLayers", GetID(), bands);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void TextureRenderNode::SetTextureLayerID(int layerID)
+{
+  m_iLayerID = layerID;
+  std::cout << "Changed layer ----------->" << layerID << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureRenderNode::SetOpacity(float val) {
   m_pRenderer->SetOpacity(val);
 }
@@ -169,9 +198,7 @@ void TextureRenderNode::UnloadTexture() {
 void TextureRenderNode::ReadSimulationResult(std::string filename) {
   // Read the GDAL texture (grayscale only 1 float channel)
   GDALReader::GreyScaleTexture texture;
-  GDALReader::ReadGrayScaleTexture(texture, std::move(filename));
-
-  // m_pRenderer->SetMaxRange(texture.dataRange[1])
+  GDALReader::ReadGrayScaleTexture(texture, std::move(filename), m_iLayerID);
 
   m_pItem->callJavascript(
       "TextureRenderNode.setRange", GetID(), texture.dataRange[0], texture.dataRange[1]);

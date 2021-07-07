@@ -60,14 +60,14 @@ class TextureRenderNode {
             <i class="material-icons"></i>
           </label>
         </div>
-        <div class="col-4 text">Time:</div>
+        <div class="col-4 text">Discard:</div>
         <div class="col-6">
           <div id="texture-node_${node.id}-slider_time"></div>
         </div>
       </div>`,
         (element, _control) => {
           const slider = element.querySelector(`#texture-node_${node.id}-slider_time`);
-          noUiSlider.create(slider, {start: 6, animate: false, range: {min: 0, max: 6}});
+          noUiSlider.create(slider, {start: 20, animate: false, range: {min: 0, max: 20}});
 
           element.querySelector(`#texture-node_${node.id}-set_enable_time`)
               .addEventListener('click', (event) => {
@@ -80,6 +80,27 @@ class TextureRenderNode {
             window.callNative('TextureRenderNode.setTime', node.id, parseFloat(values[handle]));
           });
         },
+    );
+
+     // Slider to control the layer
+     const layerControl = new D3NE.Control(
+      `<div class="row">
+      <div class="col-6 text">Layer:</div>
+      <div class="col-6">
+        <div id="texture-node_${node.id}-layer"></div>
+      </div>
+    </div>`,
+      (element, _control) => {
+        const slider = element.querySelector(`#texture-node_${node.id}-layer`);
+        noUiSlider.create(slider, {start: 1, animate: false, range: {min: 1, max: 1}});
+
+        // Read the files for the given simulation mode and fill combobox when mode is changed
+        slider.noUiSlider.on('slide', (values, handle) => {
+          console.log("Changed layer " + parseFloat(values[handle]));
+          window.callNative(
+              'TextureRenderNode.setTextureLayer', node.id, parseFloat(values[handle]));
+        });
+      },
     );
 
     //
@@ -131,6 +152,7 @@ class TextureRenderNode {
     // Add control elements
     node.addControl(opacityControl);
     node.addControl(timeControl);
+    node.addControl(layerControl);
     node.addControl(textureSelectControl);
     node.addControl(mipMapReduceMode);
     node.addControl(mipMapLevelControl);
@@ -241,6 +263,7 @@ class TextureRenderNode {
 
     this.lastFile = texture;
 
+    window.callNative('TextureRenderNode.getNumberOfTextureLayers', node.id, texture);
     window.callNative('TextureRenderNode.readSimulationResults', node.id, texture);
   }
 
@@ -371,6 +394,30 @@ class TextureRenderNode {
         CosmoScout.vestecNE.updateEditor();
       }
     });
+  }
+
+  static setNumberOfTextureLayers(id, layers)
+  {
+    console.log("setNumberOfTextureLayers: " + layers);
+    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
+      if (node.id == id) {
+        node.data.layers = layers;
+        CosmoScout.vestecNE.updateEditor();
+
+        //Re-Initialize slider with given layers for that texture
+        const slider = document.querySelector(`#texture-node_${node.id}-layer`);
+        slider.noUiSlider.destroy();
+        noUiSlider.create(slider, {start: 1, animate: false, range: {min: 1, max: node.data.layers}, step: 1});
+    
+          // Read the files for the given simulation mode and fill combobox when mode is changed
+          slider.noUiSlider.on('slide', (values, handle) => {
+            window.callNative('TextureRenderNode.setTextureLayer', node.id, parseFloat(values[handle]));
+            window.callNative('TextureRenderNode.readSimulationResults', node.id, node.data.activeTexture);
+        });
+      }
+    });
+     
+     
   }
 }
 

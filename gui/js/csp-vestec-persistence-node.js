@@ -49,7 +49,7 @@ class PersistenceNode {
               right: 20,
               bottom: 40,
             },
-            waitTime: 1,
+            waitTime: 2,
             enablePersistenceFilter: true,
             enableSelectionFilter: true,
             selectionStopPropagation: true,
@@ -184,11 +184,12 @@ class PersistenceNode {
     if (typeof inputs[0][0].path !== 'undefined') {
       path = `/${inputs[0][0].path}/converted/${fileName}`;
     }
-
-    renderer.load(path).then(() => {
+    //HACKY We have to wait until file writing from CinemaDB node is finished
+    setTimeout(() => renderer.load(path).then(() => {
       node.data.activeFile = fileName;
       renderer.update();
-    });
+    }), 250);
+    
   }
 
   /**

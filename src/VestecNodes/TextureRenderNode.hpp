@@ -87,7 +87,18 @@ class TextureRenderNode : public VNE::Node {
    */
   void UnloadTexture();
 
+  /**
+   * Read the number of layers in the texture
+   */
+  void GetNumerOfTextureLayers(std::string filePath);
+
+  /**
+   * Set the layer to be visualized from the texture
+   */
+  void SetTextureLayerID(int layerID);
+
  private:
+  int m_iLayerID = 1;
   csp::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =

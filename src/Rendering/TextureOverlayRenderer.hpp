@@ -98,7 +98,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   float  mOpacity          = 1;     //! Opacity value used in shader to adjust the overlay
   float  mTime             = 6;     //! Time value in hours. Used by shader to discard pixels
   int    mMipMapLevels     = 0;     //! Count of generated MipMap levels
-  bool   mManualMipMaps    = false; //! Flag if manual MipMaps are active
+  bool   mManualMipMaps    = true;  //! Flag if manual MipMaps are active
   double mMipMapLevel      = 0;     //! Current manual MipMap Level
   int    mMipMapReduceMode = 0;     //! 0 = Max, 1 = Min, 2 = Average
 

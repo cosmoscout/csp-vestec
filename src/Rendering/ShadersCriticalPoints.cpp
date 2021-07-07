@@ -66,11 +66,10 @@ vec3 geodeticSurfaceNormal(vec2 lngLat) {
       cos(lngLat.y) * cos(lngLat.x));
 }
 
-vec3 toCartesian(vec2 lonLat) {
+vec3 toCartesian(vec2 lonLat, float h) {
   vec3 n = geodeticSurfaceNormal(lonLat);
-  vec3 k = n * uRadii * uRadii;
-  float gamma = sqrt(dot(k, n));
-  return k / gamma;
+  vec3 k = n * (uRadii + h);
+  return k;
 }
 
 
@@ -93,17 +92,13 @@ void outputVertex(vec4 vPos, int i, int sides, vec4[5] positions)
     EmitVertex();
 }
 
-// Maps the point persistence to a pre-defined range
-float map(float value, float outMin, float outMax) {
-    return outMin + (outMax - outMin) * (value - uMinPersistence) / (uMaxPersistence - uMinPersistence);
-}
-
 void main()
 {
     const int sides = 4;
 
-    float widthScale = map((gs_in_vs[0].persistence * uWidthScale), 0.00000125, 0.000015);
-    float heightScale = map((gs_in_vs[0].persistence * uHeightScale), 1, 1.00015);
+    float normalizedPersistence = (gs_in_vs[0].persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
+    float widthScale = uWidthScale * 3.14 / 180; //in degree
+    float heightScale = normalizedPersistence * uHeightScale * 1000; //m to km
 
     // Total number of sides + center position
     vec4[sides + 1] positions;
@@ -115,13 +110,12 @@ void main()
     // First create needed vertex positions
     for (int i = 0; i < sides; i++) {
         float ang = (PI * 2.0 / sides * i) - PI / 4;
+        vec4 offset = vec4(cos(ang), -sin(ang), 0.0, 0.0);
+        vec4 inPos = gl_in[0].gl_Position + offset * widthScale;
 
-        vec4 offset = vec4(cos(ang) * widthScale, -sin(ang) * widthScale, 0.0, 0.0);
-        vec4 inPos = gl_in[0].gl_Position + offset;
+        vec3 posV = toCartesian(inPos.xy, heightScale);
 
-        vec3 posV = toCartesian(inPos.xy);
-
-        vec3 scaledPos = posV * heightScale;
+        vec3 scaledPos = posV;
 
         positions[i] = vec4(scaledPos.xyz, 1);
     }
