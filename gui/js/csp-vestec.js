@@ -342,7 +342,7 @@
      * Retrieves a summary list of completed incidents
      */
     async getIncidents() {
-      const response = await this._vestecApi.getIncidents('active', 'completed')
+      const response = await this._vestecApi.getIncidents('active', 'completed', 'pending')
                            .catch(this._defaultCatch.bind(this));
 
       const data = await response.json();
@@ -570,13 +570,16 @@
         return null;
       }
 
-      const response = await this._vestecApi.createIncident(
-          form.elements.namedItem('csp-vestec-incident-name').value,
-          form.elements.namedItem('csp-vestec-incident-workflow').value,
-          form.elements.namedItem('csp-vestec-incident-upper-left').value,
-          form.elements.namedItem('csp-vestec-incident-lower-right').value,
-          form.elements.namedItem('csp-vestec-incident-duration').value,
-      );
+      const response = await this._vestecApi.createIncident({
+        name: form.elements.namedItem('csp-vestec-incident-name').value,
+        kind: form.elements.namedItem('csp-vestec-incident-workflow').value,
+        upperLeftLatlong: form.elements.namedItem('csp-vestec-incident-upper-left').value,
+        lowerRightLatlong: form.elements.namedItem('csp-vestec-incident-lower-right').value,
+        duration: form.elements.namedItem('csp-vestec-incident-duration').value,
+        simulationRuns: form.elements.namedItem('csp-vestec-incident-runs').value,
+        mosquitoSpecies: form.elements.namedItem('csp-vestec-incident-mosquito-species').value,
+        diseaseOfInterest: form.elements.namedItem('csp-vestec-incident-interest-disease').value,
+      });
 
       if (response.status === 201) {
         CosmoScout.notifications.print(
@@ -588,25 +591,6 @@
         form.parentElement.classList.toggle('visible');
         form.reset();
         window.callNative('vestec.removeMarks');
-
-        // Incident id is in body text
-        const uuid = await response.text();
-
-        const activationResponse = await this._vestecApi.activateIncident(uuid).catch(() => {
-          CosmoScout.notifications.print(
-              'Activation failed', 'Could not activate Incident', 'error');
-        });
-
-        if (activationResponse.status !== 200) {
-          CosmoScout.notifications.print(
-              'Activation failed', 'Could not activate Incident', 'error');
-        } else {
-          CosmoScout.notifications.print(
-              'Incident activated',
-              'Successfully activated incident.',
-              'done',
-          );
-        }
       }
 
       // TODO Status code currently missing in vestec response

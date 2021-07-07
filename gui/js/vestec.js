@@ -320,27 +320,29 @@ class Vestec {
    * Access the response data as response.text() instead of response.json()
    * Trying to parse the UUID as json results in an error
    *
-   * @param name {string} Name of the incident
-   * @param kind {string} Incident type, corresponds to a registered workflow
-   * @param upperLeftLatlong {string|undefined} Optional
-   * @param lowerRightLatlong {string|undefined} Optional
-   * @param duration {number|undefined} Optional
+   * @param incident {{
+   *     name: String,
+   *     kind: String,
+   *     upperLeftLatlong: String|undefined,
+   *     lowerRightLatlong: String|undefined,
+   *     duration: Number|undefined,
+   *     simulationRuns: Number|undefined,
+   *     mosquitoSpecies: string|undefined,
+   *     diseaseOfInterest: string|undefined,
+   * }}
    * @returns {Promise<Response>}
    */
-  async createIncident(
-      name,
-      kind,
-      upperLeftLatlong  = undefined,
-      lowerRightLatlong = undefined,
-      duration          = undefined,
-  ) {
+  async createIncident(incident) {
     const response = await fetch(
         this._buildRequest('createincident', {
-          name,
-          kind,
-          upperLeftLatlong,
-          lowerRightLatlong,
-          duration,
+          name: incident.name,
+          kind: incident.kind,
+          upperLeftLatlong: incident.upperLeftLatlong,
+          lowerRightLatlong: incident.lowerRightLatlong,
+          duration: incident.duration,
+          simulationRuns: incident.simulationRuns,
+          mosquitoSpecies: incident.mosquitoSpecies,
+          diseaseOfInterest: incident.diseaseOfInterest,
         }),
     );
 
@@ -658,6 +660,78 @@ class Vestec {
   }
 
   /**
+   * TODO
+   * Uploads a dataset, payload on data should be base64 encoded
+   *
+   * // Success
+   * TODO
+   *
+   * // Failure
+   * TODO
+   *
+   * Based on:
+   * https://github.com/EPCCed/vestec-wp5/blob/abbfa69768534f752d5c6eb75005b117ef28ee80/Nginx/static/js/script.js#L514
+   *
+   * @param queue {string} Queue name e.g. add_data for simple
+   * @param incidentId {string} UUID of the incident
+   * @param data {{
+   *     filename: String,
+   *     filetype: String,
+   *     filecomment: String,
+   *     payload: String,
+   * }}
+   * @returns {Promise<Response>}
+   */
+  async uploadDataset(queue, incidentId, data) {
+    if (typeof data === 'undefined') {
+      data = {}
+    }
+
+    data.incidentId = incidentId;
+
+    const response = await fetch(
+        this._buildRequest(`EDI/${queue}${incidentId}`, data, 'POST'),
+    );
+
+    if (!response.ok) {
+      return Vestec.buildResponse(response);
+    }
+
+    return response;
+  }
+
+  /**
+   * TODO
+   * Runs the test stage of an incident
+   *
+   * // Success
+   * TODO
+   *
+   * // Failure
+   * TODO
+   *
+   * Based on:
+   * https://github.com/EPCCed/vestec-wp5/blob/09ea36bf4e6447bd357882e22374ed501cbcabb2/Nginx/static/js/script.js#L548
+   *
+   * @param incidentId {string} UUID of the incident
+   * @param data {{
+   *     data: String,
+   * }}
+   * @returns {Promise<Response>}
+   */
+  async testIncident(incidentId, data) {
+    const response = await fetch(
+        this._buildRequest(`EDI/test_stage_${incidentId}`, data, 'POST'),
+    );
+
+    if (!response.ok) {
+      return Vestec.buildResponse(response);
+    }
+
+    return response;
+  }
+
+  /**
    * Refreshes the state of a simulation
    * by default all simulation statuses are refreshed around every 15 minutes.
    * By calling this it will update the state of the simulation immediately
@@ -817,7 +891,11 @@ class Vestec {
       throw new Error('Vestec server is undefined.');
     }
 
-    const url = new URL(`flask/${uri}`, this.server);
+    if (uri.indexOf('EDI') === -1) {
+      uri = `flask/${uri}`;
+    }
+
+    const url = new URL(uri, this.server);
 
     if (typeof data === 'object') {
       // Append search params to the url in the form of url?key=value
