@@ -543,7 +543,7 @@ class IncidentNode {
     node.data.incidentSelectContainer.classList.add('hidden');
     node.data.incidentDatasetSelectContainer.classList.add('hidden');
 
-    node.data.incidentStartButton.parentElement.classList.add('hidden');
+    node.data.incidentButtonContainer.classList.add('hidden');
     +node.data.incidentStatusText.parentElement.classList.add('hidden');
 
     node.data.info.classList.remove('hidden');
