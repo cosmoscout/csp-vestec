@@ -77,9 +77,13 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
       }));
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
-      std::function([](std::string uuid) {
+      std::function([](std::string uuid, bool appendCDB = false) {
         std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
         std::string extract(csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid);
+
+        if (appendCDB) {
+          extract = csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid + ".cdb";
+        }
 
         if (!boost::filesystem::exists(zip)) {
           csp::vestec::logger().debug(

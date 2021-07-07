@@ -1,7 +1,7 @@
 // Plugin Includes
 #include "TextureOverlayRenderer.hpp"
-#include "../../../../src/cs-utils/convert.hpp"
 #include "../../../../src/cs-utils/FrameTimings.hpp"
+#include "../../../../src/cs-utils/convert.hpp"
 
 // VISTA includes
 #include <VistaInterProcComm/Connections/VistaByteBufferDeSerializer.h>
@@ -186,8 +186,8 @@ bool TextureOverlayRenderer::Do() {
   GLint iViewport[4];
   glGetIntegerv(GL_VIEWPORT, iViewport);
 
-  auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
-  auto        & data     = mGBufferData[viewport];
+  auto* viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
+  auto& data     = mGBufferData[viewport];
 
   data.mDepthBuffer->Bind();
   glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0], iViewport[1],
@@ -237,7 +237,7 @@ bool TextureOverlayRenderer::Do() {
       glUniform1i(glGetUniformLocation(m_pComputeShader, "uLevel"), i);
       glUniform1i(glGetUniformLocation(m_pComputeShader, "uMipMapReduceMode"), mMipMapReduceMode);
       glBindImageTexture(2, data.mColorBuffer->GetId(), i, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-      
+
       if (i > 0) {
         glBindImageTexture(
             1, data.mColorBuffer->GetId(), i - 1, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);

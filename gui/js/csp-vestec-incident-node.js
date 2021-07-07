@@ -59,6 +59,7 @@ class IncidentNode {
     CINEMA_DB_PATH: IncidentNode.outputTypes[3],
     PATH: IncidentNode.outputTypes[3],
     POINT_ARRAY: IncidentNode.outputTypes[4],
+    'MOSQUITO TOPOLOGICAL OUTPUT': IncidentNode.outputTypes[3],
   }
 
   /**
@@ -418,7 +419,11 @@ class IncidentNode {
     output = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
 
     if (metadata.name.includes('.zip')) {
-      window.callNative('incidentNode.extractDataSet', metadata.uuid);
+      // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should be
+      // removed
+      const addCDB = metadata.type === 'MOSQUITO TOPOLOGICAL OUTPUT';
+
+      window.callNative('incidentNode.extractDataSet', metadata.uuid, addCDB);
     }
 
     metadata.type = metadata.type.toUpperCase();
@@ -439,6 +444,10 @@ class IncidentNode {
     case 'CINEMA_DB':
       output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${
           metadata.name.replace('.zip', '')}`;
+      break;
+
+    case 'MOSQUITO TOPOLOGICAL OUTPUT':
+      output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}.cdb`;
       break;
 
     default:
@@ -486,7 +495,7 @@ class IncidentNode {
       return;
     }
 
-    IncidentNode.typeMappings[from] = to;
+    IncidentNode.typeMappings[from.toUpperCase()] = to;
   }
 
   /**
@@ -510,8 +519,8 @@ class IncidentNode {
   static handleUnauthorized(node) {
     node.data.incidentSelectContainer.classList.add('hidden');
     node.data.incidentDatasetSelectContainer.classList.add('hidden');
-    node.data.incidentStartButton.classList.add('hidden');
-    node.data.incidentDeleteButton.classList.add('hidden');
+    node.data.incidentStartButton.parentElement.classList.add('hidden');
+    node.data.incidentDeleteButton.parentElement.classList.add('hidden');
     node.data.incidentStatusText.parentElement.classList.add('hidden');
 
     node.data.info.classList.remove('hidden');
