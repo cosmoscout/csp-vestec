@@ -139,7 +139,7 @@ class CinemaDBNode {
       window.callNative('CinemaDBNode.convertFile', node.data.caseName, node.data.timeStep, path);
       node.data.converted = fileName;
     }
-
+    
     outputs[0] = {
       caseName: node.data.caseName,
       timeStep: node.data.timeStep,

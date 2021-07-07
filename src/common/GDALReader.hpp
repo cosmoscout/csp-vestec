@@ -32,7 +32,12 @@ class GDALReader {
   /**
    * Reads a GDAL supported gray scale image into the texture passed as reference
    */
-  static void ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename);
+  static void ReadGrayScaleTexture(GreyScaleTexture& texture, std::string filename, int layer = 1);
+
+  /**
+   * Get the number of layers in the texture
+   */
+  static int ReadNumberOfLayers(std::string filename);
 
   /**
    * Adds a texture with unique path to the cache

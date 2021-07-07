@@ -87,8 +87,8 @@ void CinemaDBNode::ConvertFile(
   /////////////////
   auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
   cinemaQuery->SetInputConnection(reader->GetOutputPort());
-  cinemaQuery->SetSQLStatement("SELECT * FROM InputTable0 WHERE CaseName == '" + caseName +
-                               "' AND TimeStep == " + (timeStep));
+  cinemaQuery->SetSQLStatement("SELECT * FROM InputTable0 WHERE Area == '" + caseName +
+                               "' AND Month == " + (timeStep));
   cinemaQuery->Update();
 
   auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();
@@ -127,7 +127,7 @@ void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
   auto* table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
 
   std::set<std::string> caseNames;
-  auto* caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("CaseName"));
+  auto* caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("Area"));
 
   for (int x = 0; x < table->GetNumberOfRows(); ++x) {
     caseNames.insert(caseNamesColumn->GetValue(x));
@@ -154,7 +154,7 @@ void CinemaDBNode::GetTimeSteps(int id, const std::string& path) {
 
   auto*         table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
   std::set<int> caseNames;
-  auto*         timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("TimeStep"));
+  auto*         timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("Month"));
 
   int min = std::numeric_limits<int>::max();
   int max = std::numeric_limits<int>::min();
