@@ -242,6 +242,8 @@ class TextureRenderNode {
 
     if (typeof textureInput === 'string') {
       texture = textureInput;
+
+      node.data.activeTexture = texture;
     } else if (typeof textureInput === 'object') {
       if (typeof node.data.activeFileSet === 'undefined' ||
           node.data.activeFileSet !== textureInput) {
