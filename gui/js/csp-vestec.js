@@ -576,10 +576,6 @@
         upperLeftLatlong: form.elements.namedItem('csp-vestec-incident-upper-left').value,
         lowerRightLatlong: form.elements.namedItem('csp-vestec-incident-lower-right').value,
         duration: form.elements.namedItem('csp-vestec-incident-duration').value,
-        count: form.elements.namedItem('csp-vestec-incident-runs').value,
-        species: form.elements.namedItem('csp-vestec-incident-mosquito-species').value,
-        disease: form.elements.namedItem('csp-vestec-incident-interest-disease').value,
-        region: form.elements.namedItem('csp-vestec-incident-interest-region').value,
       });
 
       if (response.status === 201) {
