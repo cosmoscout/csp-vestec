@@ -22,6 +22,7 @@
 #include "VestecNodes/CriticalPointsNode.hpp"
 #include "VestecNodes/DiseasesSensorInputNode.hpp"
 #include "VestecNodes/DiseasesSimulationNode.hpp"
+#include "VestecNodes/IncidentConfigNode.hpp"
 #include "VestecNodes/IncidentNode.hpp"
 #include "VestecNodes/PersistenceNode.hpp"
 #include "VestecNodes/TextureLoaderNode.hpp"
@@ -214,6 +215,7 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("POINT_ARRAY");
   m_pNodeEditor->RegisterSocketType("TEXTURES");
   m_pNodeEditor->RegisterSocketType("INCIDENT");
+  m_pNodeEditor->RegisterSocketType("INCIDENT_CONFIG");
   m_pNodeEditor->RegisterSocketType("TRANSFER_FUNCTION");
 
   // Register our node types for the flow editor
@@ -264,6 +266,11 @@ void Plugin::init() {
       IncidentNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new IncidentNode(webView, id); },
       [](VNE::NodeEditor* editor) { IncidentNode::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(
+      IncidentConfigNode::GetName(), "Sources",
+      [](cs::gui::GuiItem* webView, int id) { return new IncidentConfigNode(webView, id); },
+      [](VNE::NodeEditor* editor) { IncidentConfigNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(
       PersistenceNode::GetName(), "Renderer",

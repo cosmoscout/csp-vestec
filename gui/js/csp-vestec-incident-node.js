@@ -63,6 +63,8 @@ class IncidentNode {
     PATH: IncidentNode.outputTypes[3],
     POINT_ARRAY: IncidentNode.outputTypes[4],
     'MOSQUITO TOPOLOGICAL OUTPUT': IncidentNode.outputTypes[3],
+    'MOSQUITO MOSAIC OUTPUT': IncidentNode.outputTypes[1],
+    'MOSQUITO CONVERT OUTPUT': IncidentNode.outputTypes[1],
   }
 
   /**
@@ -113,9 +115,9 @@ class IncidentNode {
     const incidentDatasetControl = new D3NE.Control(
         `<div class="row">
 <div class="col-10" style="max-width: 200px;"><select id="incident_dataset_node_select_${
-            node.id}" class="combobox"></select></div>
+            node.id}" class="combobox"></select></div><!--
 <div class="col-2"><i class="material-icons" style="font-size: 22px;" id="incident_node_${
-            node.id}_dataset_created_date">info</i></div>
+            node.id}_dataset_created_date">info</i></div>-->
 </div>
 `,
         (element, control) => {
@@ -151,7 +153,7 @@ class IncidentNode {
     );
 
     const incidentButtonControl = new D3NE.Control(
-        `<div class="btn-group">
+        `<div class="btn-group" style="flex-direction: column">
 <button id="incident_node_${
             node.id}_incident_start_button" class="btn glass">Start Incident</button>
 <button id="incident_node_${
@@ -228,9 +230,8 @@ class IncidentNode {
 
           incidentTestStageButton.addEventListener('click', async () => {
             const testStageResponse =
-                await CosmoScout.vestec.api.testIncident(node.data.activeIncident).catch(() => {
-                  CosmoScout.notifications.print(
-                      'Test failed', 'Could not run Test Stage', 'error');
+                await CosmoScout.vestec.api.testIncident(node.data.activeIncident, node.data?.inputConfig[0] ?? {}).catch(() => {
+          CosmoScout.notifications.print('Test failed', 'Could not run Test Stage', 'error');
                 });
 
             if (testStageResponse.status !== 200) {
@@ -270,6 +271,9 @@ class IncidentNode {
         },
     );
 
+    const configInput =
+        new D3NE.Input('Test Stage Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG);
+
     node.addControl(loginMessageControl);
 
     node.addControl(incidentControl);
@@ -277,9 +281,13 @@ class IncidentNode {
     node.addControl(incidentDatasetControl);
     node.addControl(incidentButtonControl);
 
+    node.addInput(configInput);
     IncidentNode.addOutputs(node);
 
     node.data.firstWorkerRound = true;
+
+    node.data['INCIDENT_CONFIG'] = configInput;
+
     CosmoScout.vestecNE.updateEditor();
 
     // Listens to node removals, to clear the update interval
@@ -296,10 +304,10 @@ class IncidentNode {
 
   /**
    * @param {Node} node
-   * @param {Array} _inputs - Unused
+   * @param {Array} inputs - Config input
    * @param {Array} outputs - Texture / CinemaDB / PointArray
    */
-  async worker(node, _inputs, outputs) {
+  async worker(node, inputs, outputs) {
     // First worker round = node was just created
     // Hide all outputs until the type is determined
     if (node.data.firstWorkerRound) {
@@ -327,6 +335,12 @@ class IncidentNode {
           node.data.incidentSelect.value,
           node,
       );
+    }
+
+    if (typeof inputs[0] !== 'undefined') {
+      node.data.inputConfig = inputs[0];
+    } else {
+      delete node.data.inputConfig;
     }
 
     if (!node.data.incidentsLoaded || !node.data.incidentDatasetLoaded) {
@@ -544,7 +558,7 @@ class IncidentNode {
     node.data.incidentDatasetSelectContainer.classList.add('hidden');
 
     node.data.incidentButtonContainer.classList.add('hidden');
-    +node.data.incidentStatusText.parentElement.classList.add('hidden');
+    node.data.incidentStatusText.parentElement.classList.add('hidden');
 
     node.data.info.classList.remove('hidden');
 
@@ -554,6 +568,7 @@ class IncidentNode {
     IncidentNode.showOutputType(node, 'none', true);
 
     node.data['INCIDENT'].el.parentElement.classList.add('hidden');
+    node.data['INCIDENT_CONFIG'].el.parentElement.classList.add('hidden');
   }
 
   /**
@@ -783,9 +798,13 @@ class IncidentNode {
         activeIncident.test_workflow === true) {
       node.data.incidentButtonContainer.classList.remove('hidden');
       node.data.incidentTestStageButton.classList.remove('hidden');
+
+      node.data['INCIDENT_CONFIG'].el.parentElement.classList.remove('hidden')
     } else {
       node.data.incidentTestStageButton.classList.add('hidden');
       node.data.incidentButtonContainer.classList.add('hidden');
+
+      node.data['INCIDENT_CONFIG'].el.parentElement.classList.add('hidden')
     }
 
     node.data.incidentStatusText.parentElement.classList.remove('hidden');
