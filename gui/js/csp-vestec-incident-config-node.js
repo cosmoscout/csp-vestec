@@ -28,6 +28,7 @@ class IncidentConfigNode {
             node.id}">Species</label></div>
 <div class="col-8">
   <select id="incident_config_node_select_mosquito_${node.id}" class="combobox">
+    <option value="aegypti">Aegypti</option>
     <option value="albopictus">Albopictus</option>
   </select>
 </div></div>`,
@@ -44,6 +45,7 @@ class IncidentConfigNode {
 <div class="col-4"><label for="incident_config_node_select_region_${node.id}">Region</label></div>
 <div class="col-8">
   <select id="incident_config_node_select_region_${node.id}" class="combobox">
+    <option value="rome">Rome</option>
     <option value="trento">Trento</option>
   </select>
 </div></div>`,
@@ -62,6 +64,7 @@ class IncidentConfigNode {
 <div class="col-8">
   <select id="incident_config_node_select_disease_${node.id}" class="combobox">
     <option value="deng">Dengue</option>
+    <option value="zika">Zika</option>
   </select>
 </div></div>`,
         (element, control) => {
