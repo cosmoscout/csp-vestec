@@ -69,11 +69,11 @@ class DiseasesSensorInputNode {
     node.addControl(simulationFile);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURE', CosmoScout.vestecNE.sockets.TEXTURES);
+    const output = new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
 
     if (this._useVestec()) {
-      const input = new D3NE.Input('PATH', CosmoScout.vestecNE.sockets.PATH);
+      const input = new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
       node.addInput(input);
     }
 

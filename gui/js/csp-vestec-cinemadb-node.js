@@ -38,8 +38,6 @@ class CinemaDBNode {
    * @returns {Node}
    */
   builder(node) {
-    const output = new D3NE.Output('CINEMA_DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
-
     const caseNames = new D3NE.Control(
         `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
         (element, control) => {
@@ -82,10 +80,13 @@ class CinemaDBNode {
 
     node.addControl(caseNames);
     node.addControl(timeSteps);
+
+    const output = new D3NE.Output('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
+
     node.addOutput(output);
 
     if (this._useVestec()) {
-      const input = new D3NE.Input('PATH', CosmoScout.vestecNE.sockets.PATH);
+      const input = new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
       node.addInput(input);
     }
 

@@ -46,7 +46,7 @@ class TextureLoaderNode {
     node.addControl(texture);
 
     // Define the output type
-    const output = new D3NE.Output('TEXTURE', CosmoScout.vestecNE.sockets.TEXTURES);
+    const output = new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }

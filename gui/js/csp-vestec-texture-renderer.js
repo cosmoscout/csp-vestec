@@ -158,10 +158,10 @@ class TextureRenderNode {
     node.addControl(mipMapLevelControl);
 
     // Define the input types
-    const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
+    const inputTexture = new D3NE.Input('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(inputTexture);
     const inputTransferFunction =
-        new D3NE.Input('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+        new D3NE.Input('Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
 
     return node;

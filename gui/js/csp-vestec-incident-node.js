@@ -36,43 +36,46 @@ class IncidentNode {
   /**
    * Supported output types
    *
-   * @type {[string, string, string]}
+   * Key = Port type registered on the node editor
+   * Value = name: Displayed name in the node
+   *         mappings: Vestec dataset 'type' parameter from dataset metadata
    */
-  static outputTypes = [
-    'INCIDENT',
-    'TEXTURES',
-    'CINEMA_DB',
-    'PATH',
-    'POINT_ARRAY',
-  ];
-
-  /**
-   * Output type mappings
-   * Key: Vestec dataset 'type' parameter from dataset metadata
-   * Value: Type of output
-   *
-   * @type {{CINEMA_DB: string, POINT_ARRAY: string, "2D_FIRE": string}}
-   */
-  static typeMappings = {
-    TEXTURE: IncidentNode.outputTypes[1],
-    '2D_FIRE': IncidentNode.outputTypes[1],
-    DISEASES_TEXTURE: IncidentNode.outputTypes[1],
-    CINEMA_DB: IncidentNode.outputTypes[2],
-    CINEMA_DB_JSON: IncidentNode.outputTypes[2],
-    CINEMA_DB_PATH: IncidentNode.outputTypes[3],
-    PATH: IncidentNode.outputTypes[3],
-    POINT_ARRAY: IncidentNode.outputTypes[4],
-    'MOSQUITO TOPOLOGICAL OUTPUT': IncidentNode.outputTypes[3],
-    'MOSQUITO MOSAIC OUTPUT': IncidentNode.outputTypes[1],
-    'MOSQUITO CONVERT OUTPUT': IncidentNode.outputTypes[1],
-  }
-
-  /**
-   * Freezes outputTypes and mappings
-   */
-  constructor() {
-    Object.freeze(IncidentNode.outputTypes);
-  }
+  static outputTypes = {
+    'INCIDENT': {
+      name: 'Incident',
+      mappings: [],
+    },
+    'TEXTURES': {
+      name: 'Texture(s)',
+      mappings:
+          [
+            'TEXTURE',
+            'DISEASES_TEXTURE',
+            '2D_FIRE',
+            'MOSQUITO MOSAIC OUTPUT',
+            'MOSQUITO CONVERT OUTPUT',
+          ],
+    },
+    'CINEMA_DB': {
+      name: 'Cinema DB',
+      mappings:
+          [
+            'CINEMA_DB_JSON',
+          ],
+    },
+    'PATH': {
+      name: 'File Path',
+      mappings:
+          [
+            'CINEMA_DB_PATH',
+            'MOSQUITO TOPOLOGICAL OUTPUT',
+          ],
+    },
+    'POINT_ARRAY': {
+      name: 'Point Array',
+      mappings: [],
+    },
+  };
 
   /**
    * Builder method creating incident and dataset select
@@ -115,10 +118,7 @@ class IncidentNode {
     const incidentDatasetControl = new D3NE.Control(
         `<div class="row">
 <div class="col-10" style="max-width: 200px;"><select id="incident_dataset_node_select_${
-            node.id}" class="combobox"></select></div><!--
-<div class="col-2"><i class="material-icons" style="font-size: 22px;" id="incident_node_${
-            node.id}_dataset_created_date">info</i></div>-->
-</div>
+            node.id}" class="combobox"></select></div></div>
 `,
         (element, control) => {
           $(element).selectpicker();
@@ -355,7 +355,7 @@ class IncidentNode {
     });
 
     // 0 = Incident output
-    outputs[IncidentNode.outputTypes.indexOf('INCIDENT')] = node.data.activeIncident;
+    outputs[0] = node.data.activeIncident;
 
     if (incidentId.length === 0 || ( datasetId.length ?? '' ) === 0) {
       return;
@@ -503,20 +503,21 @@ class IncidentNode {
    * @param {Node} node - The node to add outputs to
    */
   static addOutputs(node) {
-    IncidentNode.outputTypes.forEach((outputType) => {
-      if (typeof CosmoScout.vestecNE.sockets[outputType] === 'undefined') {
-        console.error(`Output type ${outputType} not found in CosmoScout.vestecNE.sockets`);
-        return;
-      }
+    Object.entries(IncidentNode.outputTypes)
+        .filter(output => output.length === 2)
+        .forEach(output => {
+          if (typeof CosmoScout.vestecNE.sockets[output[0]] === 'undefined') {
+            console.error(`Output type ${output[0]} not found in CosmoScout.vestecNE.sockets`);
+            return;
+          }
 
-      const name = outputType.charAt(0).toUpperCase() + outputType.toLowerCase().slice(1);
+          const outputDefinition =
+              new D3NE.Output(output[1].name, CosmoScout.vestecNE.sockets[output[0]]);
 
-      const output = new D3NE.Output(name, CosmoScout.vestecNE.sockets[outputType]);
+          node.data[output[0]] = outputDefinition;
 
-      node.data[outputType] = output;
-
-      node.addOutput(output);
-    });
+          node.addOutput(outputDefinition);
+        });
   }
 
   /**
@@ -532,7 +533,7 @@ class IncidentNode {
       return;
     }
 
-    IncidentNode.typeMappings[from.toUpperCase()] = to;
+    IncidentNode.outputTypes[from.toUpperCase()].mappings.push(to.toUpperCase());
   }
 
   /**
@@ -599,8 +600,7 @@ class IncidentNode {
         }));
 
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
-      IncidentNode.showOutputType(
-          node, IncidentNode.typeMappings[metadata.type.toUpperCase()], true);
+      IncidentNode.showOutputType(node, metadata.type.toUpperCase(), true);
 
       node.data.loadedDataHash  = datasetId + incidentId;
       node.data.currentMetadata = metadata;
@@ -721,17 +721,28 @@ class IncidentNode {
    * If removeConnections is set to true all connections from this node to others are removed
    *
    * @see {outputTypes}
-   * @see {typeMappings}
    *
    * @param {Node} node - The node to operate on
-   * @param {string} outputType - Type of output (value from typeMappings)
+   * @param {string} outputType - Type of output, either outputType key or value from mappings
    * @param {boolean} removeConnections - True to remove all active connections from/to this node
    */
   static showOutputType(node, outputType, removeConnections = true) {
-    if (node.data.activeOutputType === outputType) {
+    if (outputType !== 'none') {
+      outputType = Object.entries(IncidentNode.outputTypes).find(outputDefinition => {
+              return outputType === outputDefinition[0] || (outputDefinition[1].mappings ?? []).includes(outputType);
+      });
+
+      if (typeof outputType !== 'undefined') {
+        outputType = outputType[0];
+      }
+    }
+
+    if (typeof outputType === 'undefined' || node.data.activeOutputType === outputType) {
       return;
     }
 
+    // The filter function running on the entries of outputTypes
+    // Idx 0 = Key, Idx 1 = object containing name, mappings
     let filter;
 
     if (outputType === 'none' || typeof outputType === 'undefined') {
@@ -740,9 +751,12 @@ class IncidentNode {
       filter = (type) => (type !== outputType && typeof node.data[outputType] !== 'undefined');
     }
 
-    IncidentNode.outputTypes.filter(filter).filter(type => type !== 'INCIDENT').forEach((type) => {
-      node.data[type].el.parentElement.classList.add('hidden');
-    });
+    Object.keys(IncidentNode.outputTypes)
+        .filter(filter)
+        .filter(outputDefinition => outputDefinition !== 'INCIDENT')
+        .forEach((outputDefinition) => {
+          node.data[outputDefinition].el.parentElement.classList.add('hidden');
+        });
 
     if (removeConnections) {
       CosmoScout.vestecNE.removeConnections(node);

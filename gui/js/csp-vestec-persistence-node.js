@@ -123,7 +123,7 @@ class PersistenceNode {
 
     node.data.activeFile = null;
 
-    const input = new D3NE.Input('CinemaDB', CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const input = new D3NE.Input('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
 
     node.addInput(input);
 

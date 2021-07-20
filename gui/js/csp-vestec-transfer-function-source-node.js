@@ -40,7 +40,7 @@ class TransferFunctionSourceNode {
 
     // Define the output type
     const output =
-        new D3NE.Output('TRANSFER FUNCTION', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+        new D3NE.Output('Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addOutput(output);
     return node;
   }

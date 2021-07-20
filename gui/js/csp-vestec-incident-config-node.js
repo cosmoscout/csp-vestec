@@ -60,7 +60,8 @@ class IncidentConfigNode {
 
     const diseaseSelect = new D3NE.Control(
         `<div class="row">
-<div class="col-4"><label for="incident_config_node_select_disease_${node.id}">Disease</label></div>
+<div class="col-4"><label for="incident_config_node_select_disease_${
+            node.id}">Disease</label></div>
 <div class="col-8">
   <select id="incident_config_node_select_disease_${node.id}" class="combobox">
     <option value="deng">Dengue</option>
@@ -92,7 +93,8 @@ class IncidentConfigNode {
     node.addControl(diseaseSelect);
     node.addControl(countInput);
 
-    const configOutput = new D3NE.Output('Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG)
+    const configOutput =
+        new D3NE.Output('Test Stage Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG)
 
     node.addOutput(configOutput);
 

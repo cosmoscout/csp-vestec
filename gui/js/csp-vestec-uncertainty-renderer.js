@@ -71,13 +71,13 @@ class UncertaintyRenderNode {
     node.addControl(opacityControl);
 
     // Define the input types
-    const inputTexture = new D3NE.Input('TEXTURE(S)', CosmoScout.vestecNE.sockets.TEXTURES);
+    const inputTexture = new D3NE.Input('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(inputTexture);
     const inputTransferFunction = new D3NE.Input(
-        'TRANSFER FUNCTION (average)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+        'Transfer Function (average)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
     const inputTransferFunctionUncertainty = new D3NE.Input(
-        'TRANSFER FUNCTION (variance, difference)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+        'Transfer Function (variance, difference)', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunctionUncertainty);
     return node;
   }
