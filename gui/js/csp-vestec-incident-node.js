@@ -448,10 +448,8 @@ class IncidentNode {
     let                    output;
     const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
 
-    (async () => {
-      window.callNative(
-          'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
-    })();
+    /** Download and Extract should probably be in one function */
+    window.callNative('incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
 
     output = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
 

@@ -4,6 +4,10 @@
 //                        Copyright: (c) 2019 German Aerospace Center (DLR)                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
+#include <future>
+#include <thread>
+
 #include "IncidentNode.hpp"
 #include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
@@ -48,32 +52,38 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
           return;
         }
 
-        std::ofstream out;
+        std::future<int> downloadResult = std::async(std::launch::async, [downloadPath, uuid, token]{
+          std::ofstream out;
 
-        out.open(downloadPath, std::ofstream::out | std::ofstream::binary);
+          out.open(downloadPath, std::ofstream::out | std::ofstream::binary);
 
-        if (!out) {
-          csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
-          return;
-        }
+          if (!out) {
+            csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
+            return 1;
+          }
 
-        std::list<std::string> header;
-        header.push_back("Authorization: Bearer " + token);
+          std::list<std::string> header;
+          header.push_back("Authorization: Bearer " + token);
 
-        auto url = csp::vestec::Plugin::vestecServer + "/flask/data/" + uuid;
+          auto url = csp::vestec::Plugin::vestecServer + "/flask/data/" + uuid;
 
-        csp::vestec::logger().debug("Downloading '{}' to '{}'.", url, downloadPath);
+          csp::vestec::logger().debug("Downloading '{}' to '{}'.", url, downloadPath);
 
-        curlpp::Easy request;
-        request.setOpt(curlpp::options::HttpHeader(header));
-        request.setOpt(curlpp::options::Url(url));
-        request.setOpt(curlpp::options::WriteStream(&out));
-        request.setOpt(curlpp::options::NoSignal(true));
+          curlpp::Easy request;
+          request.setOpt(curlpp::options::HttpHeader(header));
+          request.setOpt(curlpp::options::Url(url));
+          request.setOpt(curlpp::options::WriteStream(&out));
+          request.setOpt(curlpp::options::NoSignal(true));
 
-        request.perform();
-        request.reset();
+          request.perform();
+          request.reset();
 
-        out.close();
+          out.close();
+
+          return 0;
+        });
+
+        downloadResult.wait();
       }));
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
