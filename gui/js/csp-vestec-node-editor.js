@@ -205,6 +205,8 @@
       this.editor.eventListener.on('nodecreate', (node, persistent) => {
         try {
           window.callNative('AddNewNode', parseInt(node.id, 10), node.title);
+
+          this._addToggleBtnToNode(node);
         } catch (e) { console.error(`Error: AddNewNode #${node.id} (${node.title})`, e); }
       });
 
@@ -268,6 +270,28 @@
       }
 
       return true;
+    }
+
+    /**
+     * Toggles all control elements of a node after the title has been clicked
+     *
+     * @param node
+     * @private
+     */
+    async _addToggleBtnToNode(node) {
+      await this.engine.abort();
+      await this.engine.process(this.editor.toJSON());
+
+      if (typeof node.el === 'undefined') {
+        return;
+      }
+
+      const controls = node.el.querySelectorAll('div.control');
+
+      node.el.querySelector('div.title')
+          .addEventListener('click', () => {controls.forEach(control => {
+            control.classList.toggle('off');
+          })})
     }
   }
 
