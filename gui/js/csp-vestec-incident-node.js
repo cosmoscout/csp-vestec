@@ -39,11 +39,13 @@ class IncidentNode {
    * Key = Port type registered on the node editor
    * Value = name: Displayed name in the node
    *         mappings: Vestec dataset 'type' parameter from dataset metadata
+   *         index: Output Index
    */
   static outputTypes = {
     'INCIDENT': {
       name: 'Incident',
       mappings: [],
+        index: 0,
     },
     'TEXTURES': {
       name: 'Texture(s)',
@@ -55,6 +57,7 @@ class IncidentNode {
             'MOSQUITO MOSAIC OUTPUT',
             'MOSQUITO CONVERT OUTPUT',
           ],
+        index: 1,
     },
     'CINEMA_DB': {
       name: 'Cinema DB',
@@ -62,6 +65,7 @@ class IncidentNode {
           [
             'CINEMA_DB_JSON',
           ],
+        index: 2,
     },
     'PATH': {
       name: 'File Path',
@@ -70,10 +74,12 @@ class IncidentNode {
             'CINEMA_DB_PATH',
             'MOSQUITO TOPOLOGICAL OUTPUT',
           ],
+        index: 3,
     },
     'POINT_ARRAY': {
       name: 'Point Array',
       mappings: [],
+        index: 4,
     },
   };
 
@@ -371,9 +377,7 @@ class IncidentNode {
       return;
     }
 
-    const outputIndex = IncidentNode.outputTypes.indexOf(node.data.activeOutputType);
-
-    outputs[outputIndex] = output;
+    outputs[Object.entries(IncidentNode.outputTypes).find(entry => entry[0] === node.data.activeOutputType)[1].index] = output;
   }
 
   /**
