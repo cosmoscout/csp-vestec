@@ -17,6 +17,7 @@
 #include <curlpp/Info.hpp>
 #include <curlpp/Infos.hpp>
 #include <curlpp/Options.hpp>
+#include <utility>
 
 #include <zipper/unzipper.h>
 
@@ -46,81 +47,108 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.downloadDataSet",
       "Downloads a given Dataset", std::function([](std::string uuid, std::string token) {
-        std::string downloadPath(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
+        IncidentNode::DownloadDataset(uuid, token);
+        //auto future = std::async(std::launch::async, &IncidentNode::DownloadDataset, uuid, token);
 
-        if (boost::filesystem::exists(downloadPath)) {
-          return;
-        }
-
-        std::future<int> downloadResult = std::async(std::launch::async, [downloadPath, uuid, token]{
-          std::ofstream out;
-
-          out.open(downloadPath, std::ofstream::out | std::ofstream::binary);
-
-          if (!out) {
-            csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
-            return 1;
-          }
-
-          std::list<std::string> header;
-          header.push_back("Authorization: Bearer " + token);
-
-          auto url = csp::vestec::Plugin::vestecServer + "/flask/data/" + uuid;
-
-          csp::vestec::logger().debug("Downloading '{}' to '{}'.", url, downloadPath);
-
-          curlpp::Easy request;
-          request.setOpt(curlpp::options::HttpHeader(header));
-          request.setOpt(curlpp::options::Url(url));
-          request.setOpt(curlpp::options::WriteStream(&out));
-          request.setOpt(curlpp::options::NoSignal(true));
-
-          request.perform();
-          request.reset();
-
-          out.close();
-
-          return 0;
-        });
-
-        downloadResult.wait();
       }));
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
       std::function([](std::string uuid, bool appendCDB = false) {
-        std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
-        std::string extract(csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid);
-
-        if (appendCDB) {
-          extract = csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid + ".cdb";
-        }
-
-        if (!boost::filesystem::exists(zip)) {
-          csp::vestec::logger().debug(
-              "File '{}' does not exist on '{}'.", uuid, csp::vestec::Plugin::vestecDownloadDir);
-          return;
-        }
-
-        if (boost::filesystem::exists(extract)) {
-          csp::vestec::logger().debug("File '{}' already extracted in '{}'.", uuid, extract);
-          return;
-        }
-
-        cs::utils::filesystem::createDirectoryRecursively(extract);
-
-        // TODO what happens if file isn't a zip
-        zipper::Unzipper unzipper(zip);
-
-        if (unzipper.entries().empty()) {
-          csp::vestec::logger().debug("Zip file '{}' seems to be empty.", uuid);
-          unzipper.close();
-          return;
-        }
-
-        csp::vestec::logger().debug(
-            "Extracting {} files to '{}'.", unzipper.entries().size(), extract);
-
-        unzipper.extract(extract);
-        unzipper.close();
+        IncidentNode::ExtractDataset(uuid, appendCDB);
+        //auto future = std::async(std::launch::async, &IncidentNode::ExtractDataset, uuid, appendCDB);
       }));
+
+  pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet", "Downloads ans extracts a given Dataset",
+      std::function([pEditor](std::string uuid, std::string token, bool appendCDB = false) {
+
+        IncidentNode::DownloadDataset(uuid, token);
+        IncidentNode::ExtractDataset(uuid, appendCDB);
+/*
+        auto downloadExtract = std::async(std::launch::async, std::function([pEditor, uuid, token, appendCDB](){
+          IncidentNode::DownloadDataset(uuid, token);
+          IncidentNode::ExtractDataset(uuid, appendCDB);
+
+          //pEditor->GetGuiItem()->callJavascript("IncidentNode.callback");
+        }));
+
+        //downloadExtract.get();*/
+      }));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void IncidentNode::DownloadDataset(const std::string& uuid, const std::string& token) {
+  std::string downloadPath(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
+
+  if (boost::filesystem::exists(downloadPath)) {
+    return;
+  }
+
+  std::ofstream out;
+
+  out.open(downloadPath, std::ofstream::out | std::ofstream::binary);
+
+  if (!out) {
+    csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
+    return;
+  }
+
+  std::list<std::string> header;
+  header.push_back("Authorization: Bearer " + token);
+
+  auto url = csp::vestec::Plugin::vestecServer + "/flask/data/" + uuid;
+
+  csp::vestec::logger().debug("Downloading '{}' to '{}'.", url, downloadPath);
+
+  curlpp::Easy request;
+  request.setOpt(curlpp::options::ConnectTimeout(1L));
+  request.setOpt(curlpp::options::HttpHeader(header));
+  request.setOpt(curlpp::options::Url(url));
+  request.setOpt(curlpp::options::WriteStream(&out));
+  request.setOpt(curlpp::options::NoSignal(true));
+
+  request.perform();
+  request.reset();
+
+  out.close();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void IncidentNode::ExtractDataset(const std::string& uuid, bool appendCDB) {
+
+  std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
+  std::string extract(csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid);
+
+  if (appendCDB) {
+    extract = csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid + ".cdb";
+  }
+
+  if (!boost::filesystem::exists(zip)) {
+    csp::vestec::logger().debug(
+        "File '{}' does not exist on '{}'.", uuid, csp::vestec::Plugin::vestecDownloadDir);
+    return;
+  }
+
+  if (boost::filesystem::exists(extract)) {
+    csp::vestec::logger().debug("File '{}' already extracted in '{}'.", uuid, extract);
+    return;
+  }
+
+  cs::utils::filesystem::createDirectoryRecursively(extract);
+
+  // TODO what happens if file isn't a zip
+  zipper::Unzipper unzipper(zip);
+
+  if (unzipper.entries().empty()) {
+    csp::vestec::logger().debug("Zip file '{}' seems to be empty.", uuid);
+    unzipper.close();
+    return;
+  }
+
+  csp::vestec::logger().debug(
+      "Extracting {} files to '{}'.", unzipper.entries().size(), extract);
+
+  unzipper.extract(extract);
+  unzipper.close();
 }

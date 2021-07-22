@@ -34,6 +34,10 @@ class IncidentNode : public VNE::Node {
    * Returns the unique identifier for the node as string
    */
   static std::string GetName();
+
+ private:
+  static void DownloadDataset(const std::string& uuid, const std::string& token);
+  static void ExtractDataset(const std::string& uuid, bool appendCDB);
 };
 
 #endif // COSMOSCOUT_VR_INCIDENTNODE_HPP

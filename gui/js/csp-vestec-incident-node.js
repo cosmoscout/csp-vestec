@@ -452,9 +452,6 @@ class IncidentNode {
     let                    output;
     const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
 
-    /** Download and Extract should probably be in one function */
-    window.callNative('incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
-
     output = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
 
     if (metadata.name.includes('.zip')) {
@@ -462,7 +459,9 @@ class IncidentNode {
       // removed
       const addCDB = metadata.type === 'MOSQUITO TOPOLOGICAL OUTPUT';
 
-      window.callNative('incidentNode.extractDataSet', metadata.uuid, addCDB);
+      window.callNative('incidentNode.downloadAndExtractDataSet', metadata.uuid, CosmoScout.vestec.getToken(), addCDB);
+    } else {
+        window.callNative('incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
     }
 
     metadata.type = metadata.type.toUpperCase();
