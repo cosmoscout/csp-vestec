@@ -58,10 +58,13 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet",
       "Downloads ans extracts a given Dataset",
       std::function([](std::string uuid, std::string token, bool appendCDB = false) {
+        IncidentNode::DownloadDataset(uuid, token);
+        IncidentNode::ExtractDataset(uuid, appendCDB);
+/*
         std::thread(std::function([uuid, token, appendCDB]() {
           IncidentNode::DownloadDataset(uuid, token);
           IncidentNode::ExtractDataset(uuid, appendCDB);
-        })).detach();
+        })).detach();*/
       }));
 }
 
