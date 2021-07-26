@@ -4,14 +4,14 @@
 //                        Copyright: (c) 2019 German Aerospace Center (DLR)                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
 #include <future>
+#include <iostream>
 #include <thread>
 
-#include "IncidentNode.hpp"
 #include "../../../../src/cs-utils/filesystem.hpp"
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
+#include "IncidentNode.hpp"
 
 #include <curlpp/Easy.hpp>
 #include <curlpp/Info.hpp>
@@ -47,31 +47,21 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.downloadDataSet",
       "Downloads a given Dataset", std::function([](std::string uuid, std::string token) {
-        IncidentNode::DownloadDataset(uuid, token);
-        //auto future = std::async(std::launch::async, &IncidentNode::DownloadDataset, uuid, token);
-
+        std::thread(&IncidentNode::DownloadDataset, uuid, token).detach();
       }));
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
       std::function([](std::string uuid, bool appendCDB = false) {
-        IncidentNode::ExtractDataset(uuid, appendCDB);
-        //auto future = std::async(std::launch::async, &IncidentNode::ExtractDataset, uuid, appendCDB);
+        std::thread(&IncidentNode::ExtractDataset, uuid, appendCDB).detach();
       }));
 
-  pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet", "Downloads ans extracts a given Dataset",
-      std::function([pEditor](std::string uuid, std::string token, bool appendCDB = false) {
-
-        IncidentNode::DownloadDataset(uuid, token);
-        IncidentNode::ExtractDataset(uuid, appendCDB);
-/*
-        auto downloadExtract = std::async(std::launch::async, std::function([pEditor, uuid, token, appendCDB](){
+  pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet",
+      "Downloads ans extracts a given Dataset",
+      std::function([](std::string uuid, std::string token, bool appendCDB = false) {
+        std::thread(std::function([uuid, token, appendCDB]() {
           IncidentNode::DownloadDataset(uuid, token);
           IncidentNode::ExtractDataset(uuid, appendCDB);
-
-          //pEditor->GetGuiItem()->callJavascript("IncidentNode.callback");
-        }));
-
-        //downloadExtract.get();*/
+        })).detach();
       }));
 }
 
@@ -146,8 +136,7 @@ void IncidentNode::ExtractDataset(const std::string& uuid, bool appendCDB) {
     return;
   }
 
-  csp::vestec::logger().debug(
-      "Extracting {} files to '{}'.", unzipper.entries().size(), extract);
+  csp::vestec::logger().debug("Extracting {} files to '{}'.", unzipper.entries().size(), extract);
 
   unzipper.extract(extract);
   unzipper.close();

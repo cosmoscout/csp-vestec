@@ -45,7 +45,7 @@ class IncidentNode {
     'INCIDENT': {
       name: 'Incident',
       mappings: [],
-        index: 0,
+      index: 0,
     },
     'TEXTURES': {
       name: 'Texture(s)',
@@ -57,7 +57,7 @@ class IncidentNode {
             'MOSQUITO MOSAIC OUTPUT',
             'MOSQUITO CONVERT OUTPUT',
           ],
-        index: 1,
+      index: 1,
     },
     'CINEMA_DB': {
       name: 'Cinema DB',
@@ -65,7 +65,7 @@ class IncidentNode {
           [
             'CINEMA_DB_JSON',
           ],
-        index: 2,
+      index: 2,
     },
     'PATH': {
       name: 'File Path',
@@ -74,12 +74,12 @@ class IncidentNode {
             'CINEMA_DB_PATH',
             'MOSQUITO TOPOLOGICAL OUTPUT',
           ],
-        index: 3,
+      index: 3,
     },
     'POINT_ARRAY': {
       name: 'Point Array',
       mappings: [],
-        index: 4,
+      index: 4,
     },
   };
 
@@ -377,7 +377,9 @@ class IncidentNode {
       return;
     }
 
-    outputs[Object.entries(IncidentNode.outputTypes).find(entry => entry[0] === node.data.activeOutputType)[1].index] = output;
+    outputs[Object.entries(IncidentNode.outputTypes)
+                .find(entry => entry[0] === node.data.activeOutputType)[1]
+                .index] = output;
   }
 
   /**
@@ -457,11 +459,13 @@ class IncidentNode {
     if (metadata.name.includes('.zip')) {
       // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should be
       // removed
-      const addCDB = metadata.type === 'MOSQUITO TOPOLOGICAL OUTPUT';
+      const addCDB = metadata.type === 'Mosquito topological output';
 
-      window.callNative('incidentNode.downloadAndExtractDataSet', metadata.uuid, CosmoScout.vestec.getToken(), addCDB);
+      window.callNative('incidentNode.downloadAndExtractDataSet', metadata.uuid,
+          CosmoScout.vestec.getToken(), addCDB);
     } else {
-        window.callNative('incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+      window.callNative(
+          'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
     }
 
     metadata.type = metadata.type.toUpperCase();
