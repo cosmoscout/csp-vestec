@@ -12,7 +12,10 @@
  *   incidentDatasetSelect: HTMLSelectElement,
  *   incidentSelectContainer: HTMLDivElement,
  *   incidentDatasetSelectContainer: HTMLDivElement,
- *   incidentDatasetSelectValue: string,
+ *   activeIncidentDataset: string,
+ *
+ *   datasets: Array,
+ *   incidentDatasets: Array,
  *
  *   incidentButtonContainer: HTMLDivElement
  *
@@ -26,6 +29,7 @@
  *   loadedDataHash: string|null,
  *   currentMetadata: Object,
  *   activeOutputType: string|null,
+ *
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -103,6 +107,10 @@ class IncidentNode {
           element.parentElement.parentElement.classList.add('hidden');
 
           element.addEventListener('change', async (event) => {
+            if (node.data.activeIncident === event.target.value) {
+              return;
+            }
+
             IncidentNode.unsetNodeValues(node);
             IncidentNode.showOutputType(node, 'none', true);
             node.data.activeIncident = event.target.value;
@@ -127,21 +135,23 @@ class IncidentNode {
             node.id}" class="combobox"></select></div></div>
 `,
         (element, control) => {
-          $(element).selectpicker();
+          const select = element.querySelector(`#incident_dataset_node_select_${node.id}`);
+          $(select).selectpicker();
 
           const container = element.parentElement;
 
-          control.putData('incidentDatasetSelect',
-              element.querySelector(`#incident_dataset_node_select_${node.id}`));
-          control.putData('incidentInfo',
-              element.querySelector(`#incident_node_${node.id}_dataset_created_date`));
+          control.putData('incidentDatasetSelect', select);
           control.putData('incidentDatasetSelectContainer', container);
           control.putData('incidentDatasetLoaded', false);
 
           container.classList.add('hidden');
 
           element.addEventListener('change', (event) => {
-            node.data.incidentDatasetSelectValue = event.target.value;
+            if (node.data.activeIncidentDataset === event.target.value) {
+              return;
+            }
+
+            node.data.activeIncidentDataset = event.target.value;
 
             const activeDataset =
                 node.data.incidentDatasets.find(dataset => dataset.uuid === event.target.value);
@@ -291,6 +301,8 @@ class IncidentNode {
     IncidentNode.addOutputs(node);
 
     node.data.firstWorkerRound = true;
+    node.data.incidents        = [];
+    node.data.incidentDatasets = [];
 
     node.data['INCIDENT_CONFIG'] = configInput;
 
@@ -353,7 +365,7 @@ class IncidentNode {
       return;
     }
 
-    const datasetId = node.data.incidentDatasetSelectValue ?? null;
+    const datasetId = node.data.activeIncidentDataset ?? null;
 
     // Clear data
     outputs.forEach((value, index) => {
@@ -430,7 +442,7 @@ class IncidentNode {
         IncidentNode
             .loadIncidentDatasets(
                 node.data.incidentDatasetSelect,
-                node.data.incidentSelect.value,
+                node.data.activeIncident,
                 node,
                 )
             .then(datasetsLoaded => {
@@ -605,7 +617,8 @@ class IncidentNode {
         }));
 
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
-      IncidentNode.showOutputType(node, metadata.type.toUpperCase(), true);
+      // IncidentNode.showOutputType(node, metadata.type.toUpperCase(), true);
+      IncidentNode.showOutputType(node, metadata.type.toUpperCase());
 
       node.data.loadedDataHash  = datasetId + incidentId;
       node.data.currentMetadata = metadata;
@@ -629,25 +642,23 @@ class IncidentNode {
       return false;
     }
 
-    const incidents = await CosmoScout.vestec.getIncidents();
+    const incidents      = await CosmoScout.vestec.getIncidents();
+    const activeIncident = element.value;
 
     if (incidents.length === 0) {
       return false;
     }
 
     // Don't clear dropdown if incident count didn't change
-    if (typeof node.data.incidents !== 'undefined') {
-      const oldLen        = node.data.incidents.length;
-      node.data.incidents = incidents;
+    const oldLen        = node.data.incidents.length;
+    node.data.incidents = incidents;
 
-      if (oldLen === incidents.length) {
-        return true;
-      }
-
-      IncidentNode.unsetNodeValues(node);
+    if (oldLen === incidents.length) {
+      return true;
     }
 
-    node.data.incidents      = incidents;
+    // IncidentNode.unsetNodeValues(node);
+
     node.data.activeIncident = incidents[0].uuid;
 
     $(element).selectpicker('destroy');
@@ -658,10 +669,16 @@ class IncidentNode {
       option.text  = incident.name;
       option.value = incident.uuid;
 
+      if (incident.uuid === activeIncident) {
+        node.data.activeIncident = activeIncident;
+        option.selected          = true;
+      }
+
       element.appendChild(option);
     });
 
     $(element).selectpicker();
+    $(element).selectpicker('val', node.data.activeIncident);
 
     IncidentNode.updateControlVisibility(node);
 
@@ -686,15 +703,24 @@ class IncidentNode {
       return false;
     }
 
-    const datasets = await CosmoScout.vestec.getIncidentDatasets(id);
+    const datasets      = await CosmoScout.vestec.getIncidentDatasets(id) ?? [];
+    const activeDataset = element.value;
+
+    if (datasets.length === 0) {
+      return false;
+    }
 
     // Don't load if incidents are the same
-    if (typeof node.data.incidentDatasets !== 'undefined' &&
-        node.data.incidentDatasets.length === datasets.length) {
+    const oldLen               = node.data.incidentDatasets.length;
+    node.data.incidentDatasets = datasets;
+
+    if (oldLen === datasets.length) {
       return true;
     }
 
-    IncidentNode.unsetNodeValues(node);
+    // IncidentNode.unsetNodeValues(node);
+
+    node.data.activeIncidentDataset = datasets[0].uuid;
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -704,13 +730,16 @@ class IncidentNode {
       option.text  = `${dataset.name} - ${dataset.date_created}`;
       option.value = dataset.uuid;
 
+      if (dataset.uuid === activeDataset) {
+        option.selected                 = true;
+        node.data.activeIncidentDataset = activeDataset;
+      }
+
       element.appendChild(option);
     });
 
     $(element).selectpicker();
-
-    node.data.incidentDatasets           = datasets;
-    node.data.incidentDatasetSelectValue = datasets[0].uuid;
+    $(element).selectpicker('val', node.data.activeIncidentDataset);
 
     if (typeof datasets[0].date_created !== 'undefined') {
       $(`#incident_node_${node.id}_dataset_created_date`)
@@ -784,12 +813,14 @@ class IncidentNode {
    * @param {Node} node
    */
   static unsetNodeValues(node) {
-    node.data.activeOutputType           = null;
-    node.data.loadedDataHash             = null;
-    node.data.currentMetadata            = null;
-    node.data.incidentDatasetSelectValue = '';
-    node.data.incidentDatasets           = [];
-    node.data.incidentDatasetLoaded      = false;
+    node.data.activeOutputType      = null;
+    node.data.loadedDataHash        = null;
+    node.data.currentMetadata       = null;
+    node.data.activeIncident        = '';
+    node.data.activeIncidentDataset = '';
+    node.data.incidents             = [];
+    node.data.incidentDatasets      = [];
+    node.data.incidentDatasetLoaded = false;
 
     $(node.data.incidentDatasetSelect).selectpicker('destroy');
     CosmoScout.gui.clearHtml(node.data.incidentDatasetSelect);
@@ -802,7 +833,7 @@ class IncidentNode {
    * @param {Node} node
    */
   static updateControlVisibility(node) {
-    if (typeof node.data.incidents === 'undefined') {
+    if (node.data.incidents.length === 0) {
       return;
     }
 
