@@ -266,6 +266,7 @@ class TextureRenderNode {
     this.lastFile = texture;
 
     window.callNative('TextureRenderNode.getNumberOfTextureLayers', node.id, texture);
+    window.callNative('TextureRenderNode.setMinMaxDataRange', node.id, texture);
     window.callNative('TextureRenderNode.readSimulationResults', node.id, texture);
   }
 
