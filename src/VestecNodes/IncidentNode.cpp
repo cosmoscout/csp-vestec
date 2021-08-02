@@ -58,6 +58,7 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet",
       "Downloads ans extracts a given Dataset",
       std::function([](std::string uuid, std::string token, bool appendCDB = false) {
+        // TODO: This is not ideal
         std::thread(std::function([uuid, token, appendCDB]() {
           if(!IncidentNode::downloadInProgress){
             std::cout << "Downloading dataset" << uuid << std::endl;
@@ -111,13 +112,19 @@ void IncidentNode::DownloadDataset(const std::string uuid, const std::string tok
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+<<<<<<< HEAD
 void IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
 
+=======
+void IncidentNode::ExtractDataset(const std::string& uuid, bool appendCDB) {
+>>>>>>> 05aceb8f1595b34c3f32cd5a841bad61b2bbc3ff
   std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
-  std::string extract(csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid);
+  std::string extract;
 
   if (appendCDB) {
     extract = csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid + ".cdb";
+  } else {
+    extract = csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid;
   }
 
   if (!boost::filesystem::exists(zip)) {

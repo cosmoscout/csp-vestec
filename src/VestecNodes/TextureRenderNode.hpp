@@ -83,6 +83,11 @@ class TextureRenderNode : public VNE::Node {
   void SetUseTime(bool use);
 
   /**
+   * Sets the min and max data ranges from a texture with multiple layers
+   */
+  void SetMinMaxDataRange(std::string filePath);
+
+  /**
    * Unloads the currently used texture
    */
   void UnloadTexture();
@@ -90,7 +95,7 @@ class TextureRenderNode : public VNE::Node {
   /**
    * Read the number of layers in the texture
    */
-  void GetNumerOfTextureLayers(std::string filePath);
+  void GetNumberOfTextureLayers(std::string filePath);
 
   /**
    * Set the layer to be visualized from the texture
@@ -98,7 +103,8 @@ class TextureRenderNode : public VNE::Node {
   void SetTextureLayerID(int layerID);
 
  private:
-  int m_iLayerID = 1;
+  int                 m_iLayerID = 1;
+  std::vector<double> minMaxRange;
   csp::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =

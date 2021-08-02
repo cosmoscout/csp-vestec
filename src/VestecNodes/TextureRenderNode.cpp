@@ -10,6 +10,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
+#include <thread>
 #include <vector>
 
 // Define PI
@@ -62,7 +63,7 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->registerCallback("TextureRenderNode.getNumberOfTextureLayers",
       "Get the number of layers in the texture",
       std::function([pEditor](double id, std::string filePath) {
-        pEditor->GetNode<TextureRenderNode>(std::lround(id))->GetNumerOfTextureLayers(filePath);
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->GetNumberOfTextureLayers(filePath);
       }));
 
   pEditor->GetGuiItem()->registerCallback("TextureRenderNode.setTextureLayer",
@@ -70,6 +71,13 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
       std::function([pEditor](double id, double layerID) {
         pEditor->GetNode<TextureRenderNode>(std::lround(id))
             ->SetTextureLayerID(std::lround(layerID));
+      }));
+
+  pEditor->GetGuiItem()->registerCallback("TextureRenderNode.setMinMaxDataRange",
+      "Sets the texture layer to be visualized",
+      std::function([pEditor](double id, std::string filePath) {
+        std::cout << "Filepath: " << filePath << "\n";
+        pEditor->GetNode<TextureRenderNode>(std::lround(id))->SetMinMaxDataRange(filePath);
       }));
 
   // Callback which reads simulation data (path+x is given from JavaScript)
@@ -131,7 +139,7 @@ void TextureRenderNode::Init(VNE::NodeEditor* pEditor) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TextureRenderNode::GetNumerOfTextureLayers(std::string filePath) {
+void TextureRenderNode::GetNumberOfTextureLayers(std::string filePath) {
   int bands = GDALReader::ReadNumberOfLayers(filePath);
   m_pItem->callJavascript("TextureRenderNode.setNumberOfTextureLayers", GetID(), bands);
 }
@@ -187,6 +195,30 @@ void TextureRenderNode::SetUseTime(bool use) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void TextureRenderNode::SetMinMaxDataRange(std::string filePath) {
+  std::thread(std::function([this, filePath]() {
+    int    bands = GDALReader::ReadNumberOfLayers(filePath);
+    double min   = INT_MAX;
+    double max   = INT_MIN;
+
+    GDALReader::GreyScaleTexture texture;
+    for (int l = 1; l < bands + 1; ++l) {
+      GDALReader::ReadGrayScaleTexture(texture, filePath, l);
+      if (texture.dataRange[0] < min) {
+        min = texture.dataRange[0];
+      }
+
+      if (texture.dataRange[1] > max) {
+        max = texture.dataRange[1];
+      }
+    }
+
+    m_pItem->callJavascript("TextureRenderNode.setRange", GetID(), min, max);
+  })).detach();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void TextureRenderNode::UnloadTexture() {
   m_pRenderer->UnloadTexture();
 }
@@ -198,8 +230,6 @@ void TextureRenderNode::ReadSimulationResult(std::string filename) {
   GDALReader::GreyScaleTexture texture;
   GDALReader::ReadGrayScaleTexture(texture, std::move(filename), m_iLayerID);
 
-  m_pItem->callJavascript(
-      "TextureRenderNode.setRange", GetID(), texture.dataRange[0], texture.dataRange[1]);
   // Add the new texture for rendering
   m_pRenderer->SetOverlayTexture(texture);
   m_pItem->callJavascript(
