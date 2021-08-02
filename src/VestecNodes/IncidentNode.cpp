@@ -59,15 +59,21 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
       "Downloads ans extracts a given Dataset",
       std::function([](std::string uuid, std::string token, bool appendCDB = false) {
         std::thread(std::function([uuid, token, appendCDB]() {
-          IncidentNode::DownloadDataset(uuid, token);
-          IncidentNode::ExtractDataset(uuid, appendCDB);
+          if(!IncidentNode::downloadInProgress){
+            std::cout << "Downloading dataset" << uuid << std::endl;
+            IncidentNode::downloadInProgress = true;
+            IncidentNode::DownloadDataset(uuid, token);
+            std::cout << "Extracting dataset" << uuid << std::endl;
+            IncidentNode::ExtractDataset(uuid, appendCDB);
+            IncidentNode::downloadInProgress = false;
+          }
         })).detach();
       }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentNode::DownloadDataset(const std::string& uuid, const std::string& token) {
+void IncidentNode::DownloadDataset(const std::string uuid, const std::string token) {
   std::string downloadPath(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
 
   if (boost::filesystem::exists(downloadPath)) {
@@ -105,7 +111,7 @@ void IncidentNode::DownloadDataset(const std::string& uuid, const std::string& t
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentNode::ExtractDataset(const std::string& uuid, bool appendCDB) {
+void IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
 
   std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
   std::string extract(csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid);
