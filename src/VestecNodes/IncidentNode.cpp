@@ -112,12 +112,8 @@ void IncidentNode::DownloadDataset(const std::string uuid, const std::string tok
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
 void IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
 
-=======
-void IncidentNode::ExtractDataset(const std::string& uuid, bool appendCDB) {
->>>>>>> 05aceb8f1595b34c3f32cd5a841bad61b2bbc3ff
   std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
   std::string extract;
 
