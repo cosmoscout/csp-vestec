@@ -12,6 +12,8 @@
  *   incidentDatasetSelect: HTMLSelectElement,
  *   incidentSelectContainer: HTMLDivElement,
  *   incidentDatasetSelectContainer: HTMLDivElement,
+ *
+ *   activeIncident: string,
  *   activeIncidentDataset: string,
  *
  *   datasets: Array,
@@ -25,6 +27,7 @@
  *   incidentDeleteButton: HTMLButtonElement,
  *   incidentTestStageButton: HTMLButtonElement,
  *   incidentStatusText: HTMLSpanElement,
+ *   incidentTestStageStatusText: HTMLSpanElement,
  *
  *   loadedDataHash: string|null,
  *   currentMetadata: Object,
@@ -132,8 +135,7 @@ class IncidentNode {
     const incidentDatasetControl = new D3NE.Control(
         `<div class="row">
 <div class="col-10" style="max-width: 200px;"><select id="incident_dataset_node_select_${
-            node.id}" class="combobox"></select></div></div>
-`,
+            node.id}" class="combobox"></select></div></div>`,
         (element, control) => {
           const select = element.querySelector(`#incident_dataset_node_select_${node.id}`);
           $(select).selectpicker();
@@ -152,15 +154,6 @@ class IncidentNode {
             }
 
             node.data.activeIncidentDataset = event.target.value;
-
-            const activeDataset =
-                node.data.incidentDatasets.find(dataset => dataset.uuid === event.target.value);
-
-            if (typeof activeDataset.date_created !== 'undefined') {
-              $(`#incident_node_${node.id}_dataset_created_date`)
-                  .tooltip({placement: 'top'})
-                  .attr('data-original-title', activeDataset.date_created);
-            }
 
             // Calls the worker and updates the outputs
             CosmoScout.vestecNE.updateEditor();
@@ -253,6 +246,10 @@ class IncidentNode {
             if (testStageResponse.status !== 200) {
               CosmoScout.notifications.print('Test failed', 'Could not run Test Stage', 'error');
             } else {
+              clearInterval(node.data.simulationUpdateInterval);
+              node.data.simulationUpdateInterval =
+                  setInterval(this._checkSimulationStatus, 5000, node)
+
               CosmoScout.notifications.print(
                   'Test started',
                   'Successfully started test stage.',
@@ -269,6 +266,14 @@ class IncidentNode {
               control.putData('incidentStatusText', element);
               element.parentElement.classList.add('hidden');
             });
+
+    // Test Stage Status text
+    const incidentTestStageStatusControl = new D3NE.Control(
+        `<span id="incident_node_${node.id}_test_stage_status" class="text"></span>`,
+        (element, control) => {
+          control.putData('incidentTestStageStatusText', element);
+          element.parentElement.classList.add('hidden');
+        });
 
     // Element is shown if the user is not logged in
     const loginMessageControl = new D3NE.Control(
@@ -296,6 +301,7 @@ class IncidentNode {
     node.addControl(incidentStatusControl);
     node.addControl(incidentDatasetControl);
     node.addControl(incidentButtonControl);
+    node.addControl(incidentTestStageStatusControl);
 
     node.addInput(configInput);
     IncidentNode.addOutputs(node);
@@ -315,7 +321,8 @@ class IncidentNode {
       }
     });
 
-    node.data.updateIntervalId = setInterval(this._updateNode, 5000, node);
+    node.data.updateIntervalId         = setInterval(this._updateNode, 5000, node);
+    node.data.simulationUpdateInterval = null;
 
     return node;
   }
@@ -453,6 +460,66 @@ class IncidentNode {
   }
 
   /**
+   * This runs on a 5 second interval
+   * Checks for new Incidents and incident datasets
+   *
+   * @param {Node} node
+   * @private
+   */
+  async _checkSimulationStatus(node) {
+    if (!CosmoScout.vestec.isAuthorized()) {
+      return;
+    }
+
+    // Only check simulations from the last 15 minutes
+    const includeMinutes = 60;
+    const includeDate    = new Date(Date.now() - (1000 * 60 * includeMinutes));
+
+    const activeIncident = await CosmoScout.vestec.getIncident(node.data.activeIncident);
+
+    // Because dates are fun...
+    const parseDate =
+        (date) => {
+          let datePart, timePart;
+
+          [datePart, timePart] = date.split(', ');
+          const dateParts      = datePart.split('/');
+
+          // Creates a ISO8601 Date Time String
+          const parsedDate =
+              new Date(Date.parse(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${timePart}`));
+
+          // GMT+2
+          parsedDate.setHours(parsedDate.getHours() + 2);
+
+          return parsedDate;
+        }
+
+    const currentSimulations = activeIncident.simulations
+                                   .filter(simulation => {
+                                     return (parseDate(simulation.created) - includeDate) >= 0;
+                                   })
+                                   .sort((a, b) => {
+                                     // So the latest timestamp is first
+                                     return parseDate(b.created) - parseDate(a.created);
+                                   });
+
+    if (currentSimulations.length > 0) {
+      const statusText = `Test Stage: ${currentSimulations[0].status}`;
+      node.data.incidentTestStageStatusText.parentElement.classList.remove('hidden');
+      node.data.incidentTestStageStatusText.innerText = statusText;
+
+      if (currentSimulations[0].status !== 'COMPLETED') {
+        console.log(statusText);
+      }
+    } else {
+      node.data.incidentTestStageStatusText.parentElement.classList.add('hidden');
+      node.data.incidentTestStageStatusText.innerText = '';
+      clearInterval(node.data.simulationUpdateInterval);
+    }
+  }
+
+  /**
    * Creates the output object based on the active dataset type
    *
    * @param node
@@ -577,6 +644,7 @@ class IncidentNode {
 
     node.data.incidentButtonContainer.classList.add('hidden');
     node.data.incidentStatusText.parentElement.classList.add('hidden');
+    node.data.incidentTestStageStatusText.parentElement.classList.add('hidden');
 
     node.data.info.classList.remove('hidden');
 
@@ -875,6 +943,7 @@ class IncidentNode {
 
       node.data.incidentStartButton.classList.remove('hidden');
       node.data.incidentDeleteButton.classList.remove('hidden');
+      node.data.incidentTestStageButton.classList.add('hidden');
       break;
 
     case 'COMPLETED':

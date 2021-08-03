@@ -357,6 +357,23 @@
     }
 
     /**
+     * Retrieves a specific incident
+     */
+    async getIncident(uuid) {
+      const response = await this._vestecApi.getIncident(uuid).catch(this._defaultCatch.bind(this));
+
+      const data = await response.json();
+
+      if (response.status !== 200) {
+        console.error('Error retrieving incident.');
+
+        return [];
+      }
+
+      return data;
+    }
+
+    /**
      * Retrieves a summary list of completed incidents
      */
     async getIncidentDatasets(incidentId) {
