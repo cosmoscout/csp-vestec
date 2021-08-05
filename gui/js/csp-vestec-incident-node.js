@@ -14,7 +14,7 @@
  *   incidentDatasetSelectContainer: HTMLDivElement,
  *
  *   activeIncident: string,
- *   activeIncidentDataset: string,
+ *   activeIncidentDatasets: string[],
  *
  *   datasets: Array,
  *   incidentDatasets: Array,
@@ -29,9 +29,9 @@
  *   incidentStatusText: HTMLSpanElement,
  *   incidentTestStageStatusText: HTMLSpanElement,
  *
- *   loadedDataHash: string|null,
- *   currentMetadata: Object,
- *   activeOutputType: string|null,
+ *   loadedDataHash: string[]|null,
+ *   currentMetadata: Object[],
+ *   activeOutputTypes: string[]|null,
  *
  * }} data
  * @property {Function} addOutput
@@ -51,11 +51,13 @@ class IncidentNode {
   static outputTypes = {
     'INCIDENT': {
       name: 'Incident',
+      root: 'INCIDENT',
       mappings: [],
       index: 0,
     },
     'TEXTURES': {
       name: 'Texture(s)',
+      root: 'TEXTURES',
       mappings:
           [
             'TEXTURE',
@@ -68,6 +70,7 @@ class IncidentNode {
     },
     'CINEMA_DB': {
       name: 'Cinema DB',
+      root: 'CINEMA_DB',
       mappings:
           [
             'CINEMA_DB_JSON',
@@ -76,6 +79,7 @@ class IncidentNode {
     },
     'PATH': {
       name: 'File Path',
+      root: 'PATH',
       mappings:
           [
             'CINEMA_DB_PATH',
@@ -85,6 +89,7 @@ class IncidentNode {
     },
     'POINT_ARRAY': {
       name: 'Point Array',
+      root: 'POINT_ARRAY',
       mappings: [],
       index: 4,
     },
@@ -135,7 +140,7 @@ class IncidentNode {
     const incidentDatasetControl = new D3NE.Control(
         `<div class="row">
 <div class="col-10" style="max-width: 200px;"><select id="incident_dataset_node_select_${
-            node.id}" class="combobox"></select></div></div>`,
+            node.id}" class="combobox" multiple></select></div></div>`,
         (element, control) => {
           const select = element.querySelector(`#incident_dataset_node_select_${node.id}`);
           $(select).selectpicker();
@@ -149,11 +154,16 @@ class IncidentNode {
           container.classList.add('hidden');
 
           element.addEventListener('change', (event) => {
-            if (node.data.activeIncidentDataset === event.target.value) {
+            const selectedEntries =
+                Array.from(event.target.selectedOptions).map(option => option.value);
+
+            // oof.
+            if (JSON.stringify(node.data.activeIncidentDatasets) ===
+                JSON.stringify(selectedEntries)) {
               return;
             }
 
-            node.data.activeIncidentDataset = event.target.value;
+            node.data.activeIncidentDatasets = selectedEntries;
 
             // Calls the worker and updates the outputs
             CosmoScout.vestecNE.updateEditor();
@@ -372,33 +382,36 @@ class IncidentNode {
       return;
     }
 
-    const datasetId = node.data.activeIncidentDataset ?? null;
+    const datasetIds = node.data.activeIncidentDatasets ?? null;
 
     // Clear data
-    outputs.forEach((value, index) => {
+    outputs.forEach((_, index) => {
       delete outputs[index];
     });
 
     // 0 = Incident output
     outputs[0] = node.data.activeIncident;
 
-    if (incidentId.length === 0 || ( datasetId.length ?? '' ) === 0) {
+    if (incidentId.length === 0 || ( datasetIds.length ?? '' ) === 0) {
       return;
     }
 
     let output;
 
     try {
-      output = await this._makeOutputForMetadata(node, datasetId, incidentId);
+      output = await this._makeOutputForMetadata(node, datasetIds, incidentId);
     } catch (e) {
-      console.error(`Error loading metadata for dataset '${datasetId}'. Incident: '${
-          incidentId}. Message: ${e}`);
+      console.error(`Error loading metadata for dataset '${
+          JSON.stringify(datasetIds)}'. Incident: '${incidentId}. Message: ${e}`);
       return;
     }
 
-    outputs[Object.entries(IncidentNode.outputTypes)
-                .find(entry => entry[0] === node.data.activeOutputType)[1]
-                .index] = output;
+    node.data.activeOutputTypes.forEach(type => {
+      const definition = IncidentNode.outputTypes[type] ?? {index: -1};
+
+      // Write the content to the correct index
+      outputs[definition.index] = output[definition.index] ?? null;
+    })
   }
 
   /**
@@ -523,57 +536,76 @@ class IncidentNode {
    * Creates the output object based on the active dataset type
    *
    * @param node
-   * @param datasetId
+   * @param datasetIds {String[]}
    * @param incidentId
-   * @returns {Promise<{timeStep: *, caseName: *, uuid}|string|undefined>}
+   * @returns {Promise<[{timeStep: *, caseName: *, uuid}]|string|undefined>}
    * @throws {}
    * @private
    */
-  async _makeOutputForMetadata(node, datasetId, incidentId) {
-    let                    output;
-    const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, datasetId, incidentId);
+  async _makeOutputForMetadata(node, datasetIds, incidentId) {
+    let output          = [];
+    let datasetMetadata = {};
+    let activeHashes    = [];
 
-    output = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
+    for (const id of datasetIds) {
+      const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, id, incidentId);
+      let                    datasetOutput;
 
-    if (metadata.name.includes('.zip')) {
-      // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should be
-      // removed
-      const addCDB = metadata.type === 'Mosquito topological output';
+      activeHashes.push(metadata.hash);
+      datasetMetadata[metadata.hash] = metadata.metadata;
 
-      window.callNative('incidentNode.downloadAndExtractDataSet', metadata.uuid,
-          CosmoScout.vestec.getToken(), addCDB);
-    } else {
-      window.callNative(
-          'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+      datasetOutput = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
+
+      if (metadata.metadata.name.includes('.zip')) {
+        // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should be
+        // removed
+        const addCDB = metadata.metadata.type === 'Mosquito topological output';
+
+        window.callNative('incidentNode.downloadAndExtractDataSet', metadata.metadata.uuid,
+            CosmoScout.vestec.getToken(), addCDB);
+      } else {
+        window.callNative(
+            'incidentNode.downloadDataSet', metadata.metadata.uuid, CosmoScout.vestec.getToken());
+      }
+
+      metadata.metadata.type = metadata.metadata.type.toUpperCase();
+
+      switch (metadata.metadata.type) {
+      case 'CINEMA_DB_JSON': {
+        const [caseName, timeStep] = metadata.metadata.name.replace('.zip', '').split('_');
+
+        datasetOutput = {
+          caseName,
+          timeStep,
+          uuid: id,
+        };
+        break;
+      }
+
+      case 'PATH':
+      case 'CINEMA_DB':
+        datasetOutput = `${CosmoScout.vestec.downloadDir}/extracted/${
+            node.data.currentMetadata.uuid}/${metadata.metadata.name.replace('.zip', '')}`;
+        break;
+
+      case 'MOSQUITO TOPOLOGICAL OUTPUT':
+        datasetOutput =
+            `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}.cdb`;
+        break;
+
+      default:
+        break;
+      }
+
+      const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.metadata.type);
+
+      output[outputDefinition.index] = datasetOutput;
     }
 
-    metadata.type = metadata.type.toUpperCase();
+    node.data.currentMetadata = datasetMetadata;
+    node.data.loadedDataHash  = activeHashes;
 
-    switch (metadata.type) {
-    case 'CINEMA_DB_JSON': {
-      const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
-
-      output = {
-        caseName,
-        timeStep,
-        uuid: datasetId,
-      };
-      break;
-    }
-
-    case 'PATH':
-    case 'CINEMA_DB':
-      output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}/${
-          metadata.name.replace('.zip', '')}`;
-      break;
-
-    case 'MOSQUITO TOPOLOGICAL OUTPUT':
-      output = `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}.cdb`;
-      break;
-
-    default:
-      break;
-    }
+    IncidentNode.showOutputType(node, datasetMetadata.map(metadata => metadata.type));
 
     return output;
   }
@@ -667,7 +699,7 @@ class IncidentNode {
    * @param {string} datasetId
    * @param {string} incidentId
    * @see {CosmoScout.vestec.getIncidentDatasetMetadata}
-   * @return {Promise<T|{type: null|string}|undefined|null>}
+   * @return {Promise<T|{metadata: {type: null|string}, hash: string}|undefined|null>}
    */
   static async loadIncidentDatasetMetadata(node, datasetId, incidentId) {
     if (incidentId === null || datasetId === null || incidentId.length === 0 ||
@@ -675,8 +707,9 @@ class IncidentNode {
       throw Error('Required ids missing');
     }
 
-    if (node.data.loadedDataHash !== null && node.data.loadedDataHash === datasetId + incidentId) {
-      return node.data.currentMetadata;
+    if (node.data.loadedDataHash !== null &&
+        node.data.loadedDataHash.includes(datasetId + incidentId)) {
+      return node.data.currentMetadata[datasetId + incidentId];
     }
 
     const metadata =
@@ -685,13 +718,10 @@ class IncidentNode {
         }));
 
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
-      // IncidentNode.showOutputType(node, metadata.type.toUpperCase(), true);
-      IncidentNode.showOutputType(node, metadata.type.toUpperCase());
-
-      node.data.loadedDataHash  = datasetId + incidentId;
-      node.data.currentMetadata = metadata;
-
-      return metadata;
+      return {
+        metadata,
+        hash: datasetId + incidentId,
+      };
     }
 
     throw Error('Metadata null');
@@ -772,7 +802,7 @@ class IncidentNode {
     }
 
     const datasets      = await CosmoScout.vestec.getIncidentDatasets(id) ?? [];
-    const activeDataset = element.value;
+    const activeDataset = Array.from(element.selectedOptions).map(option => option.value);
 
     if (datasets.length === 0) {
       return false;
@@ -788,7 +818,7 @@ class IncidentNode {
 
     // IncidentNode.unsetNodeValues(node);
 
-    node.data.activeIncidentDataset = datasets[0].uuid;
+    node.data.activeIncidentDatasets = [datasets[0].uuid];
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -798,22 +828,16 @@ class IncidentNode {
       option.text  = `${dataset.name} - ${dataset.date_created}`;
       option.value = dataset.uuid;
 
-      if (dataset.uuid === activeDataset) {
-        option.selected                 = true;
-        node.data.activeIncidentDataset = activeDataset;
+      if (activeDataset.includes(dataset.uuid)) {
+        option.selected                  = true;
+        node.data.activeIncidentDatasets = activeDataset;
       }
 
       element.appendChild(option);
     });
 
     $(element).selectpicker();
-    $(element).selectpicker('val', node.data.activeIncidentDataset);
-
-    if (typeof datasets[0].date_created !== 'undefined') {
-      $(`#incident_node_${node.id}_dataset_created_date`)
-          .tooltip({placement: 'top'})
-          .attr('data-original-title', datasets[0].date_created);
-    }
+    $(element).selectpicker('val', node.data.activeIncidentDatasets);
 
     return true;
   }
@@ -825,21 +849,29 @@ class IncidentNode {
    * @see {outputTypes}
    *
    * @param {Node} node - The node to operate on
-   * @param {string} outputType - Type of output, either outputType key or value from mappings
+   * @param {string|string[]|null} outputTypes - Type of output, either outputTypes key or value
+   *     from mappings
    * @param {boolean} removeConnections - True to remove all active connections from/to this node
    */
-  static showOutputType(node, outputType, removeConnections = true) {
-    if (outputType !== 'none') {
-      outputType = Object.entries(IncidentNode.outputTypes).find(outputDefinition => {
-              return outputType === outputDefinition[0] || (outputDefinition[1].mappings ?? []).includes(outputType);
-      });
+  static showOutputType(node, outputTypes, removeConnections = true) {
+    if (Array.isArray(outputTypes)) {
+      outputTypes = outputTypes
+                        .map(type => {
+                          const definition = IncidentNode.getOutputDefinitionForType(type);
 
-      if (typeof outputType !== 'undefined') {
-        outputType = outputType[0];
+                          return definition?.root ?? null;
+                        })
+                        .filter(definition => definition !== null);
+
+      if (outputTypes.length === 0) {
+        outputTypes = null;
       }
     }
 
-    if (typeof outputType === 'undefined' || node.data.activeOutputType === outputType) {
+    // If no mapping was found, OR currently active outputs are the same, then skip
+    if (outputTypes === null ||
+        (outputTypes.every(type => node.data.activeOutputTypes.includes(type)) &&
+            outputTypes.length === node.data.activeOutputTypes.length)) {
       return;
     }
 
@@ -847,32 +879,50 @@ class IncidentNode {
     // Idx 0 = Key, Idx 1 = object containing name, mappings
     let filter;
 
-    if (outputType === 'none' || typeof outputType === 'undefined') {
+    if (outputTypes === 'none') {
       filter = () => true;
     } else {
-      filter = (type) => (type !== outputType && typeof node.data[outputType] !== 'undefined');
+      // We are dealing with an array
+      filter = (type) => !outputTypes.includes(type);
     }
 
     Object.keys(IncidentNode.outputTypes)
         .filter(filter)
-        .filter(outputDefinition => outputDefinition !== 'INCIDENT')
-        .forEach((outputDefinition) => {
-          node.data[outputDefinition].el.parentElement.classList.add('hidden');
+        .filter(outputType => outputType !== 'INCIDENT')
+        .forEach(outputType => {
+          node.data[outputType].el.parentElement.classList.add('hidden');
         });
 
     if (removeConnections) {
       CosmoScout.vestecNE.removeConnections(node);
     }
 
-    if (typeof node.data[outputType] !== 'undefined') {
-      node.data[outputType].el.parentElement.classList.remove('hidden');
-
-      if (outputType !== 'INCIDENT') {
-        node.data.activeOutputType = outputType;
+    if (Array.isArray(outputTypes)) {
+      for (const outputType of outputTypes) {
+        node.data[outputType].el.parentElement.classList.remove('hidden');
       }
-    } else if (outputType !== 'none') {
-      console.error(`Output type ${outputType} not recognized.`);
+
+      node.data.activeOutputTypes = outputTypes.filter(type => type !== 'INCIDENT');
+    } else if (outputTypes !== 'none') {
+      console.error(`Output type ${outputTypes} not recognized.`);
     }
+  }
+
+  /**
+   * Returns the correct output index for a specific metadata type
+   * @param {String} type Metadata type to check
+   * @returns {{name: String, root: String, mappings: Array, index: Number}|null}
+   */
+  static getOutputDefinitionForType(type) {
+    const outputType = Object.entries(IncidentNode.outputTypes).find(outputDefinition => {
+            return type === outputDefinition[0] || (outputDefinition[1].mappings ?? []).includes(type);
+    });
+
+    if (typeof outputType !== 'undefined') {
+      return outputType[1];
+    }
+
+    return null;
   }
 
   /**
@@ -881,14 +931,14 @@ class IncidentNode {
    * @param {Node} node
    */
   static unsetNodeValues(node) {
-    node.data.activeOutputType      = null;
-    node.data.loadedDataHash        = null;
-    node.data.currentMetadata       = null;
-    node.data.activeIncident        = '';
-    node.data.activeIncidentDataset = '';
-    node.data.incidents             = [];
-    node.data.incidentDatasets      = [];
-    node.data.incidentDatasetLoaded = false;
+    node.data.activeOutputTypes      = null;
+    node.data.loadedDataHash         = null;
+    node.data.currentMetadata        = null;
+    node.data.activeIncident         = '';
+    node.data.activeIncidentDatasets = [];
+    node.data.incidents              = [];
+    node.data.incidentDatasets       = [];
+    node.data.incidentDatasetLoaded  = false;
 
     $(node.data.incidentDatasetSelect).selectpicker('destroy');
     CosmoScout.gui.clearHtml(node.data.incidentDatasetSelect);
