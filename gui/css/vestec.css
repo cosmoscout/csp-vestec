@@ -381,6 +381,12 @@
     color: var(--cs-color-text);
 }
 
+.node-editor .dropdown li.selected a::before {
+    content: '\2713';
+    padding-right: 0.25rem;
+    font-size: 90%;
+}
+
 .node-editor .node .btn.glass {
     line-height: 1;
 }

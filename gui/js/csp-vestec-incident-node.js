@@ -29,10 +29,11 @@
  *   incidentStatusText: HTMLSpanElement,
  *   incidentTestStageStatusText: HTMLSpanElement,
  *
- *   loadedDataHash: string[]|null,
+ *   loadedDataHashes: string[],
  *   currentMetadata: Object[],
- *   activeOutputTypes: string[]|null,
+ *   activeOutputTypes: string[],
  *
+ *   testStageConfig: Object,
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -46,6 +47,7 @@ class IncidentNode {
    * Key = Port type registered on the node editor
    * Value = name: Displayed name in the node
    *         mappings: Vestec dataset 'type' parameter from dataset metadata
+   *         root: Object key for easier access
    *         index: Output Index
    */
   static outputTypes = {
@@ -317,8 +319,8 @@ class IncidentNode {
     IncidentNode.addOutputs(node);
 
     node.data.firstWorkerRound = true;
-    node.data.incidents        = [];
-    node.data.incidentDatasets = [];
+    // Initialize variables
+    IncidentNode.unsetNodeValues(node);
 
     node.data['INCIDENT_CONFIG'] = configInput;
 
@@ -350,7 +352,7 @@ class IncidentNode {
       node.data.firstWorkerRound = false;
     }
 
-    // Hide all controls if the user logs out
+    // Hide all controls if the user isn't authorized
     if (!CosmoScout.vestec.isAuthorized()) {
       IncidentNode.handleUnauthorized(node);
 
@@ -373,18 +375,18 @@ class IncidentNode {
     }
 
     if (typeof inputs[0] !== 'undefined') {
-      node.data.inputConfig = inputs[0];
+      node.data.testStageConfig = inputs[0];
     } else {
-      delete node.data.inputConfig;
+      delete node.data.testStageConfig;
     }
 
     if (!node.data.incidentsLoaded || !node.data.incidentDatasetLoaded) {
       return;
     }
 
-    const datasetIds = node.data.activeIncidentDatasets ?? null;
+    const datasetIds = node.data.activeIncidentDatasets ?? [];
 
-    // Clear data
+    // Clear output data
     outputs.forEach((_, index) => {
       delete outputs[index];
     });
@@ -392,14 +394,29 @@ class IncidentNode {
     // 0 = Incident output
     outputs[0] = node.data.activeIncident;
 
-    if (incidentId.length === 0 || ( datasetIds.length ?? '' ) === 0) {
+    if (incidentId.length === 0) {
       return;
     }
 
     let output;
 
     try {
-      output = await this._makeOutputForMetadata(node, datasetIds, incidentId);
+      output = await this._makeOutputData(node, datasetIds, incidentId);
+
+      const activeTypes = Object.values(node.data.currentMetadata).map(metadata => metadata.type);
+
+      IncidentNode.showOutputType(node, activeTypes);
+
+      if (activeTypes.length !== Array.from(new Set(activeTypes)).length) {
+        CosmoScout.notifications.print(
+            'Dataset Selection',
+            'Contains non unique types',
+            'warning',
+        );
+
+        console.warn(
+            'The selected incident datasets contain more than one file of the same type. Only one dataset of each type can be output at the same time, e.g. Cinema DB and Texture, but not Texture and Texture.');
+      }
     } catch (e) {
       console.error(`Error loading metadata for dataset '${
           JSON.stringify(datasetIds)}'. Incident: '${incidentId}. Message: ${e}`);
@@ -473,8 +490,8 @@ class IncidentNode {
   }
 
   /**
-   * This runs on a 5 second interval
-   * Checks for new Incidents and incident datasets
+   * This runs on a 5 second interval after the "Start Test Stage" button was clicked
+   * Checks the status of the latest simulation process
    *
    * @param {Node} node
    * @private
@@ -533,7 +550,8 @@ class IncidentNode {
   }
 
   /**
-   * Creates the output object based on the active dataset type
+   * Creates the output objects based on the active datasets
+   * Also downloads / extracts datasets through CosmoScout
    *
    * @param node
    * @param datasetIds {String[]}
@@ -542,37 +560,35 @@ class IncidentNode {
    * @throws {}
    * @private
    */
-  async _makeOutputForMetadata(node, datasetIds, incidentId) {
+  async _makeOutputData(node, datasetIds, incidentId) {
     let output          = [];
     let datasetMetadata = {};
     let activeHashes    = [];
 
     for (const id of datasetIds) {
-      const metadata = await IncidentNode.loadIncidentDatasetMetadata(node, id, incidentId);
-      let                    datasetOutput;
+      const {metadata, hash} = await IncidentNode.loadIncidentDatasetMetadata(node, id, incidentId);
+      let                            datasetOutput;
 
-      activeHashes.push(metadata.hash);
-      datasetMetadata[metadata.hash] = metadata.metadata;
+      activeHashes.push(metadata);
+      datasetMetadata[hash] = metadata;
 
-      datasetOutput = `${CosmoScout.vestec.downloadDir}/${node.data.currentMetadata.uuid}`;
+      datasetOutput = `${CosmoScout.vestec.downloadDir}/${id}`;
 
-      if (metadata.metadata.name.includes('.zip')) {
+      if (metadata.name.includes('.zip')) {
         // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should be
         // removed
-        const addCDB = metadata.metadata.type === 'Mosquito topological output';
+        const addCDB = metadata.type === 'MOSQUITO TOPOLOGICAL OUTPUT';
 
-        window.callNative('incidentNode.downloadAndExtractDataSet', metadata.metadata.uuid,
+        window.callNative('incidentNode.downloadAndExtractDataSet', metadata.uuid,
             CosmoScout.vestec.getToken(), addCDB);
       } else {
         window.callNative(
-            'incidentNode.downloadDataSet', metadata.metadata.uuid, CosmoScout.vestec.getToken());
+            'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
       }
 
-      metadata.metadata.type = metadata.metadata.type.toUpperCase();
-
-      switch (metadata.metadata.type) {
+      switch (metadata.type) {
       case 'CINEMA_DB_JSON': {
-        const [caseName, timeStep] = metadata.metadata.name.replace('.zip', '').split('_');
+        const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
 
         datasetOutput = {
           caseName,
@@ -584,28 +600,27 @@ class IncidentNode {
 
       case 'PATH':
       case 'CINEMA_DB':
-        datasetOutput = `${CosmoScout.vestec.downloadDir}/extracted/${
-            node.data.currentMetadata.uuid}/${metadata.metadata.name.replace('.zip', '')}`;
+        datasetOutput =
+            `${CosmoScout.vestec.downloadDir}/extracted/${id}/${metadata.name.replace('.zip', '')}`;
         break;
 
       case 'MOSQUITO TOPOLOGICAL OUTPUT':
-        datasetOutput =
-            `${CosmoScout.vestec.downloadDir}/extracted/${node.data.currentMetadata.uuid}.cdb`;
+        datasetOutput = `${CosmoScout.vestec.downloadDir}/extracted/${id}.cdb`;
         break;
 
       default:
         break;
       }
 
-      const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.metadata.type);
+      // Use the index specified on IncidentNode.outputTypes
+      // Used later to determine on which port to write the data to
+      const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.type);
 
       output[outputDefinition.index] = datasetOutput;
     }
 
-    node.data.currentMetadata = datasetMetadata;
-    node.data.loadedDataHash  = activeHashes;
-
-    IncidentNode.showOutputType(node, datasetMetadata.map(metadata => metadata.type));
+    node.data.currentMetadata  = datasetMetadata;
+    node.data.loadedDataHashes = activeHashes;
 
     return output;
   }
@@ -614,7 +629,7 @@ class IncidentNode {
    * Adds all defined outputTypes as outputs to the argument node
    * Output types need to be defined on the vestecNE instance
    *
-   * @see {outputTypes}
+   * @see {IncidentNode.outputTypes}
    * @see {CosmoScout.vestecNE.sockets}
    * @param {Node} node - The node to add outputs to
    */
@@ -644,16 +659,16 @@ class IncidentNode {
    * @param {string} to Target socket type
    */
   static addTypeMapping(from, to) {
-    if (typeof IncidentNode.outputTypes[to] === 'undefined') {
+    if (typeof IncidentNode.outputTypes[to.toUpperCase()] === 'undefined') {
       console.error(`Output type ${to} does not exist on CosmoScout.vestecNE.sockets.`);
       return;
     }
 
-    IncidentNode.outputTypes[from.toUpperCase()].mappings.push(to.toUpperCase());
+    IncidentNode.outputTypes[to.toUpperCase()].mappings.push(from.toUpperCase());
   }
 
   /**
-   * Shows all relevant controls if user is authorized
+   * Shows all relevant controls if user is authorized / logged in
    *
    * @param {Node} node
    */
@@ -666,7 +681,7 @@ class IncidentNode {
   }
 
   /**
-   * Hides all controls if user is unauthorized
+   * Hides all controls if user is unauthorized / not logged in
    *
    * @param {Node} node
    */
@@ -699,7 +714,8 @@ class IncidentNode {
    * @param {string} datasetId
    * @param {string} incidentId
    * @see {CosmoScout.vestec.getIncidentDatasetMetadata}
-   * @return {Promise<T|{metadata: {type: null|string}, hash: string}|undefined|null>}
+   * @return {Promise<T|{metadata: {type: null|string, name: string|null, uuid: string|null}, hash:
+   *     string}|undefined|null>}
    */
   static async loadIncidentDatasetMetadata(node, datasetId, incidentId) {
     if (incidentId === null || datasetId === null || incidentId.length === 0 ||
@@ -707,17 +723,25 @@ class IncidentNode {
       throw Error('Required ids missing');
     }
 
-    if (node.data.loadedDataHash !== null &&
-        node.data.loadedDataHash.includes(datasetId + incidentId)) {
-      return node.data.currentMetadata[datasetId + incidentId];
+    // Metadata already loaded
+    if (node.data.loadedDataHashes.includes(datasetId + incidentId)) {
+      return {
+        metadata: node.data.currentMetadata[datasetId + incidentId],
+        hash: datasetId + incidentId,
+      };
     }
 
     const metadata =
         await CosmoScout.vestec.getIncidentDatasetMetadata(datasetId, incidentId).catch(() => ({
           type: null,
+          name: null,
+          uuid: null,
         }));
 
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
+      // Normalize the type
+      metadata.type = metadata.type.toUpperCase();
+
       return {
         metadata,
         hash: datasetId + incidentId,
@@ -755,8 +779,6 @@ class IncidentNode {
       return true;
     }
 
-    // IncidentNode.unsetNodeValues(node);
-
     node.data.activeIncident = incidents[0].uuid;
 
     $(element).selectpicker('destroy');
@@ -784,7 +806,7 @@ class IncidentNode {
   }
 
   /**
-   * Load vestec incidents into the select control
+   * Load vestec incident datasets into the select control
    *
    * @param {HTMLSelectElement} element
    * @param {string} id - Unique incident UUID
@@ -816,8 +838,6 @@ class IncidentNode {
       return true;
     }
 
-    // IncidentNode.unsetNodeValues(node);
-
     node.data.activeIncidentDatasets = [datasets[0].uuid];
 
     $(element).selectpicker('destroy');
@@ -843,7 +863,7 @@ class IncidentNode {
   }
 
   /**
-   * Hides all outputs but the relevant one on the given node
+   * Hides all outputs but the relevant one(s) on the given node
    * If removeConnections is set to true all connections from this node to others are removed
    *
    * @see {outputTypes}
@@ -854,23 +874,23 @@ class IncidentNode {
    * @param {boolean} removeConnections - True to remove all active connections from/to this node
    */
   static showOutputType(node, outputTypes, removeConnections = true) {
+    // If arg is an array, get the correct mapping from IncidentNode.outputTypes
     if (Array.isArray(outputTypes)) {
       outputTypes = outputTypes
-                        .map(type => {
-                          const definition = IncidentNode.getOutputDefinitionForType(type);
-
-                          return definition?.root ?? null;
-                        })
+          .map(type => IncidentNode.getOutputDefinitionForType(type))
+          .map(definition => definition?.root ?? null)
                         .filter(definition => definition !== null);
 
+      // Fallback to non if nothing was selected
       if (outputTypes.length === 0) {
-        outputTypes = null;
+        outputTypes = 'none';
       }
     }
 
     // If no mapping was found, OR currently active outputs are the same, then skip
-    if (outputTypes === null ||
-        (outputTypes.every(type => node.data.activeOutputTypes.includes(type)) &&
+    if (typeof outputTypes === 'undefined' ||
+        (Array.isArray(outputTypes) &&
+            outputTypes.every(type => node.data.activeOutputTypes.includes(type)) &&
             outputTypes.length === node.data.activeOutputTypes.length)) {
       return;
     }
@@ -886,6 +906,8 @@ class IncidentNode {
       filter = (type) => !outputTypes.includes(type);
     }
 
+    // Hides all outputs, walks through all outputs, applies the previous filter and skips the
+    // INCIDENT output
     Object.keys(IncidentNode.outputTypes)
         .filter(filter)
         .filter(outputType => outputType !== 'INCIDENT')
@@ -898,9 +920,10 @@ class IncidentNode {
     }
 
     if (Array.isArray(outputTypes)) {
-      for (const outputType of outputTypes) {
+      // Sanity check, remove hidden classes for active outputs
+      outputTypes.forEach(outputType => {
         node.data[outputType].el.parentElement.classList.remove('hidden');
-      }
+      });
 
       node.data.activeOutputTypes = outputTypes.filter(type => type !== 'INCIDENT');
     } else if (outputTypes !== 'none') {
@@ -909,7 +932,8 @@ class IncidentNode {
   }
 
   /**
-   * Returns the correct output index for a specific metadata type
+   * Returns the correct output definition for a specific metadata type
+   *
    * @param {String} type Metadata type to check
    * @returns {{name: String, root: String, mappings: Array, index: Number}|null}
    */
@@ -931,18 +955,20 @@ class IncidentNode {
    * @param {Node} node
    */
   static unsetNodeValues(node) {
-    node.data.activeOutputTypes      = null;
-    node.data.loadedDataHash         = null;
-    node.data.currentMetadata        = null;
+    node.data.activeOutputTypes      = [];
+    node.data.loadedDataHashes       = [];
+    node.data.currentMetadata        = [];
     node.data.activeIncident         = '';
     node.data.activeIncidentDatasets = [];
     node.data.incidents              = [];
     node.data.incidentDatasets       = [];
     node.data.incidentDatasetLoaded  = false;
 
-    $(node.data.incidentDatasetSelect).selectpicker('destroy');
-    CosmoScout.gui.clearHtml(node.data.incidentDatasetSelect);
-    $(node.data.incidentDatasetSelect).selectpicker();
+    if (typeof node.data.incidentDatasetSelect === 'object') {
+      $(node.data.incidentDatasetSelect).selectpicker('destroy');
+      CosmoScout.gui.clearHtml(node.data.incidentDatasetSelect);
+      $(node.data.incidentDatasetSelect).selectpicker();
+    }
   }
 
   /**
