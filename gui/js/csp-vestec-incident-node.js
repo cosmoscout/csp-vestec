@@ -251,7 +251,7 @@ class IncidentNode {
 
           incidentTestStageButton.addEventListener('click', async () => {
             const testStageResponse =
-                await CosmoScout.vestec.api.testIncident(node.data.activeIncident, node.data?.inputConfig[0] ?? {}).catch(() => {
+                await CosmoScout.vestec.api.testIncident(node.data.activeIncident, node.data?.testStageConfig[0] ?? {}).catch(() => {
           CosmoScout.notifications.print('Test failed', 'Could not run Test Stage', 'error');
                 });
 
