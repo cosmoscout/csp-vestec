@@ -121,7 +121,9 @@ class IncidentNode {
               return;
             }
 
-            IncidentNode.unsetNodeValues(node);
+            clearInterval(node.data.simulationUpdateInterval);
+
+              IncidentNode.unsetNodeValues(node);
             IncidentNode.showOutputType(node, 'none', true);
             node.data.activeIncident = event.target.value;
             IncidentNode.updateControlVisibility(node);
