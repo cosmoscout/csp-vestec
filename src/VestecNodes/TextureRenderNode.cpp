@@ -148,7 +148,6 @@ void TextureRenderNode::GetNumberOfTextureLayers(std::string filePath) {
 
 void TextureRenderNode::SetTextureLayerID(int layerID) {
   m_iLayerID = layerID;
-  std::cout << "Changed layer ----------->" << layerID << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,14 +203,11 @@ void TextureRenderNode::SetMinMaxDataRange(std::string filePath) {
     GDALReader::GreyScaleTexture texture;
     for (int l = 1; l < bands + 1; ++l) {
       GDALReader::ReadGrayScaleTexture(texture, filePath, l);
-      if (texture.dataRange[0] < min) {
-        min = texture.dataRange[0];
-      }
-
-      if (texture.dataRange[1] > max) {
-        max = texture.dataRange[1];
-      }
+      min = std::min(min, texture.dataRange[0]);
+      max = std::max(max, texture.dataRange[1]);
     }
+    m_Texture.dataRange[0] = min;
+    m_Texture.dataRange[1] = max;
 
     m_pItem->callJavascript("TextureRenderNode.setRange", GetID(), min, max);
   })).detach();
@@ -227,11 +223,26 @@ void TextureRenderNode::UnloadTexture() {
 
 void TextureRenderNode::ReadSimulationResult(std::string filename) {
   // Read the GDAL texture (grayscale only 1 float channel)
-  GDALReader::GreyScaleTexture texture;
-  GDALReader::ReadGrayScaleTexture(texture, std::move(filename), m_iLayerID);
+  GDALReader::ReadGrayScaleTexture(m_Texture, filename, m_iLayerID);
 
-  // Add the new texture for rendering
-  m_pRenderer->SetOverlayTexture(texture);
+  // If we have multiple laxers compute the global min max range
+  int    bands = GDALReader::ReadNumberOfLayers(filename);
+  if(bands > 1)
+  {
+    double min   = INT_MAX;
+    double max   = INT_MIN;
+    GDALReader::GreyScaleTexture texture;
+    for (int l = 1; l < bands + 1; ++l) {
+      GDALReader::ReadGrayScaleTexture(texture, filename, l);
+      min = std::min(min, texture.dataRange[0]);
+      max = std::max(max, texture.dataRange[1]);
+    }
+    m_Texture.dataRange[0] = min;
+    m_Texture.dataRange[1] = max;
+  }
+
+  //Add the new texture for rendering
+  m_pRenderer->SetOverlayTexture(m_Texture);
   m_pItem->callJavascript(
       "TextureRenderNode.setMipMapLevels", GetID(), m_pRenderer->GetMipMapLevels());
 }
