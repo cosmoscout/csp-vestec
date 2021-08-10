@@ -320,6 +320,17 @@ class IncidentNode {
     node.addInput(configInput);
     IncidentNode.addOutputs(node);
 
+    node.data.fn = {};
+
+    node.data.fn.addOutput = output => {
+        node.addOutput(output);
+    }
+    
+    node.data.fn.clearOutputs = () => {
+        node.outputs.lenth = 0;
+        node.outputs = [];
+    }
+
     node.data.firstWorkerRound = true;
     // Initialize variables
     IncidentNode.unsetNodeValues(node);
@@ -405,11 +416,11 @@ class IncidentNode {
     try {
       output = await this._makeOutputData(node, datasetIds, incidentId);
 
-      const activeTypes = Object.values(node.data.currentMetadata).map(metadata => metadata.type);
+      const activeDatasets = Object.values(node.data.currentMetadata).filter(dataset => node.data.activeIncidentDatasets.includes(dataset.uuid));
 
-      IncidentNode.showOutputType(node, activeTypes);
+      IncidentNode.showOutputType(node, activeDatasets);
 
-      if (activeTypes.length !== Array.from(new Set(activeTypes)).length) {
+/*      if (activeTypes.length !== Array.from(new Set(activeTypes)).length) {
         CosmoScout.notifications.print(
             'Dataset Selection',
             'Contains non unique types',
@@ -418,19 +429,19 @@ class IncidentNode {
 
         console.warn(
             'The selected incident datasets contain more than one file of the same type. Only one dataset of each type can be output at the same time, e.g. Cinema DB and Texture, but not Texture and Texture.');
-      }
+      }*/
     } catch (e) {
       console.error(`Error loading metadata for dataset '${
           JSON.stringify(datasetIds)}'. Incident: '${incidentId}. Message: ${e}`);
+      console.error(e);
       return;
     }
 
-    node.data.activeOutputTypes.forEach(type => {
-      const definition = IncidentNode.outputTypes[type] ?? {index: -1};
-
-      // Write the content to the correct index
-      outputs[definition.index] = output[definition.index] ?? null;
-    })
+      node.outputs.forEach((out, idx) => {
+          if (typeof out.hash !== 'undefined' && typeof output[out.hash] !== 'undefined') {
+              outputs[idx] = output[out.hash];
+          }
+      });
   }
 
   /**
@@ -571,6 +582,7 @@ class IncidentNode {
       const {metadata, hash} = await IncidentNode.loadIncidentDatasetMetadata(node, id, incidentId);
       let                            datasetOutput;
 
+      metadata.hash = hash;
       activeHashes.push(metadata);
       datasetMetadata[hash] = metadata;
 
@@ -616,9 +628,10 @@ class IncidentNode {
 
       // Use the index specified on IncidentNode.outputTypes
       // Used later to determine on which port to write the data to
-      const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.type);
+      //const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.type);
 
-      output[outputDefinition.index] = datasetOutput;
+      //output[outputDefinition.index] = datasetOutput;
+      output[hash] = datasetOutput;
     }
 
     node.data.currentMetadata  = datasetMetadata;
@@ -636,6 +649,13 @@ class IncidentNode {
    * @param {Node} node - The node to add outputs to
    */
   static addOutputs(node) {
+      const incidentOut = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets['INCIDENT']);
+      node.addOutput(incidentOut);
+
+      node.data['INCIDENT'] = incidentOut;
+
+      return;
+
     Object.entries(IncidentNode.outputTypes)
         .filter(output => output.length === 2)
         .forEach(output => {
@@ -876,6 +896,30 @@ class IncidentNode {
    * @param {boolean} removeConnections - True to remove all active connections from/to this node
    */
   static showOutputType(node, outputTypes, removeConnections = true) {
+      if (outputTypes === 'none') {
+          CosmoScout.vestecNE.removeConnections(node);
+          return;
+      }
+
+      node.data.fn.clearOutputs();
+
+      outputTypes.forEach(metadata => {
+          const definition = IncidentNode.getOutputDefinitionForType(metadata.type);
+          console.log(definition);
+
+          const output =
+              new D3NE.Output(
+                  `${metadata.name} - ${definition.name}`,
+                  CosmoScout.vestecNE.sockets[definition.root],
+              );
+          output.hash = metadata.hash;
+
+          node.data.fn.addOutput(output);
+      });
+
+  }
+
+  static showOutputType2(node, outputTypes, removeConnections = true) {
     // If arg is an array, get the correct mapping from IncidentNode.outputTypes
     if (Array.isArray(outputTypes)) {
       outputTypes = outputTypes
