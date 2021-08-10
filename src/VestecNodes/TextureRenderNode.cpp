@@ -226,11 +226,10 @@ void TextureRenderNode::ReadSimulationResult(std::string filename) {
   GDALReader::ReadGrayScaleTexture(m_Texture, filename, m_iLayerID);
 
   // If we have multiple laxers compute the global min max range
-  int    bands = GDALReader::ReadNumberOfLayers(filename);
-  if(bands > 1)
-  {
-    double min   = INT_MAX;
-    double max   = INT_MIN;
+  int bands = GDALReader::ReadNumberOfLayers(filename);
+  if (bands > 1) {
+    double                       min = INT_MAX;
+    double                       max = INT_MIN;
     GDALReader::GreyScaleTexture texture;
     for (int l = 1; l < bands + 1; ++l) {
       GDALReader::ReadGrayScaleTexture(texture, filename, l);
@@ -241,7 +240,7 @@ void TextureRenderNode::ReadSimulationResult(std::string filename) {
     m_Texture.dataRange[1] = max;
   }
 
-  //Add the new texture for rendering
+  // Add the new texture for rendering
   m_pRenderer->SetOverlayTexture(m_Texture);
   m_pItem->callJavascript(
       "TextureRenderNode.setMipMapLevels", GetID(), m_pRenderer->GetMipMapLevels());
