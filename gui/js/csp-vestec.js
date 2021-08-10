@@ -375,6 +375,9 @@
 
     /**
      * Retrieves a summary list of completed incidents
+     *
+     * @param {string} incidentId - UUID of the incident the dataset is registered on
+     * @returns {Promise<[{uuid: String, date_created: String, name: String}]>}
      */
     async getIncidentDatasets(incidentId) {
       const response =
