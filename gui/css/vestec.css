@@ -293,6 +293,7 @@
     font-size: 14px;
     margin: 10px 0;
     line-height: 16px;
+    max-width: 180px;
 }
 
 .node-editor .node .input-control {

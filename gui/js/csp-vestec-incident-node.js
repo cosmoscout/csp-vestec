@@ -116,6 +116,8 @@ class IncidentNode {
         (element, control) => {
           $(element).selectpicker();
 
+          element.parentElement.style.maxWidth = '220px';
+
           control.putData('incidentSelect', element);
           control.putData('incidentSelectContainer', element.parentElement.parentElement);
           control.putData('incidentsLoaded', false);
@@ -148,13 +150,14 @@ class IncidentNode {
 
     // Dropdown for selecting different datasets on the active incident
     const incidentDatasetControl = new D3NE.Control(
-        `<div style="max-width: 200px;"><select id="incident_dataset_node_select_${
+        `<div><select id="incident_dataset_node_select_${
             node.id}" class="combobox" multiple></select></div>`,
         (element, control) => {
           const select = element.querySelector(`#incident_dataset_node_select_${node.id}`);
           $(select).selectpicker();
 
-          const container = element.parentElement;
+          const container          = element.parentElement;
+          container.style.maxWidth = '220px';
 
           control.putData('incidentDatasetSelect', select);
           control.putData('incidentDatasetSelectContainer', container);
@@ -325,58 +328,69 @@ class IncidentNode {
 
     node.data.fn = {};
 
-    node.data.fn.addOutputs =
-        metadata => {
-          const added = node.outputs.filter(output => typeof output.hash !== 'undefined')
-                            .map(output => output.hash);
+    /**
+     *
+     * @param metadata
+     */
+    node.data.fn.addOutputs = metadata => {
+      const added = node.outputs.filter(output => typeof output.hash !== 'undefined')
+                        .map(output => output.hash);
 
-          node.data.fn.clearOutputs(metadata.map(data => data.hash));
+      metadata.filter(dataset => !added.includes(dataset.hash)).forEach(dataset => {
+        const definition = IncidentNode.getOutputDefinitionForType(dataset.type);
 
-          metadata.forEach(dataset => {
-            if (added.includes(dataset.hash)) {
-              return;
-            }
+        const output = new D3NE.Output(
+            `${dataset.name} - ${definition.name}`,
+            CosmoScout.vestecNE.sockets[definition.root],
+        );
+        output.hash = dataset.hash;
 
-            const definition = IncidentNode.getOutputDefinitionForType(dataset.type);
+        node.addOutput(output);
+      });
+    };
 
-            const output = new D3NE.Output(
-                `${dataset.name} - ${definition.name}`,
-                CosmoScout.vestecNE.sockets[definition.root],
-            );
-            output.hash = dataset.hash;
+    /**
+     * Removes unused outputs
+     *
+     * @param {String[]|undefined} activeHashes
+     * @returns {boolean} True if outputs where removed
+     */
+    node.data.fn.clearOutputs = activeHashes => {
+      if (typeof activeHashes === 'undefined') {
+        activeHashes = [];
+      }
 
-            node.addOutput(output);
-          });
+      let outputsToRemove = [];
+      node.outputs.forEach((output, idx) => {
+        if (typeof output.hash !== 'undefined' && !activeHashes.includes(output.hash)) {
+          outputsToRemove.push(idx);
         }
+      });
 
-                    node.data.fn.clearOutputs =
-            activeHashes => {
-              if (typeof activeHashes === 'undefined') {
-                activeHashes = [];
-              }
+      outputsToRemove      = outputsToRemove.sort();
+      const outputsRemoved = outputsToRemove.length > 0;
 
-              console.log(`Active Hashes: ${JSON.stringify(activeHashes)}`);
+      while (outputsToRemove.length) {
+        const output = node.outputs.splice(outputsToRemove.pop(), 1);
 
-              const filtered = [];
-              node.outputs.forEach((output, idx) => {
-                if (typeof output.hash !== 'undefined' && !activeHashes.includes(output.hash)) {
-                  filtered.push(idx);
-                }
-              });
+        output.pop().connections.forEach(connection => {
+          CosmoScout.vestecNE.editor.removeConnection(connection);
+        });
+      }
 
-              console.log(filtered);
+      // -> True = Outputs cleared
+      return outputsRemoved;
+    };
 
-              if (filtered.length > 0) {
-                node.outputs.splice(filtered.pop(), 1);
-              }
-            }
+    /**
+     *
+     * @returns {Array}
+     */
+    node.data.fn.getOutputs = () => {
+      return node.outputs;
+    };
 
-                            node.data.fn.getOutputs =
-                () => {
-                  return node.outputs;
-                }
-
-                      CosmoScout.vestecNE.updateEditor();
+    CosmoScout.vestecNE.updateEditor();
 
     // Listens to node removals, to clear the update interval
     CosmoScout.vestecNE.editor.eventListener.on('noderemove', (node, _) => {
@@ -457,19 +471,6 @@ class IncidentNode {
               .filter(dataset => node.data.activeIncidentDatasets.includes(dataset.uuid));
 
       IncidentNode.showOutputType(node, activeDatasets);
-
-      /*      if (activeTypes.length !== Array.from(new Set(activeTypes)).length) {
-              CosmoScout.notifications.print(
-                  'Dataset Selection',
-                  'Contains non unique types',
-                  'warning',
-              );
-
-              console.warn(
-                  'The selected incident datasets contain more than one file of the same type. Only
-         one dataset of each type can be output at the same time, e.g. Cinema DB and Texture, but
-         not Texture and Texture.');
-            }*/
     } catch (e) {
       console.error(`Error loading metadata for dataset '${
           JSON.stringify(datasetIds)}'. Incident: '${incidentId}. Message: ${e}`);
@@ -479,7 +480,6 @@ class IncidentNode {
 
     node.data.fn.getOutputs().forEach((out, idx) => {
       if (typeof out.hash !== 'undefined' && typeof output[out.hash] !== 'undefined') {
-        console.log('Writing: ' + JSON.stringify(output[out.hash]));
         outputs[idx] = output[out.hash];
       }
     });
@@ -940,7 +940,7 @@ class IncidentNode {
 
     datasets.forEach((dataset) => {
       const option = document.createElement('option');
-      option.text  = `${dataset.name} - ${dataset.date_created}`;
+      option.text  = `${dataset.name.replace('.zip', '')} - ${dataset.date_created}`;
       option.value = dataset.uuid;
 
       if (activeDataset.includes(dataset.uuid)) {
@@ -974,6 +974,7 @@ class IncidentNode {
       return;
     }
 
+    node.data.fn.clearOutputs(activeDatasets.map(dataset => dataset.hash));
     node.data.fn.addOutputs(activeDatasets);
   }
 
