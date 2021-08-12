@@ -217,6 +217,11 @@
       });
 
       this.editor.eventListener.on('connectioncreate', (connection, persistent) => {
+        // TODO: Re-Enable
+        if (connection.output.node.title === 'IncidentNode') {
+          return;
+        }
+
         try {
           window.callNative(
               'AddConnection',
@@ -233,6 +238,11 @@
       });
 
       this.editor.eventListener.on('connectionremove', (connection, persistent) => {
+        // TODO: Re-Enable
+        if (connection.output.node.title === 'IncidentNode') {
+          return;
+        }
+
         try {
           window.callNative(
               'DeleteConnection',
