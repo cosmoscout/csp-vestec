@@ -26,7 +26,6 @@
  *   incidentStartButton: HTMLButtonElement,
  *   incidentDeleteButton: HTMLButtonElement,
  *   incidentTestStageButton: HTMLButtonElement,
- *   incidentStatusText: HTMLSpanElement,
  *   incidentTestStageStatusText: HTMLSpanElement,
  *
  *   loadedDataHashes: string[],
@@ -34,10 +33,17 @@
  *   activeOutputTypes: string[],
  *
  *   testStageConfig: Object,
+ *
+ *   fn: {
+ *       addOutputs: Function,
+ *       clearOutputs: Function,
+ *       getOutputs: Function,
+ *   }
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
  * @property {Function} addControl
+ * @property {Array} outputs
  */
 
 class IncidentNode {
@@ -110,6 +116,8 @@ class IncidentNode {
         (element, control) => {
           $(element).selectpicker();
 
+          element.parentElement.style.maxWidth = '220px';
+
           control.putData('incidentSelect', element);
           control.putData('incidentSelectContainer', element.parentElement.parentElement);
           control.putData('incidentsLoaded', false);
@@ -123,7 +131,7 @@ class IncidentNode {
 
             clearInterval(node.data.simulationUpdateInterval);
 
-              IncidentNode.unsetNodeValues(node);
+            IncidentNode.unsetNodeValues(node);
             IncidentNode.showOutputType(node, 'none', true);
             node.data.activeIncident = event.target.value;
             IncidentNode.updateControlVisibility(node);
@@ -142,14 +150,14 @@ class IncidentNode {
 
     // Dropdown for selecting different datasets on the active incident
     const incidentDatasetControl = new D3NE.Control(
-        `<div class="row">
-<div class="col-10" style="max-width: 200px;"><select id="incident_dataset_node_select_${
-            node.id}" class="combobox" multiple></select></div></div>`,
+        `<div><select id="incident_dataset_node_select_${
+            node.id}" class="combobox" multiple></select></div>`,
         (element, control) => {
           const select = element.querySelector(`#incident_dataset_node_select_${node.id}`);
           $(select).selectpicker();
 
-          const container = element.parentElement;
+          const container          = element.parentElement;
+          container.style.maxWidth = '220px';
 
           control.putData('incidentDatasetSelect', select);
           control.putData('incidentDatasetSelectContainer', container);
@@ -273,14 +281,6 @@ class IncidentNode {
           });
         });
 
-    // Status text displaying the incident state, e.g. active, pending, etc.
-    const incidentStatusControl =
-        new D3NE.Control(`<span id="incident_node_${node.id}_incident_status" class="text"></span>`,
-            (element, control) => {
-              control.putData('incidentStatusText', element);
-              element.parentElement.classList.add('hidden');
-            });
-
     // Test Stage Status text
     const incidentTestStageStatusControl = new D3NE.Control(
         `<span id="incident_node_${node.id}_test_stage_status" class="text"></span>`,
@@ -312,19 +312,83 @@ class IncidentNode {
     node.addControl(loginMessageControl);
 
     node.addControl(incidentControl);
-    node.addControl(incidentStatusControl);
     node.addControl(incidentDatasetControl);
     node.addControl(incidentButtonControl);
     node.addControl(incidentTestStageStatusControl);
 
     node.addInput(configInput);
     IncidentNode.addOutputs(node);
-
-    node.data.firstWorkerRound = true;
     // Initialize variables
     IncidentNode.unsetNodeValues(node);
 
-    node.data['INCIDENT_CONFIG'] = configInput;
+    node.data.firstWorkerRound         = true;
+    node.data['INCIDENT_CONFIG']       = configInput;
+    node.data.updateIntervalId         = setInterval(this._updateNode, 5000, node);
+    node.data.simulationUpdateInterval = null;
+
+    node.data.fn = {};
+
+    /**
+     *
+     * @param metadata
+     */
+    node.data.fn.addOutputs = metadata => {
+      const added = node.outputs.filter(output => typeof output.hash !== 'undefined')
+                        .map(output => output.hash);
+
+      metadata.filter(dataset => !added.includes(dataset.hash)).forEach(dataset => {
+        const definition = IncidentNode.getOutputDefinitionForType(dataset.type);
+
+        const output = new D3NE.Output(
+            `${dataset.name} - ${definition.name}`,
+            CosmoScout.vestecNE.sockets[definition.root],
+        );
+        output.hash = dataset.hash;
+
+        node.addOutput(output);
+      });
+    };
+
+    /**
+     * Removes unused outputs
+     *
+     * @param {String[]|undefined} activeHashes
+     * @returns {boolean} True if outputs where removed
+     */
+    node.data.fn.clearOutputs = activeHashes => {
+      if (typeof activeHashes === 'undefined') {
+        activeHashes = [];
+      }
+
+      let outputsToRemove = [];
+      node.outputs.forEach((output, idx) => {
+        if (typeof output.hash !== 'undefined' && !activeHashes.includes(output.hash)) {
+          outputsToRemove.push(idx);
+        }
+      });
+
+      outputsToRemove      = outputsToRemove.sort();
+      const outputsRemoved = outputsToRemove.length > 0;
+
+      while (outputsToRemove.length) {
+        const output = node.outputs.splice(outputsToRemove.pop(), 1);
+
+        output.pop().connections.forEach(connection => {
+          CosmoScout.vestecNE.editor.removeConnection(connection);
+        });
+      }
+
+      // -> True = Outputs cleared
+      return outputsRemoved;
+    };
+
+    /**
+     *
+     * @returns {Array}
+     */
+    node.data.fn.getOutputs = () => {
+      return node.outputs;
+    };
 
     CosmoScout.vestecNE.updateEditor();
 
@@ -334,9 +398,6 @@ class IncidentNode {
         clearInterval(node.data.updateIntervalId);
       }
     });
-
-    node.data.updateIntervalId         = setInterval(this._updateNode, 5000, node);
-    node.data.simulationUpdateInterval = null;
 
     return node;
   }
@@ -405,32 +466,23 @@ class IncidentNode {
     try {
       output = await this._makeOutputData(node, datasetIds, incidentId);
 
-      const activeTypes = Object.values(node.data.currentMetadata).map(metadata => metadata.type);
+      const activeDatasets =
+          Object.values(node.data.currentMetadata)
+              .filter(dataset => node.data.activeIncidentDatasets.includes(dataset.uuid));
 
-      IncidentNode.showOutputType(node, activeTypes);
-
-      if (activeTypes.length !== Array.from(new Set(activeTypes)).length) {
-        CosmoScout.notifications.print(
-            'Dataset Selection',
-            'Contains non unique types',
-            'warning',
-        );
-
-        console.warn(
-            'The selected incident datasets contain more than one file of the same type. Only one dataset of each type can be output at the same time, e.g. Cinema DB and Texture, but not Texture and Texture.');
-      }
+      IncidentNode.showOutputType(node, activeDatasets);
     } catch (e) {
       console.error(`Error loading metadata for dataset '${
           JSON.stringify(datasetIds)}'. Incident: '${incidentId}. Message: ${e}`);
+      console.error(e);
       return;
     }
 
-    node.data.activeOutputTypes.forEach(type => {
-      const definition = IncidentNode.outputTypes[type] ?? {index: -1};
-
-      // Write the content to the correct index
-      outputs[definition.index] = output[definition.index] ?? null;
-    })
+    node.data.fn.getOutputs().forEach((out, idx) => {
+      if (typeof out.hash !== 'undefined' && typeof output[out.hash] !== 'undefined') {
+        outputs[idx] = output[out.hash];
+      }
+    });
   }
 
   /**
@@ -537,9 +589,16 @@ class IncidentNode {
                                    });
 
     if (currentSimulations.length > 0) {
-      const statusText = `Test Stage: ${currentSimulations[0].status}`;
+      const statusText = document.createTextNode(`Test Stage: ${currentSimulations[0].status}`);
       node.data.incidentTestStageStatusText.parentElement.classList.remove('hidden');
-      node.data.incidentTestStageStatusText.innerText = statusText;
+
+      const spinner = document.createElement('i');
+      spinner.classList.add('material-icons');
+      spinner.innerText = 'autorenew';
+
+      CosmoScout.gui.clearHtml(node.data.incidentTestStageStatusText);
+      node.data.incidentTestStageStatusText.appendChild(statusText)
+      node.data.incidentTestStageStatusText.appendChild(spinner)
 
       if (currentSimulations[0].status !== 'COMPLETED') {
         console.log(statusText);
@@ -558,12 +617,12 @@ class IncidentNode {
    * @param node
    * @param datasetIds {String[]}
    * @param incidentId
-   * @returns {Promise<[{timeStep: *, caseName: *, uuid}]|string|undefined>}
+   * @returns {Promise<{}|undefined>}
    * @throws {}
    * @private
    */
   async _makeOutputData(node, datasetIds, incidentId) {
-    let output          = [];
+    let output          = {};
     let datasetMetadata = {};
     let activeHashes    = [];
 
@@ -571,6 +630,7 @@ class IncidentNode {
       const {metadata, hash} = await IncidentNode.loadIncidentDatasetMetadata(node, id, incidentId);
       let                            datasetOutput;
 
+      metadata.hash = hash;
       activeHashes.push(metadata);
       datasetMetadata[hash] = metadata;
 
@@ -616,9 +676,10 @@ class IncidentNode {
 
       // Use the index specified on IncidentNode.outputTypes
       // Used later to determine on which port to write the data to
-      const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.type);
+      // const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.type);
 
-      output[outputDefinition.index] = datasetOutput;
+      // output[outputDefinition.index] = datasetOutput;
+      output[hash] = datasetOutput;
     }
 
     node.data.currentMetadata  = datasetMetadata;
@@ -636,6 +697,13 @@ class IncidentNode {
    * @param {Node} node - The node to add outputs to
    */
   static addOutputs(node) {
+    const incidentOut = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets['INCIDENT']);
+    node.addOutput(incidentOut);
+
+    node.data['INCIDENT'] = incidentOut;
+
+    return;
+
     Object.entries(IncidentNode.outputTypes)
         .filter(output => output.length === 2)
         .forEach(output => {
@@ -692,7 +760,6 @@ class IncidentNode {
     node.data.incidentDatasetSelectContainer.classList.add('hidden');
 
     node.data.incidentButtonContainer.classList.add('hidden');
-    node.data.incidentStatusText.parentElement.classList.add('hidden');
     node.data.incidentTestStageStatusText.parentElement.classList.add('hidden');
 
     node.data.info.classList.remove('hidden');
@@ -777,32 +844,58 @@ class IncidentNode {
     const oldLen        = node.data.incidents.length;
     node.data.incidents = incidents;
 
-    if (oldLen === incidents.length) {
-      return true;
+    if (oldLen !== incidents.length) {
+      $(element).selectpicker('destroy');
     }
 
     node.data.activeIncident = incidents[0].uuid;
 
-    $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
 
-    incidents.forEach((incident) => {
-      const option = document.createElement('option');
-      option.text  = incident.name;
-      option.value = incident.uuid;
+    const sorted = {};
 
-      if (incident.uuid === activeIncident) {
-        node.data.activeIncident = activeIncident;
-        option.selected          = true;
+    incidents.forEach(incident => {
+      if (typeof sorted[incident.kind] === 'undefined') {
+        sorted[incident.kind] = [];
       }
 
-      element.appendChild(option);
+      sorted[incident.kind].push(incident);
     });
 
-    $(element).selectpicker();
-    $(element).selectpicker('val', node.data.activeIncident);
+    Object.entries(sorted).forEach(entry => {
+      const [type, incidents] = entry;
+      const group             = document.createElement('optgroup');
+      group.label             = `${type.charAt(0).toUpperCase()}${type.slice(1).toLowerCase()}`
 
-    IncidentNode.updateControlVisibility(node);
+      incidents
+          .sort((a, b) => {
+            return a.status.localeCompare(b.status);
+          })
+          .forEach(incident => {
+            const option = document.createElement('option');
+            option.text  = `${incident.name} - ${incident.status.charAt(0).toUpperCase()}${
+                incident.status.slice(1).toLowerCase()}`;
+            option.value = incident.uuid;
+
+            if (incident.uuid === activeIncident) {
+              node.data.activeIncident = activeIncident;
+              option.selected          = true;
+            }
+
+            group.appendChild(option);
+          });
+
+      element.appendChild(group);
+    });
+
+    if (oldLen !== incidents.length) {
+      $(element).selectpicker();
+      $(element).selectpicker('val', node.data.activeIncident);
+      IncidentNode.updateControlVisibility(node);
+    } else {
+
+      $(element).selectpicker('refresh');
+    }
 
     return true;
   }
@@ -847,7 +940,7 @@ class IncidentNode {
 
     datasets.forEach((dataset) => {
       const option = document.createElement('option');
-      option.text  = `${dataset.name} - ${dataset.date_created}`;
+      option.text  = `${dataset.name.replace('.zip', '')} - ${dataset.date_created}`;
       option.value = dataset.uuid;
 
       if (activeDataset.includes(dataset.uuid)) {
@@ -871,11 +964,21 @@ class IncidentNode {
    * @see {outputTypes}
    *
    * @param {Node} node - The node to operate on
-   * @param {string|string[]|null} outputTypes - Type of output, either outputTypes key or value
+   * @param {string|string[]|null} activeDatasets - Type of output, either outputTypes key or value
    *     from mappings
    * @param {boolean} removeConnections - True to remove all active connections from/to this node
    */
-  static showOutputType(node, outputTypes, removeConnections = true) {
+  static showOutputType(node, activeDatasets, removeConnections = true) {
+    if (activeDatasets === 'none') {
+      CosmoScout.vestecNE.removeConnections(node);
+      return;
+    }
+
+    node.data.fn.clearOutputs(activeDatasets.map(dataset => dataset.hash));
+    node.data.fn.addOutputs(activeDatasets);
+  }
+
+  static showOutputType2(node, outputTypes, removeConnections = true) {
     // If arg is an array, get the correct mapping from IncidentNode.outputTypes
     if (Array.isArray(outputTypes)) {
       outputTypes = outputTypes
@@ -1003,11 +1106,8 @@ class IncidentNode {
       node.data['INCIDENT_CONFIG'].el.parentElement.classList.add('hidden')
     }
 
-    node.data.incidentStatusText.parentElement.classList.remove('hidden');
-
     switch (activeIncident.status) {
     case 'ACTIVE':
-      node.data.incidentStatusText.innerText = 'Incident Active';
       node.data.incidentButtonContainer.classList.remove('hidden');
 
       node.data.incidentStartButton.classList.add('hidden');
@@ -1015,18 +1115,12 @@ class IncidentNode {
       break;
 
     case 'PENDING':
-      node.data.incidentStatusText.innerText = 'Incident Pending';
-
       node.data.incidentButtonContainer.classList.remove('hidden');
 
       node.data.incidentStartButton.classList.remove('hidden');
       node.data.incidentDeleteButton.classList.remove('hidden');
       node.data.incidentTestStageButton.classList.add('hidden');
       break;
-
-    case 'COMPLETED':
-      node.data.incidentStatusText.innerText = 'Incident Completed';
-      // No break in order to fallthrough to default
 
     default:
       node.data.incidentButtonContainer.classList.add('hidden');

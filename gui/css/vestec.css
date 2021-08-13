@@ -293,6 +293,7 @@
     font-size: 14px;
     margin: 10px 0;
     line-height: 16px;
+    max-width: 180px;
 }
 
 .node-editor .node .input-control {
@@ -385,10 +386,6 @@
     content: '\2713';
     padding-right: 0.25rem;
     font-size: 90%;
-}
-
-.node-editor .node .btn.glass {
-    line-height: 1;
 }
 
 .context-menu {
