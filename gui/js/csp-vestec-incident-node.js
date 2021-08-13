@@ -29,7 +29,7 @@
  *   incidentTestStageStatusText: HTMLSpanElement,
  *
  *   loadedDataHashes: string[],
- *   currentMetadata: Object[],
+ *   currentMetadata: Object,
  *   activeOutputTypes: string[],
  *
  *   testStageConfig: Object,
@@ -113,6 +113,10 @@ class IncidentNode {
     // Dropdown for selecting different incidents
     const incidentControl = new D3NE.Control(
         `<select id="incident_node_select_${node.id}" class="combobox"></select>`,
+        /**
+         * @param {HTMLElement} element
+         * @param {{putData: Function}} control
+         */
         (element, control) => {
           $(element).selectpicker();
 
@@ -132,7 +136,7 @@ class IncidentNode {
             clearInterval(node.data.simulationUpdateInterval);
 
             IncidentNode.unsetNodeValues(node);
-            IncidentNode.showOutputType(node, 'none', true);
+            IncidentNode.showOutputType(node, 'none');
             node.data.activeIncident = event.target.value;
             IncidentNode.updateControlVisibility(node);
 
@@ -317,7 +321,9 @@ class IncidentNode {
     node.addControl(incidentTestStageStatusControl);
 
     node.addInput(configInput);
-    IncidentNode.addOutputs(node);
+    IncidentNode.addStaticOutputs(node);
+    IncidentNode.extend(node);
+
     // Initialize variables
     IncidentNode.unsetNodeValues(node);
 
@@ -325,70 +331,6 @@ class IncidentNode {
     node.data['INCIDENT_CONFIG']       = configInput;
     node.data.updateIntervalId         = setInterval(this._updateNode, 5000, node);
     node.data.simulationUpdateInterval = null;
-
-    node.data.fn = {};
-
-    /**
-     *
-     * @param metadata
-     */
-    node.data.fn.addOutputs = metadata => {
-      const added = node.outputs.filter(output => typeof output.hash !== 'undefined')
-                        .map(output => output.hash);
-
-      metadata.filter(dataset => !added.includes(dataset.hash)).forEach(dataset => {
-        const definition = IncidentNode.getOutputDefinitionForType(dataset.type);
-
-        const output = new D3NE.Output(
-            `${dataset.name} - ${definition.name}`,
-            CosmoScout.vestecNE.sockets[definition.root],
-        );
-        output.hash = dataset.hash;
-
-        node.addOutput(output);
-      });
-    };
-
-    /**
-     * Removes unused outputs
-     *
-     * @param {String[]|undefined} activeHashes
-     * @returns {boolean} True if outputs where removed
-     */
-    node.data.fn.clearOutputs = activeHashes => {
-      if (typeof activeHashes === 'undefined') {
-        activeHashes = [];
-      }
-
-      let outputsToRemove = [];
-      node.outputs.forEach((output, idx) => {
-        if (typeof output.hash !== 'undefined' && !activeHashes.includes(output.hash)) {
-          outputsToRemove.push(idx);
-        }
-      });
-
-      outputsToRemove      = outputsToRemove.sort();
-      const outputsRemoved = outputsToRemove.length > 0;
-
-      while (outputsToRemove.length) {
-        const output = node.outputs.splice(outputsToRemove.pop(), 1);
-
-        output.pop().connections.forEach(connection => {
-          CosmoScout.vestecNE.editor.removeConnection(connection);
-        });
-      }
-
-      // -> True = Outputs cleared
-      return outputsRemoved;
-    };
-
-    /**
-     *
-     * @returns {Array}
-     */
-    node.data.fn.getOutputs = () => {
-      return node.outputs;
-    };
 
     CosmoScout.vestecNE.updateEditor();
 
@@ -461,10 +403,10 @@ class IncidentNode {
       return;
     }
 
-    let output;
+    let outputData;
 
     try {
-      output = await this._makeOutputData(node, datasetIds, incidentId);
+      outputData = await this._makeOutputData(node, datasetIds, incidentId);
 
       const activeDatasets =
           Object.values(node.data.currentMetadata)
@@ -478,9 +420,9 @@ class IncidentNode {
       return;
     }
 
-    node.data.fn.getOutputs().forEach((out, idx) => {
-      if (typeof out.hash !== 'undefined' && typeof output[out.hash] !== 'undefined') {
-        outputs[idx] = output[out.hash];
+    node.data.fn.getOutputs().forEach((out, index) => {
+      if (typeof out.hash !== 'undefined' && typeof outputData[out.hash] !== 'undefined') {
+        outputs[index] = outputData[out.hash];
       }
     });
   }
@@ -614,11 +556,10 @@ class IncidentNode {
    * Creates the output objects based on the active datasets
    * Also downloads / extracts datasets through CosmoScout
    *
-   * @param node
-   * @param datasetIds {String[]}
-   * @param incidentId
+   * @param {Node} node
+   * @param {String[]} datasetIds
+   * @param {String} incidentId
    * @returns {Promise<{}|undefined>}
-   * @throws {}
    * @private
    */
   async _makeOutputData(node, datasetIds, incidentId) {
@@ -674,11 +615,6 @@ class IncidentNode {
         break;
       }
 
-      // Use the index specified on IncidentNode.outputTypes
-      // Used later to determine on which port to write the data to
-      // const outputDefinition = IncidentNode.getOutputDefinitionForType(metadata.type);
-
-      // output[outputDefinition.index] = datasetOutput;
       output[hash] = datasetOutput;
     }
 
@@ -689,36 +625,18 @@ class IncidentNode {
   }
 
   /**
-   * Adds all defined outputTypes as outputs to the argument node
+   * Adds all static outputs to the argument node
    * Output types need to be defined on the vestecNE instance
    *
    * @see {IncidentNode.outputTypes}
    * @see {CosmoScout.vestecNE.sockets}
    * @param {Node} node - The node to add outputs to
    */
-  static addOutputs(node) {
+  static addStaticOutputs(node) {
     const incidentOut = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets['INCIDENT']);
     node.addOutput(incidentOut);
 
     node.data['INCIDENT'] = incidentOut;
-
-    return;
-
-    Object.entries(IncidentNode.outputTypes)
-        .filter(output => output.length === 2)
-        .forEach(output => {
-          if (typeof CosmoScout.vestecNE.sockets[output[0]] === 'undefined') {
-            console.error(`Output type ${output[0]} not found in CosmoScout.vestecNE.sockets`);
-            return;
-          }
-
-          const outputDefinition =
-              new D3NE.Output(output[1].name, CosmoScout.vestecNE.sockets[output[0]]);
-
-          node.data[output[0]] = outputDefinition;
-
-          node.addOutput(outputDefinition);
-        });
   }
 
   /**
@@ -780,8 +698,8 @@ class IncidentNode {
    * @see {node.data.currentMetadata}
    *
    * @param {Node} node - Shows the relevant output for the dataset
-   * @param {string} datasetId
-   * @param {string} incidentId
+   * @param {string|null} datasetId
+   * @param {string|null} incidentId
    * @see {CosmoScout.vestec.getIncidentDatasetMetadata}
    * @return {Promise<T|{metadata: {type: null|string, name: string|null, uuid: string|null}, hash:
    *     string}|undefined|null>}
@@ -822,6 +740,7 @@ class IncidentNode {
 
   /**
    * Load vestec incidents into the select control
+   * Groups the incidents by type
    *
    * @param {HTMLSelectElement} element
    * @param {Node} node
@@ -862,7 +781,8 @@ class IncidentNode {
       sorted[incident.kind].push(incident);
     });
 
-    Object.entries(sorted).forEach(entry => {
+    // Takes the incidents grouped by type, sorts them alphabetically and groups them by type
+    Object.entries(sorted).sort((a, b) => a[0].localeCompare(b[0])).forEach(entry => {
       const [type, incidents] = entry;
       const group             = document.createElement('optgroup');
       group.label             = `${type.charAt(0).toUpperCase()}${type.slice(1).toLowerCase()}`
@@ -871,7 +791,18 @@ class IncidentNode {
           .sort((a, b) => {
             return a.status.localeCompare(b.status);
           })
-          .forEach(incident => {
+          .forEach((incident, index, incidents) => {
+            // Add a divider if the previous incident has a different status than the current one
+            const addDivider = typeof incidents[index - 1] !== 'undefined' &&
+                               incident.status !== incidents[index - 1].status &&
+                               incidents.length - 1 !== index;
+
+            if (addDivider === true) {
+              const divider           = document.createElement('option');
+              divider.dataset.divider = true;
+              group.appendChild(divider);
+            }
+
             const option = document.createElement('option');
             option.text  = `${incident.name} - ${incident.status.charAt(0).toUpperCase()}${
                 incident.status.slice(1).toLowerCase()}`;
@@ -893,7 +824,6 @@ class IncidentNode {
       $(element).selectpicker('val', node.data.activeIncident);
       IncidentNode.updateControlVisibility(node);
     } else {
-
       $(element).selectpicker('refresh');
     }
 
@@ -902,6 +832,7 @@ class IncidentNode {
 
   /**
    * Load vestec incident datasets into the select control
+   * Groups datasets by created date
    *
    * @param {HTMLSelectElement} element
    * @param {string} id - Unique incident UUID
@@ -938,7 +869,19 @@ class IncidentNode {
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
 
-    datasets.forEach((dataset) => {
+    datasets.forEach((dataset, index, datasets) => {
+      // Insert a divider, if the day of the previous created date differs from the current one
+      const addDivider =
+          typeof datasets[index - 1] !== 'undefined' &&
+          dataset.date_created.substr(0, 2) !== datasets[index - 1].date_created.substr(0, 2) &&
+          datasets.length - 1 !== index;
+
+      if (addDivider === true) {
+        const divider           = document.createElement('option');
+        divider.dataset.divider = true;
+        element.appendChild(divider);
+      }
+
       const option = document.createElement('option');
       option.text  = `${dataset.name.replace('.zip', '')} - ${dataset.date_created}`;
       option.value = dataset.uuid;
@@ -958,82 +901,23 @@ class IncidentNode {
   }
 
   /**
-   * Hides all outputs but the relevant one(s) on the given node
-   * If removeConnections is set to true all connections from this node to others are removed
+   * Dynamically adds outputs to the node based on the passed metadata objects
    *
    * @see {outputTypes}
    *
    * @param {Node} node - The node to operate on
-   * @param {string|string[]|null} activeDatasets - Type of output, either outputTypes key or value
-   *     from mappings
-   * @param {boolean} removeConnections - True to remove all active connections from/to this node
+   * @param {string|Array[]} activeDatasets - Array of active dataset objects (metadata) or 'none'
+   *     to remove all
    */
-  static showOutputType(node, activeDatasets, removeConnections = true) {
+  static showOutputType(node, activeDatasets) {
     if (activeDatasets === 'none') {
+      node.data.fn.clearOutputs();
       CosmoScout.vestecNE.removeConnections(node);
       return;
     }
 
     node.data.fn.clearOutputs(activeDatasets.map(dataset => dataset.hash));
     node.data.fn.addOutputs(activeDatasets);
-  }
-
-  static showOutputType2(node, outputTypes, removeConnections = true) {
-    // If arg is an array, get the correct mapping from IncidentNode.outputTypes
-    if (Array.isArray(outputTypes)) {
-      outputTypes = outputTypes
-          .map(type => IncidentNode.getOutputDefinitionForType(type))
-          .map(definition => definition?.root ?? null)
-                        .filter(definition => definition !== null);
-
-      // Fallback to non if nothing was selected
-      if (outputTypes.length === 0) {
-        outputTypes = 'none';
-      }
-    }
-
-    // If no mapping was found, OR currently active outputs are the same, then skip
-    if (typeof outputTypes === 'undefined' ||
-        (Array.isArray(outputTypes) &&
-            outputTypes.every(type => node.data.activeOutputTypes.includes(type)) &&
-            outputTypes.length === node.data.activeOutputTypes.length)) {
-      return;
-    }
-
-    // The filter function running on the entries of outputTypes
-    // Idx 0 = Key, Idx 1 = object containing name, mappings
-    let filter;
-
-    if (outputTypes === 'none') {
-      filter = () => true;
-    } else {
-      // We are dealing with an array
-      filter = (type) => !outputTypes.includes(type);
-    }
-
-    // Hides all outputs, walks through all outputs, applies the previous filter and skips the
-    // INCIDENT output
-    Object.keys(IncidentNode.outputTypes)
-        .filter(filter)
-        .filter(outputType => outputType !== 'INCIDENT')
-        .forEach(outputType => {
-          node.data[outputType].el.parentElement.classList.add('hidden');
-        });
-
-    if (removeConnections) {
-      CosmoScout.vestecNE.removeConnections(node);
-    }
-
-    if (Array.isArray(outputTypes)) {
-      // Sanity check, remove hidden classes for active outputs
-      outputTypes.forEach(outputType => {
-        node.data[outputType].el.parentElement.classList.remove('hidden');
-      });
-
-      node.data.activeOutputTypes = outputTypes.filter(type => type !== 'INCIDENT');
-    } else if (outputTypes !== 'none') {
-      console.error(`Output type ${outputTypes} not recognized.`);
-    }
   }
 
   /**
@@ -1129,6 +1013,83 @@ class IncidentNode {
       node.data.incidentStartButton.classList.add('hidden');
       break;
     }
+  }
+
+  /**
+   * Extends the data object with additional functions
+   * Adds methods only present in builder to the data object
+   *
+   * @see {builder}
+   *
+   * @param {Node} node
+   */
+  static extend(node) {
+    node.data.fn = {};
+
+    /**
+     * Adds dynamic outputs based on the passed metadata
+     *
+     * @param {Array} metadata
+     */
+    node.data.fn.addOutputs = metadata => {
+      const added = node.outputs.filter(output => typeof output.hash !== 'undefined')
+                        .map(output => output.hash);
+
+      metadata.filter(dataset => !added.includes(dataset.hash)).forEach(dataset => {
+        const definition = IncidentNode.getOutputDefinitionForType(dataset.type);
+
+        const output = new D3NE.Output(
+            `${dataset.name} - ${definition.name}`,
+            CosmoScout.vestecNE.sockets[definition.root],
+        );
+        output.hash = dataset.hash;
+
+        node.addOutput(output);
+      });
+    };
+
+    /**
+     * Removes unused outputs
+     *
+     * @param {String[]|undefined} activeHashes
+     * @returns {boolean} True if outputs where removed
+     */
+    node.data.fn.clearOutputs = activeHashes => {
+      if (typeof activeHashes === 'undefined') {
+        activeHashes = [];
+      }
+
+      let outputsToRemove = [];
+      node.outputs.forEach((output, idx) => {
+        if (typeof output.hash !== 'undefined' && !activeHashes.includes(output.hash)) {
+          outputsToRemove.push(idx);
+        }
+      });
+
+      outputsToRemove      = outputsToRemove.sort();
+      const outputsRemoved = outputsToRemove.length > 0;
+
+      while (outputsToRemove.length) {
+        const output = node.outputs.splice(outputsToRemove.pop(), 1);
+
+        output.pop().connections.forEach(connection => {
+          CosmoScout.vestecNE.editor.removeConnection(connection);
+        });
+      }
+
+      // -> True = Outputs cleared
+      return outputsRemoved;
+    };
+
+    /**
+     * Returns the outputs active on the node
+     * This differs from the outputs passed in worker!
+     *
+     * @returns {Array}
+     */
+    node.data.fn.getOutputs = () => {
+      return node.outputs;
+    };
   }
 }
 
