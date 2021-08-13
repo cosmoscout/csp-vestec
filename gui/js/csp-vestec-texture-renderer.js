@@ -7,7 +7,16 @@
  * @property {(number|string)} id
  * @property {{
  *     textureSelectParent: HTMLDivElement,
- *     activeTexture: string
+ *     activeTexture: string,
+ *     activeFileSet: Array,
+ *
+ *     lastTransferFunction: Object,
+ *
+ *     levels: Number,
+ *     prevLevels: Number,
+ *
+ *     layers: Number,
+ *     range: Number[],
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -232,7 +241,16 @@ class TextureRenderNode {
       // Or do we want to keep the state for current mipmap mode / level etc.
       delete node.data.activeTexture;
       delete node.data.lastFile;
+      delete node.data.levels;
+
+      node.data.range = [];
+
       window.callNative('TextureRenderNode.unloadTexture', node.id);
+
+      const slider = document.querySelector(`#texture-node_${node.id}-layer`);
+      slider.noUiSlider.destroy();
+      noUiSlider.create(slider, {start: 1, animate: false, range: {min: 1, max: 1}, step: 1});
+
       return;
     }
 
@@ -378,46 +396,65 @@ class TextureRenderNode {
     });
   }
 
-  // Set the min and max range of the texture
+  /**
+   * Set the min and max range of the texture
+   * @param {Number} id
+   * @param {Number} min
+   * @param {Number} max
+   */
   static setRange(id, min, max) {
-    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
-      if (node.id == id) {
-        node.data.range = [min, max];
-      }
-    });
+    const node = CosmoScout.vestecNE.editor.nodes.find(node => node.id === id);
+
+    if (typeof node === 'undefined') {
+      return;
+    }
+
+    node.data.range = [min, max];
   }
 
-  // Set maximum mip map level supported
+  /**
+   * Set maximum mip map level supported
+   * @param {Number} id
+   * @param {Number} levels
+   */
   static setMipMapLevels(id, levels) {
-    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
-      if (node.id == id) {
-        node.data.levels = levels;
-        CosmoScout.vestecNE.updateEditor();
-      }
-    });
+    const node = CosmoScout.vestecNE.editor.nodes.find(node => node.id === id);
+
+    if (typeof node === 'undefined') {
+      return;
+    }
+
+    node.data.levels = levels;
+    CosmoScout.vestecNE.updateEditor();
   }
 
+  /**
+   * Sets the number of layers, the texture contains
+   * @param {Number} id
+   * @param {Number} layers
+   */
   static setNumberOfTextureLayers(id, layers) {
     console.log("setNumberOfTextureLayers: " + layers);
-    CosmoScout.vestecNE.editor.nodes.forEach((node) => {
-      if (node.id == id) {
-        node.data.layers = layers;
-        CosmoScout.vestecNE.updateEditor();
+    const node = CosmoScout.vestecNE.editor.nodes.find(node => node.id === id);
 
-        // Re-Initialize slider with given layers for that texture
-        const slider = document.querySelector(`#texture-node_${node.id}-layer`);
-        slider.noUiSlider.destroy();
-        noUiSlider.create(
-            slider, {start: 1, animate: false, range: {min: 1, max: node.data.layers}, step: 1});
+    if (typeof node === 'undefined') {
+      return;
+    }
 
-        // Read the files for the given simulation mode and fill combobox when mode is changed
-        slider.noUiSlider.on('slide', (values, handle) => {
-          window.callNative(
-              'TextureRenderNode.setTextureLayer', node.id, parseFloat(values[handle]));
-          window.callNative(
-              'TextureRenderNode.readSimulationResults', node.id, node.data.activeTexture);
-        });
-      }
+    node.data.layers = layers;
+    CosmoScout.vestecNE.updateEditor();
+
+    // Re-Initialize slider with given layers for that texture
+    const slider = document.querySelector(`#texture-node_${node.id}-layer`);
+    slider.noUiSlider.destroy();
+    noUiSlider.create(
+        slider, {start: 1, animate: false, range: {min: 1, max: node.data.layers}, step: 1});
+
+    // Read the files for the given simulation mode and fill combobox when mode is changed
+    slider.noUiSlider.on('slide', (values, handle) => {
+      window.callNative('TextureRenderNode.setTextureLayer', node.id, parseFloat(values[handle]));
+      window.callNative(
+          'TextureRenderNode.readSimulationResults', node.id, node.data.activeTexture);
     });
   }
 }
