@@ -19,11 +19,6 @@
  * from the array as input
  */
 class TextureRenderNode {
-  constructor() {
-    this.lastFile             = '';
-    this.lastTransferFunction = '';
-  }
-
   /**
    * Node Editor Component builder
    *
@@ -164,6 +159,9 @@ class TextureRenderNode {
         new D3NE.Input('Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
 
+    node.data.lastFile             = '';
+    node.data.lastTransferFunction = '';
+
     return node;
   }
 
@@ -233,7 +231,7 @@ class TextureRenderNode {
       // TODO: Should we reset everything?
       // Or do we want to keep the state for current mipmap mode / level etc.
       delete node.data.activeTexture;
-      delete this.lastFile;
+      delete node.data.lastFile;
       window.callNative('TextureRenderNode.unloadTexture', node.id);
       return;
     }
@@ -254,16 +252,16 @@ class TextureRenderNode {
     } else {
       node.data.textureSelectParent.classList.add('hidden');
       delete node.data.activeTexture;
-      delete this.lastFile;
+      delete node.data.lastFile;
 
       return;
     }
 
-    if (this.lastFile === texture) {
+    if (node.data.lastFile === texture) {
       return;
     }
 
-    this.lastFile = texture;
+    node.data.lastFile = texture;
 
     window.callNative('TextureRenderNode.getNumberOfTextureLayers', node.id, texture);
     window.callNative('TextureRenderNode.setMinMaxDataRange', node.id, texture);
@@ -284,11 +282,11 @@ class TextureRenderNode {
 
     const transferFunction = transferFunctionInput;
 
-    if (this.lastTransferFunction === transferFunction) {
+    if (node.data.lastTransferFunction === transferFunction) {
       return;
     }
 
-    this.lastTransferFunction = transferFunction;
+    node.data.lastTransferFunction = transferFunction;
 
     window.callNative('TextureRenderNode.setTransferFunction', node.id, transferFunction);
   }
