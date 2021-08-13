@@ -385,12 +385,6 @@ class IncidentNode {
       delete node.data.testStageConfig;
     }
 
-    if (!node.data.incidentsLoaded || !node.data.incidentDatasetLoaded) {
-      return;
-    }
-
-    const datasetIds = node.data.activeIncidentDatasets ?? [];
-
     // Clear output data
     outputs.forEach((_, index) => {
       delete outputs[index];
@@ -398,6 +392,12 @@ class IncidentNode {
 
     // 0 = Incident output
     outputs[0] = node.data.activeIncident;
+
+    if (!node.data.incidentsLoaded || !node.data.incidentDatasetLoaded) {
+      return;
+    }
+
+    const datasetIds = node.data.activeIncidentDatasets ?? [];
 
     if (incidentId.length === 0) {
       return;
