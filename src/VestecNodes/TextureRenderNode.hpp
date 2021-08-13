@@ -103,9 +103,9 @@ class TextureRenderNode : public VNE::Node {
   void SetTextureLayerID(int layerID);
 
  private:
-  GDALReader::GreyScaleTexture m_Texture; //! This texture will be rendered as overlay
-  int                 m_iLayerID = 1;     //! The current layer within the texture (geoTiff)
-  std::vector<double> minMaxRange;        //! The data range used to define a texture color
+  GDALReader::GreyScaleTexture m_Texture;      //! This texture will be rendered as overlay
+  int                          m_iLayerID = 1; //! The current layer within the texture (geoTiff)
+  std::vector<double>          minMaxRange;    //! The data range used to define a texture color
   csp::vestec::Plugin::Settings
                                   mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
   cs::scene::CelestialAnchorNode* m_pAnchor =

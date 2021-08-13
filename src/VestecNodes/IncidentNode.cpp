@@ -60,7 +60,7 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
       std::function([](std::string uuid, std::string token, bool appendCDB = false) {
         // TODO: This is not ideal
         std::thread(std::function([uuid, token, appendCDB]() {
-          if(!IncidentNode::downloadInProgress){
+          if (!IncidentNode::downloadInProgress) {
             std::cout << "Downloading dataset" << uuid << std::endl;
             IncidentNode::downloadInProgress = true;
             IncidentNode::DownloadDataset(uuid, token);

@@ -231,21 +231,21 @@ void Plugin::init() {
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
-  //m_pNodeEditor->RegisterNodeType(
+  // m_pNodeEditor->RegisterNodeType(
   //    WildFireSourceNode::GetName(), "Sources",
   //    [this](cs::gui::GuiItem* webView, int id) {
   //      return new WildFireSourceNode(mPluginSettings, webView, id);
   //    },
   //    [](VNE::NodeEditor* editor) { WildFireSourceNode::Init(editor); });
 
-  //m_pNodeEditor->RegisterNodeType(
+  // m_pNodeEditor->RegisterNodeType(
   //    DiseasesSensorInputNode::GetName(), "Sources",
   //    [this](cs::gui::GuiItem* webView, int id) {
   //      return new DiseasesSensorInputNode(mPluginSettings, webView, id);
   //    },
   //    [](VNE::NodeEditor* editor) { DiseasesSensorInputNode::Init(editor); });
 
-  //m_pNodeEditor->RegisterNodeType(
+  // m_pNodeEditor->RegisterNodeType(
   //    DiseasesSimulation::GetName(), "Sources",
   //    [this](cs::gui::GuiItem* webView, int id) {
   //      return new DiseasesSimulation(mPluginSettings, webView, id);
@@ -293,7 +293,7 @@ void Plugin::init() {
       },
       [](VNE::NodeEditor* editor) { CriticalPointsNode::Init(editor); });
 
-  //m_pNodeEditor->RegisterNodeType(
+  // m_pNodeEditor->RegisterNodeType(
   //    UncertaintyRenderNode::GetName(), "Renderer",
   //    [this](cs::gui::GuiItem* webView, int id) {
   //      return new UncertaintyRenderNode(mPluginSettings, webView, id, mSolarSystem.get(),
