@@ -38,7 +38,9 @@
  *       addOutputs: Function,
  *       clearOutputs: Function,
  *       getOutputs: Function,
- *   }
+ *   },
+ *
+ *   downloadStatus: Map
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -332,6 +334,8 @@ class IncidentNode {
     node.data.updateIntervalId         = setInterval(this._updateNode, 5000, node);
     node.data.simulationUpdateInterval = null;
 
+    node.data.downloadStatus = new Map();
+
     CosmoScout.vestecNE.updateEditor();
 
     // Listens to node removals, to clear the update interval
@@ -421,7 +425,8 @@ class IncidentNode {
     }
 
     node.data.fn.getOutputs().forEach((out, index) => {
-      if (typeof out.hash !== 'undefined' && typeof outputData[out.hash] !== 'undefined') {
+      if (typeof out.hash !== 'undefined' && typeof outputData[out.hash] !== 'undefined' &&
+          node.data.downloadStatus.get(out.uuid) === true) {
         outputs[index] = outputData[out.hash];
       }
     });
@@ -536,14 +541,16 @@ class IncidentNode {
 
       const spinner = document.createElement('i');
       spinner.classList.add('material-icons');
-      spinner.innerText = 'autorenew';
+      spinner.innerText       = 'autorenew';
+      spinner.style.animation = 'spin infinite 3s linear';
+      spinner.style.marginLeft = '5px';
 
       CosmoScout.gui.clearHtml(node.data.incidentTestStageStatusText);
       node.data.incidentTestStageStatusText.appendChild(statusText)
-      node.data.incidentTestStageStatusText.appendChild(spinner)
 
       if (currentSimulations[0].status !== 'COMPLETED') {
-        console.log(statusText);
+        node.data.incidentTestStageStatusText.appendChild(spinner)
+        console.log(`Test Stage: ${currentSimulations[0].status}`);
       }
     } else {
       node.data.incidentTestStageStatusText.parentElement.classList.add('hidden');
@@ -577,16 +584,20 @@ class IncidentNode {
 
       datasetOutput = `${CosmoScout.vestec.downloadDir}/${id}`;
 
-      if (metadata.name.includes('.zip')) {
-        // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should be
-        // removed
-        const addCDB = metadata.type === 'MOSQUITO TOPOLOGICAL OUTPUT';
+      if (!node.data.downloadStatus.has(metadata.uuid)) {
+        if (metadata.name.includes('.zip')) {
+          // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should
+          // be removed
+          const addCDB = metadata.type === 'MOSQUITO TOPOLOGICAL OUTPUT';
 
-        window.callNative('incidentNode.downloadAndExtractDataSet', metadata.uuid,
-            CosmoScout.vestec.getToken(), addCDB);
-      } else {
-        window.callNative(
-            'incidentNode.downloadDataSet', metadata.uuid, CosmoScout.vestec.getToken());
+          window.callNative('incidentNode.downloadAndExtractDataSet', node.id, metadata.uuid,
+              CosmoScout.vestec.getToken(), addCDB);
+        } else {
+          window.callNative(
+              'incidentNode.downloadDataSet', node.id, metadata.uuid, CosmoScout.vestec.getToken());
+        }
+
+        node.data.downloadStatus.set(metadata.uuid, false);
       }
 
       switch (metadata.type) {
@@ -1043,6 +1054,7 @@ class IncidentNode {
             CosmoScout.vestecNE.sockets[definition.root],
         );
         output.hash = dataset.hash;
+        output.uuid = dataset.uuid;
 
         node.addOutput(output);
       });
@@ -1090,6 +1102,24 @@ class IncidentNode {
     node.data.fn.getOutputs = () => {
       return node.outputs;
     };
+  }
+
+  /**
+   * Update the ready state of a dataset
+   * Only if the dataset state is true, the output will be populated
+   *
+   * @param {Number} nodeId
+   * @param {String} datasetUuid
+   * @param {boolean|number} ready
+   */
+  static setDatasetReady(nodeId, datasetUuid, ready = true) {
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === nodeId);
+
+    if (typeof node === 'undefined') {
+      return;
+    }
+
+    node.data.downloadStatus.set(datasetUuid, ready === 1 || ready === true);
   }
 }
 

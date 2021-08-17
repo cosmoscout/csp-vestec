@@ -46,8 +46,18 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
   pEditor->GetGuiItem()->executeJavascript(node);
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.downloadDataSet",
-      "Downloads a given Dataset", std::function([](std::string uuid, std::string token) {
-        std::thread(&IncidentNode::DownloadDataset, uuid, token).detach();
+      "Downloads a given Dataset",
+      std::function([pEditor](double id, std::string uuid, std::string token) {
+        std::thread(std::function([pEditor, id, uuid, token]() {
+          if (!IncidentNode::downloadInProgress) {
+            std::cout << "Downloading dataset" << uuid << std::endl;
+            IncidentNode::downloadInProgress = true;
+            IncidentNode::DownloadDataset(uuid, token);
+            IncidentNode::downloadInProgress = false;
+
+            pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady", id, uuid, true);
+          }
+        })).detach();
       }));
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
@@ -57,9 +67,10 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet",
       "Downloads ans extracts a given Dataset",
-      std::function([](std::string uuid, std::string token, bool appendCDB = false) {
+      std::function([pEditor](
+                        double id, std::string uuid, std::string token, bool appendCDB = false) {
         // TODO: This is not ideal
-        std::thread(std::function([uuid, token, appendCDB]() {
+        std::thread(std::function([pEditor, id, uuid, token, appendCDB]() {
           if (!IncidentNode::downloadInProgress) {
             std::cout << "Downloading dataset" << uuid << std::endl;
             IncidentNode::downloadInProgress = true;
@@ -67,6 +78,8 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
             std::cout << "Extracting dataset" << uuid << std::endl;
             IncidentNode::ExtractDataset(uuid, appendCDB);
             IncidentNode::downloadInProgress = false;
+
+            pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady", id, uuid, true);
           }
         })).detach();
       }));
