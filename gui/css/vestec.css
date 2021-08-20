@@ -522,8 +522,25 @@
     color: var(--cs-color-text);
 }
 
+#csp-vestec-node-editor .dropdown-divider {
+    border-color: var(--cs-color-primary);
+    margin: 0.25rem 0;
+}
+
 #csp-vestec-node-editor #floweditor-resizeable {
     position: absolute;
     top: 100px;
     left: 100px;
+}
+
+/** Node CSS */
+#csp-vestec-node-editor .incidentnode .incident-button-control {
+    flex-direction: column;
+    display: flex;
+    margin-top: 0.7rem;
+}
+
+#csp-vestec-node-editor .incidentnode .incident-button-control button {
+    border-radius: 0.25rem !important;
+    margin-bottom: 0.25rem;
 }

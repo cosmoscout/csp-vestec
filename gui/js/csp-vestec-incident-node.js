@@ -6,21 +6,11 @@
  * @typedef {Object} Node
  * @property {(number|string)} id
  * @property {{
- *   incidentsLoaded: boolean,
- *   incidentDatasetLoaded: boolean,
  *   incidentSelect: HTMLSelectElement,
  *   incidentDatasetSelect: HTMLSelectElement,
  *   incidentSelectContainer: HTMLDivElement,
  *   incidentDatasetSelectContainer: HTMLDivElement,
- *
- *   activeIncident: string,
- *   activeIncidentDatasets: string[],
- *
- *   datasets: Array,
- *   incidentDatasets: Array,
- *
- *   incidentButtonContainer: HTMLDivElement
- *
+ *   incidentButtonContainer: HTMLDivElement,
  *   info: HTMLDivElement,
  *
  *   incidentStartButton: HTMLButtonElement,
@@ -28,11 +18,24 @@
  *   incidentTestStageButton: HTMLButtonElement,
  *   incidentTestStageStatusText: HTMLSpanElement,
  *
+ *   incidentsLoaded: boolean,
+ *   incidentDatasetLoaded: boolean,
+ *
+ *   activeIncident: string,
+ *   activeIncidentDatasets: string[],
+ *
+ *   datasets: Array,
+ *   incidentDatasets: Array,
+ *
  *   loadedDataHashes: string[],
  *   currentMetadata: Object,
  *   activeOutputTypes: string[],
  *
+ *   INCIDENT_CONFIG: D3NE.Input,
  *   testStageConfig: Object,
+ *
+ *   updateIntervalId: Number,
+ *   simulationUpdateInterval: Number|null,
  *
  *   fn: {
  *       addOutputs: Function,
@@ -40,7 +43,7 @@
  *       getOutputs: Function,
  *   },
  *
- *   downloadStatus: Map
+ *   downloadStatus: Map,
  * }} data
  * @property {Function} addOutput
  * @property {Function} addInput
@@ -190,7 +193,7 @@ class IncidentNode {
     );
 
     const incidentButtonControl = new D3NE.Control(
-        `<div class="btn-group" style="flex-direction: column">
+        `<div class="btn-group incident-button-control" style="flex-direction: column">
 <button id="incident_node_${
             node.id}_incident_start_button" class="btn glass">Start Incident</button>
 <button id="incident_node_${
@@ -329,7 +332,6 @@ class IncidentNode {
     // Initialize variables
     IncidentNode.unsetNodeValues(node);
 
-    node.data.firstWorkerRound         = true;
     node.data['INCIDENT_CONFIG']       = configInput;
     node.data.updateIntervalId         = setInterval(this._updateNode, 5000, node);
     node.data.simulationUpdateInterval = null;
@@ -349,18 +351,15 @@ class IncidentNode {
   }
 
   /**
+   * Requests all incidents, loads datasets for the active incident
+   * Accepts test stage configs, dynamically adds outputs based on the selected datasets
+   * If the user is unauthorized, all controls and in- outputs will be hidden
+   *
    * @param {Node} node
    * @param {Array} inputs - Config input
    * @param {Array} outputs - Texture / CinemaDB / PointArray
    */
   async worker(node, inputs, outputs) {
-    // First worker round = node was just created
-    // Hide all outputs until the type is determined
-    if (node.data.firstWorkerRound) {
-      IncidentNode.showOutputType(node, 'none', false);
-      node.data.firstWorkerRound = false;
-    }
-
     // Hide all controls if the user isn't authorized
     if (!CosmoScout.vestec.isAuthorized()) {
       IncidentNode.handleUnauthorized(node);
@@ -509,6 +508,7 @@ class IncidentNode {
     const activeIncident = await CosmoScout.vestec.getIncident(node.data.activeIncident);
 
     // Because dates are fun...
+    // Parses the date returned by vestec (DD-MM-YYYY, HH:mm:ii) into a ISO8601 String
     const parseDate =
         (date) => {
           let datePart, timePart;
@@ -536,21 +536,27 @@ class IncidentNode {
                                    });
 
     if (currentSimulations.length > 0) {
-      const statusText = document.createTextNode(`Test Stage: ${currentSimulations[0].status}`);
+      const statusText = currentSimulations[0].status.charAt(0).toUpperCase() +
+                         currentSimulations[0].status.slice(1).toLowerCase();
+      const statusElement = document.createTextNode(`Test Stage: ${statusText}`);
       node.data.incidentTestStageStatusText.parentElement.classList.remove('hidden');
 
       const spinner = document.createElement('i');
       spinner.classList.add('material-icons');
-      spinner.innerText       = 'autorenew';
-      spinner.style.animation = 'spin infinite 3s linear';
+      spinner.innerText        = 'autorenew';
+      spinner.style.animation  = 'spin infinite 3s linear';
       spinner.style.marginLeft = '5px';
 
       CosmoScout.gui.clearHtml(node.data.incidentTestStageStatusText);
-      node.data.incidentTestStageStatusText.appendChild(statusText)
+      node.data.incidentTestStageStatusText.appendChild(statusElement)
 
       if (currentSimulations[0].status !== 'COMPLETED') {
         node.data.incidentTestStageStatusText.appendChild(spinner)
-        console.log(`Test Stage: ${currentSimulations[0].status}`);
+        console.log(`Test Stage: ${statusText}`);
+      }
+      else {
+        // TODO: Output a notification? Problem: Multistage simulations will have multiple
+        // 'complete' status
       }
     } else {
       node.data.incidentTestStageStatusText.parentElement.classList.add('hidden');
@@ -584,6 +590,7 @@ class IncidentNode {
 
       datasetOutput = `${CosmoScout.vestec.downloadDir}/${id}`;
 
+      // Status will be updated by CosmoScout, only calls download / extract once
       if (!node.data.downloadStatus.has(metadata.uuid)) {
         if (metadata.name.includes('.zip')) {
           // TODO: The TTK Reader requires that the db folder ends with .cdb, this hard code should
@@ -600,6 +607,7 @@ class IncidentNode {
         node.data.downloadStatus.set(metadata.uuid, false);
       }
 
+      // This creates the corresponding output object based on the metadata type
       switch (metadata.type) {
       case 'CINEMA_DB_JSON': {
         const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
@@ -638,6 +646,8 @@ class IncidentNode {
   /**
    * Adds all static outputs to the argument node
    * Output types need to be defined on the vestecNE instance
+   *
+   * In this context, static outputs are present on the node regardless of incident datasets
    *
    * @see {IncidentNode.outputTypes}
    * @see {CosmoScout.vestecNE.sockets}
@@ -753,18 +763,18 @@ class IncidentNode {
    * Load vestec incidents into the select control
    * Groups the incidents by type
    *
-   * @param {HTMLSelectElement} element
+   * @param {HTMLSelectElement} incidentSelect
    * @param {Node} node
    * @returns true on success
    */
-  static async loadIncidents(element, node) {
+  static async loadIncidents(incidentSelect, node) {
     if (!CosmoScout.vestec.isAuthorized()) {
       console.warn('User not authorized, aborting.');
       return false;
     }
 
     const incidents      = await CosmoScout.vestec.getIncidents();
-    const activeIncident = element.value;
+    const activeIncident = incidentSelect.value;
 
     if (incidents.length === 0) {
       return false;
@@ -775,12 +785,12 @@ class IncidentNode {
     node.data.incidents = incidents;
 
     if (oldLen !== incidents.length) {
-      $(element).selectpicker('destroy');
+      $(incidentSelect).selectpicker('destroy');
     }
 
     node.data.activeIncident = incidents[0].uuid;
 
-    CosmoScout.gui.clearHtml(element);
+    CosmoScout.gui.clearHtml(incidentSelect);
 
     const sorted = {};
 
@@ -792,11 +802,12 @@ class IncidentNode {
       sorted[incident.kind].push(incident);
     });
 
-    // Takes the incidents grouped by type, sorts them alphabetically and groups them by type
+    // Creates optgroups for each workflow kind. Incidents are further sorted by status (active,
+    // completed, ...)
     Object.entries(sorted).sort((a, b) => a[0].localeCompare(b[0])).forEach(entry => {
-      const [type, incidents] = entry;
+      const [kind, incidents] = entry;
       const group             = document.createElement('optgroup');
-      group.label             = `${type.charAt(0).toUpperCase()}${type.slice(1).toLowerCase()}`
+      group.label             = `${kind.charAt(0).toUpperCase()}${kind.slice(1).toLowerCase()}`
 
       incidents
           .sort((a, b) => {
@@ -827,15 +838,17 @@ class IncidentNode {
             group.appendChild(option);
           });
 
-      element.appendChild(group);
+      incidentSelect.appendChild(group);
     });
 
+    // If new incidents are present - Re-create the selectpicker
     if (oldLen !== incidents.length) {
-      $(element).selectpicker();
-      $(element).selectpicker('val', node.data.activeIncident);
+      $(incidentSelect).selectpicker();
+      $(incidentSelect).selectpicker('val', node.data.activeIncident);
       IncidentNode.updateControlVisibility(node);
     } else {
-      $(element).selectpicker('refresh');
+      // Update the selectpicker (= updates incident status if they changed)
+      $(incidentSelect).selectpicker('refresh');
     }
 
     return true;
@@ -894,7 +907,7 @@ class IncidentNode {
       }
 
       const option = document.createElement('option');
-      option.text  = `${dataset.name.replace('.zip', '')} - ${dataset.date_created}`;
+      option.text  = `${dataset.name.replaceAll('.zip', '')} - ${dataset.date_created}`;
       option.value = dataset.uuid;
 
       if (activeDataset.includes(dataset.uuid)) {
@@ -913,6 +926,7 @@ class IncidentNode {
 
   /**
    * Dynamically adds outputs to the node based on the passed metadata objects
+   * If 'none' is passed, all dynamic outputs will be removed
    *
    * @see {outputTypes}
    *
@@ -957,7 +971,7 @@ class IncidentNode {
   static unsetNodeValues(node) {
     node.data.activeOutputTypes      = [];
     node.data.loadedDataHashes       = [];
-    node.data.currentMetadata        = [];
+    node.data.currentMetadata        = {};
     node.data.activeIncident         = '';
     node.data.activeIncidentDatasets = [];
     node.data.incidents              = [];
@@ -1030,6 +1044,8 @@ class IncidentNode {
    * Extends the data object with additional functions
    * Adds methods only present in builder to the data object
    *
+   * This can ONLY be called from the BUILDER function!
+   *
    * @see {builder}
    *
    * @param {Node} node
@@ -1050,7 +1066,7 @@ class IncidentNode {
         const definition = IncidentNode.getOutputDefinitionForType(dataset.type);
 
         const output = new D3NE.Output(
-            `${dataset.name} - ${definition.name}`,
+            `${dataset.name.replaceAll('.zip', '')} - ${definition.name}`,
             CosmoScout.vestecNE.sockets[definition.root],
         );
         output.hash = dataset.hash;
@@ -1108,6 +1124,8 @@ class IncidentNode {
    * Update the ready state of a dataset
    * Only if the dataset state is true, the output will be populated
    *
+   * Called by CosmoScout
+   *
    * @param {Number} nodeId
    * @param {String} datasetUuid
    * @param {boolean|number} ready
@@ -1119,7 +1137,14 @@ class IncidentNode {
       return;
     }
 
-    node.data.downloadStatus.set(datasetUuid, ready === 1 || ready === true);
+    ready = ready === 1 || ready === true;
+
+    node.data.downloadStatus.set(datasetUuid, ready);
+
+    if (ready === false) {
+      // Clear so it can be called again
+      node.data.downloadStatus.delete(datasetUuid);
+    }
   }
 }
 
