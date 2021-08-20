@@ -49,14 +49,10 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
       "Downloads a given Dataset",
       std::function([pEditor](double id, std::string uuid, std::string token) {
         std::thread(std::function([pEditor, id, uuid, token]() {
-          if (!IncidentNode::downloadInProgress) {
-            std::cout << "Downloading dataset" << uuid << std::endl;
-            IncidentNode::downloadInProgress = true;
-            IncidentNode::DownloadDataset(uuid, token);
-            IncidentNode::downloadInProgress = false;
+          std::cout << "Downloading dataset" << uuid << std::endl;
+          auto success = IncidentNode::DownloadDataset(uuid, token);
 
-            pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady", id, uuid, true);
-          }
+          pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady", id, uuid, success);
         })).detach();
       }));
 
@@ -67,31 +63,29 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet",
       "Downloads ans extracts a given Dataset",
-      std::function([pEditor](
-                        double id, std::string uuid, std::string token, bool appendCDB = false) {
-        // TODO: This is not ideal
-        std::thread(std::function([pEditor, id, uuid, token, appendCDB]() {
-          if (!IncidentNode::downloadInProgress) {
-            std::cout << "Downloading dataset" << uuid << std::endl;
-            IncidentNode::downloadInProgress = true;
-            IncidentNode::DownloadDataset(uuid, token);
-            std::cout << "Extracting dataset" << uuid << std::endl;
-            IncidentNode::ExtractDataset(uuid, appendCDB);
-            IncidentNode::downloadInProgress = false;
+      std::function(
+          [pEditor](double id, std::string uuid, std::string token, bool appendCDB = false) {
+            // TODO: This is not ideal
+            std::thread(std::function([pEditor, id, uuid, token, appendCDB]() {
+              std::cout << "Downloading dataset" << uuid << std::endl;
+              auto download = IncidentNode::DownloadDataset(uuid, token);
 
-            pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady", id, uuid, true);
-          }
-        })).detach();
-      }));
+              std::cout << "Extracting dataset" << uuid << std::endl;
+              auto extract = IncidentNode::ExtractDataset(uuid, appendCDB);
+
+              pEditor->GetGuiItem()->callJavascript(
+                  "IncidentNode.setDatasetReady", id, uuid, download && extract);
+            })).detach();
+          }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentNode::DownloadDataset(const std::string uuid, const std::string token) {
+bool IncidentNode::DownloadDataset(const std::string uuid, const std::string token) {
   std::string downloadPath(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
 
   if (boost::filesystem::exists(downloadPath)) {
-    return;
+    return true;
   }
 
   std::ofstream out;
@@ -100,7 +94,7 @@ void IncidentNode::DownloadDataset(const std::string uuid, const std::string tok
 
   if (!out) {
     csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
-    return;
+    return false;
   }
 
   std::list<std::string> header;
@@ -121,11 +115,13 @@ void IncidentNode::DownloadDataset(const std::string uuid, const std::string tok
   request.reset();
 
   out.close();
+
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
+bool IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
 
   std::string zip(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
   std::string extract;
@@ -139,12 +135,12 @@ void IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
   if (!boost::filesystem::exists(zip)) {
     csp::vestec::logger().debug(
         "File '{}' does not exist on '{}'.", uuid, csp::vestec::Plugin::vestecDownloadDir);
-    return;
+    return false;
   }
 
   if (boost::filesystem::exists(extract)) {
     csp::vestec::logger().debug("File '{}' already extracted in '{}'.", uuid, extract);
-    return;
+    return true;
   }
 
   cs::utils::filesystem::createDirectoryRecursively(extract);
@@ -155,11 +151,13 @@ void IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
   if (unzipper.entries().empty()) {
     csp::vestec::logger().debug("Zip file '{}' seems to be empty.", uuid);
     unzipper.close();
-    return;
+    return false;
   }
 
   csp::vestec::logger().debug("Extracting {} files to '{}'.", unzipper.entries().size(), extract);
 
   unzipper.extract(extract);
   unzipper.close();
+
+  return true;
 }
