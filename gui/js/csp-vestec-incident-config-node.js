@@ -66,6 +66,7 @@ class IncidentConfigNode {
   <select id="incident_config_node_select_disease_${node.id}" class="combobox">
     <option value="deng">Dengue</option>
     <option value="zika">Zika</option>
+    <option value="chik">Chikungunya </option>
   </select>
 </div></div>`,
         (element, control) => {
