@@ -36,8 +36,8 @@ class IncidentNode : public VNE::Node {
   static std::string GetName();
 
  private:
-  static bool        DownloadDataset(const std::string uuid, const std::string token);
-  static bool        ExtractDataset(const std::string uuid, bool appendCDB);
+  static bool DownloadDataset(const std::string uuid, const std::string token);
+  static bool ExtractDataset(const std::string uuid, bool appendCDB);
 };
 
 #endif // COSMOSCOUT_VR_INCIDENTNODE_HPP

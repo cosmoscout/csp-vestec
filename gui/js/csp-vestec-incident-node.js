@@ -35,6 +35,7 @@
  *   testStageConfig: Object,
  *
  *   updateIntervalId: Number,
+ *   simulationUpdateIncidentUUID: string|null,
  *   simulationUpdateInterval: Number|null,
  *
  *   fn: {
@@ -278,6 +279,7 @@ class IncidentNode {
               CosmoScout.notifications.print('Test failed', 'Could not run Test Stage', 'error');
             } else {
               clearInterval(node.data.simulationUpdateInterval);
+              node.data.simulationUpdateIncidentUUID = node.data.activeIncident;
               node.data.simulationUpdateInterval =
                   setInterval(this._checkSimulationStatus, 5000, node)
 
@@ -498,6 +500,8 @@ class IncidentNode {
    */
   async _checkSimulationStatus(node) {
     if (!CosmoScout.vestec.isAuthorized()) {
+      clearInterval(node.data.simulationUpdateInterval);
+      node.data.simulationUpdateIncidentUUID = null;
       return;
     }
 
@@ -506,6 +510,12 @@ class IncidentNode {
     const includeDate    = new Date(Date.now() - (1000 * 60 * includeMinutes));
 
     const activeIncident = await CosmoScout.vestec.getIncident(node.data.activeIncident);
+
+    if (activeIncident !== node.data.simulationUpdateIncidentUUID) {
+      clearInterval(node.data.simulationUpdateInterval);
+      node.data.simulationUpdateIncidentUUID = null;
+      return;
+    }
 
     // Because dates are fun...
     // Parses the date returned by vestec (DD-MM-YYYY, HH:mm:ii) into a ISO8601 String
@@ -555,12 +565,13 @@ class IncidentNode {
         console.log(`Test Stage: ${statusText}`);
       }
       else {
-        // TODO: Output a notification? Problem: Multistage simulations will have multiple
-        // 'complete' status
+        CosmoScout.notifications.print(
+            'Simulation Step Done', `A simulation step was completed`, 'done');
       }
     } else {
       node.data.incidentTestStageStatusText.parentElement.classList.add('hidden');
       node.data.incidentTestStageStatusText.innerText = '';
+      node.data.simulationUpdateIncidentUUID          = null;
       clearInterval(node.data.simulationUpdateInterval);
     }
   }
@@ -776,7 +787,7 @@ class IncidentNode {
     const incidents      = await CosmoScout.vestec.getIncidents();
     const activeIncident = incidentSelect.value;
 
-    if (incidents.length === 0) {
+    if (incidents.length === 0 && node.data.incidents.length === 0) {
       return false;
     }
 
@@ -786,6 +797,15 @@ class IncidentNode {
 
     if (oldLen !== incidents.length) {
       $(incidentSelect).selectpicker('destroy');
+
+      const added = incidents.length - oldLen;
+      if (added > 0) {
+        CosmoScout.notifications.print(
+            'New Incidents', `Added ${added} new incident(s)`, 'post_add');
+      } else {
+        CosmoScout.notifications.print(
+            'Incidents removed', `${Math.abs(added)} incident(s) removed`, 'delete');
+      }
     }
 
     node.data.activeIncident = incidents[0].uuid;
@@ -876,7 +896,7 @@ class IncidentNode {
     const datasets      = await CosmoScout.vestec.getIncidentDatasets(id) ?? [];
     const activeDataset = Array.from(element.selectedOptions).map(option => option.value);
 
-    if (datasets.length === 0) {
+    if (datasets.length === 0 && node.data.incidentDatasets.length === 0) {
       return false;
     }
 
@@ -886,6 +906,14 @@ class IncidentNode {
 
     if (oldLen === datasets.length) {
       return true;
+    } else {
+      const added = datasets.length - oldLen;
+      if (added > 0) {
+        CosmoScout.notifications.print('New Dataset', `Added ${added} new dataset(s)`, 'note_add');
+      } else {
+        CosmoScout.notifications.print(
+            'Datasets removed', `${Math.abs(added)} were removed`, 'delete');
+      }
     }
 
     node.data.activeIncidentDatasets = [datasets[0].uuid];
