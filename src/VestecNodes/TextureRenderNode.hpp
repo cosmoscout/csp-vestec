@@ -15,9 +15,9 @@ class NodeEditor;
 }
 
 /**
- * The Texture Render Node draws arbitrary textures that are readable by the GDALReader
- * For each texture mip maps are generated which are drawn based on the observer distance to
- * the currently active body
+ * The Texture Render Node draws arbitrary textures that are readable by the
+ * GDALReader For each texture mip maps are generated which are drawn based on
+ * the observer distance to the currently active body
  *
  * MipMap levels can optionally be toggled through the node editor
  * An additional reduction mode (min / max / average) can also be set
@@ -25,16 +25,18 @@ class NodeEditor;
  * @see GDALReader
  */
 class TextureRenderNode : public VNE::Node {
- public:
-  TextureRenderNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
-      cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
-      cs::core::GraphicsEngine* pEngine);
+public:
+  TextureRenderNode(csp::vestec::Plugin::Settings const &config,
+                    cs::gui::GuiItem *pItem, int id,
+                    cs::core::SolarSystem *pSolarSystem,
+                    cs::scene::CelestialAnchorNode *pAnchor,
+                    cs::core::GraphicsEngine *pEngine);
   virtual ~TextureRenderNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor* pEditor);
+  static void Init(VNE::NodeEditor *pEditor);
 
   /**
    * Returns the unique identifier for the node as string
@@ -102,16 +104,20 @@ class TextureRenderNode : public VNE::Node {
    */
   void SetTextureLayerID(int layerID);
 
- private:
-  GDALReader::GreyScaleTexture m_Texture;      //! This texture will be rendered as overlay
-  int                          m_iLayerID = 1; //! The current layer within the texture (geoTiff)
-  std::vector<double>          minMaxRange;    //! The data range used to define a texture color
+private:
+  GDALReader::GreyScaleTexture
+      m_Texture;      //! This texture will be rendered as overlay
+  int m_iLayerID = 1; //! The current layer within the texture (geoTiff)
+  std::vector<double>
+      minMaxRange; //! The data range used to define a texture color
   csp::vestec::Plugin::Settings
-                                  mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
-  cs::scene::CelestialAnchorNode* m_pAnchor =
-      nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally centered in earth)
-  TextureOverlayRenderer* m_pRenderer =
-      nullptr; //! The renderer to overlay a texture onto a previous renderer image (depthBuffer)
+      mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
+  cs::scene::CelestialAnchorNode *m_pAnchor =
+      nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally
+               //! centered in earth)
+  TextureOverlayRenderer *m_pRenderer =
+      nullptr; //! The renderer to overlay a texture onto a previous renderer
+               //! image (depthBuffer)
 };
 
 #endif /* SIMPLE_TEXTURE_RENDER_NODE_HPP_ */

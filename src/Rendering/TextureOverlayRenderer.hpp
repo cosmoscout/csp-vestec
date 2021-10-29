@@ -22,18 +22,19 @@ class VistaViewport;
 class VistaTexture;
 
 /**
- * Class which gets a geo-referenced texture and overlays if onto the previous rendered scene.
- * Therefore it copies the depth buffer first. Second, in the shader it does an inverse projection
- * to get the cartesian coordinates. This coordinates are transformed to latitude and longitude to
- * do the lookup in the geo-referenced texture. The value is then overlayed on that pixel position.
+ * Class which gets a geo-referenced texture and overlays if onto the previous
+ * rendered scene. Therefore it copies the depth buffer first. Second, in the
+ * shader it does an inverse projection to get the cartesian coordinates. This
+ * coordinates are transformed to latitude and longitude to do the lookup in the
+ * geo-referenced texture. The value is then overlayed on that pixel position.
  */
 class TextureOverlayRenderer : public IVistaOpenGLDraw {
- public:
+public:
   /**
    * Constructor requires the SolarSystem to get the current active planet
    * to get the model matrix
    */
-  TextureOverlayRenderer(cs::core::SolarSystem* pSolarSystem);
+  TextureOverlayRenderer(cs::core::SolarSystem *pSolarSystem);
   virtual ~TextureOverlayRenderer();
 
   /**
@@ -79,7 +80,7 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   /**
    * Adding a texture used for overlay rendering
    */
-  void SetOverlayTexture(GDALReader::GreyScaleTexture& texture);
+  void SetOverlayTexture(GDALReader::GreyScaleTexture &texture);
 
   /**
    * Unloads the currently active texture
@@ -90,20 +91,21 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
   // --------------------------------------------
   virtual bool Do();
-  virtual bool GetBoundingBox(VistaBoundingBox& bb);
+  virtual bool GetBoundingBox(VistaBoundingBox &bb);
 
- private:
-  bool   mUpdateTexture    = false; //! Flag if a texture upload is required
-  bool   mUseTime          = false; //! Flag if shader should use time information
-  float  mOpacity          = 1;     //! Opacity value used in shader to adjust the overlay
-  float  mTime             = 6;     //! Time value in hours. Used by shader to discard pixels
-  int    mMipMapLevels     = 0;     //! Count of generated MipMap levels
-  bool   mManualMipMaps    = true;  //! Flag if manual MipMaps are active
-  double mMipMapLevel      = 0;     //! Current manual MipMap Level
-  int    mMipMapReduceMode = 0;     //! 0 = Max, 1 = Min, 2 = Average
+private:
+  bool mUpdateTexture = false; //! Flag if a texture upload is required
+  bool mUseTime = false;       //! Flag if shader should use time information
+  float mOpacity = 1; //! Opacity value used in shader to adjust the overlay
+  float mTime = 6;    //! Time value in hours. Used by shader to discard pixels
+  int mMipMapLevels = 0;      //! Count of generated MipMap levels
+  bool mManualMipMaps = true; //! Flag if manual MipMaps are active
+  double mMipMapLevel = 0;    //! Current manual MipMap Level
+  int mMipMapReduceMode = 0;  //! 0 = Max, 1 = Min, 2 = Average
 
-  VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
-  GLuint           m_pComputeShader;           //! Vista GLSL shader object used for computing lod
+  VistaGLSLShader *m_pSurfaceShader =
+      nullptr;             //! Vista GLSL shader object used for rendering
+  GLuint m_pComputeShader; //! Vista GLSL shader object used for computing lod
 
   static const std::string SURFACE_GEOM; //! Code for the geometry shader
   static const std::string SURFACE_VERT; //! Code for the vertex shader
@@ -111,23 +113,27 @@ class TextureOverlayRenderer : public IVistaOpenGLDraw {
   static const std::string COMPUTE;      //! Code for the compute shader
 
   /**
-   * Struct which stores the depth buffer and color buffer from the previous rendering (order)
-   * on the GPU and pass it to the shaders for inverse transformations based on depth and screen
-   * coordinates. Used to calculate texture coordinates for the overlay
+   * Struct which stores the depth buffer and color buffer from the previous
+   * rendering (order) on the GPU and pass it to the shaders for inverse
+   * transformations based on depth and screen coordinates. Used to calculate
+   * texture coordinates for the overlay
    */
   struct GBufferData {
-    VistaTexture* mDepthBuffer = nullptr;
-    VistaTexture* mColorBuffer = nullptr;
+    VistaTexture *mDepthBuffer = nullptr;
+    VistaTexture *mColorBuffer = nullptr;
   };
 
-  std::unordered_map<VistaViewport*, GBufferData> mGBufferData; //! Store one buffer per viewport
+  std::unordered_map<VistaViewport *, GBufferData>
+      mGBufferData; //! Store one buffer per viewport
 
-  GDALReader::GreyScaleTexture mTexture; //! The textured passed from outside via SetOverlayTexture
+  GDALReader::GreyScaleTexture
+      mTexture; //! The textured passed from outside via SetOverlayTexture
 
-  std::unique_ptr<cs::graphics::ColorMap> mTransferFunction; //! Transfer function used in shader
+  std::unique_ptr<cs::graphics::ColorMap>
+      mTransferFunction; //! Transfer function used in shader
 
-  cs::core::SolarSystem*
-      mSolarSystem; //! Pointer to the CosmoScout solar system used to retriev matrices
+  cs::core::SolarSystem *mSolarSystem; //! Pointer to the CosmoScout solar
+                                       //! system used to retriev matrices
 };
 
 #endif // TEXTURE_OVERLAY_RENDERER

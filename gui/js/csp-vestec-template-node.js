@@ -19,10 +19,11 @@
  * Example node
  * Use this file as a template for new nodes
  *
- * Prefix unused arguments with '_', e.g. if you don't use the inputs argument in the worker method
- * rename it to '_inputs' Write control html ids as 'class_name_type_node_id', e.g. for an input
- * element: 'template_node_text_input_ID' Each node should have a corresponding C++ file located at
- * 'src/VestecNodes'
+ * Prefix unused arguments with '_', e.g. if you don't use the inputs argument
+ * in the worker method rename it to '_inputs' Write control html ids as
+ * 'class_name_type_node_id', e.g. for an input element:
+ * 'template_node_text_input_ID' Each node should have a corresponding C++ file
+ * located at 'src/VestecNodes'
  *
  * Write variable names in camelCase
  * Use constants where possible
@@ -41,17 +42,19 @@ class TemplateNode {
   builder(node) {
     // Socket types get registered in Plugin::init()
     // E.g.: m_pNodeEditor->RegisterSocketType("TEMPLATE");
-    const input = new D3NE.Input('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
+    const input =
+        new D3NE.Input('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
 
-    const output = new D3NE.Output('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
+    const output =
+        new D3NE.Output('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
 
     const exampleControl = new D3NE.Control(
         // Write IDs as class_name_type_node_id
         `<select id="template_node_select_${
             node.id}" class="combobox hidden"><option>Template 1</option></select>`,
         (element, control) => {
-          // Element is the HTML object representation of the html string argument
-          // In this case element = HTMLSelectElement
+          // Element is the HTML object representation of the html string
+          // argument In this case element = HTMLSelectElement
           element.classList.remove('hidden');
 
           // Control is a data store in the node
@@ -95,8 +98,8 @@ class TemplateNode {
     this._checkD3NE();
 
     return new D3NE.Component('TemplateNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -115,8 +118,9 @@ class TemplateNode {
 
 /**
  * This iife (immediately invoked function expression) creates a lexical scope
- * It protects against polluting the global environment which means that the created
- * const 'templateNode' is not accessible outside the scope and wont pollute the 'window' object
+ * It protects against polluting the global environment which means that the
+ * created const 'templateNode' is not accessible outside the scope and wont
+ * pollute the 'window' object
  */
 (() => {
   const templateNode = new TemplateNode();

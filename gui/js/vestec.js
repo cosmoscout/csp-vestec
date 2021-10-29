@@ -49,7 +49,7 @@ class Vestec {
     }
 
     this._headers = new Headers({
-      'Content-Type': 'application/json',
+      'Content-Type' : 'application/json',
     });
   }
 
@@ -69,39 +69,31 @@ class Vestec {
    * @see {_server}
    * @returns {string}
    */
-  get server() {
-    return this._server;
-  }
+  get server() { return this._server; }
 
   /**
    * @see {_token}
    * @returns {string}
    */
-  get token() {
-    return this._token;
-  }
+  get token() { return this._token; }
 
   /**
    * Manually set an access token
    *
    * @param token {string}
    */
-  set token(token) {
-    this._token = token;
-  }
+  set token(token) { this._token = token; }
 
   /**
    *
    * @returns {boolean}
    */
-  isAuthorized() {
-    return this._authorized === true;
-  }
+  isAuthorized() { return this._authorized === true; }
 
   /**
-   * This call enables a user to login with the VESTEC system and returns a session token
-   * which is then used for subsequent calls to uniquely identify this user within that session.
-   * Calls /flask/login
+   * This call enables a user to login with the VESTEC system and returns a
+   * session token which is then used for subsequent calls to uniquely identify
+   * this user within that session. Calls /flask/login
    *
    * // Success
    * Status: 200
@@ -134,7 +126,7 @@ class Vestec {
 
     if (data.status === 200) {
       this._authorized = true;
-      this._token      = data.access_token;
+      this._token = data.access_token;
 
       if (this._headers.has('Authorization')) {
         this._headers.delete('Authorization');
@@ -169,9 +161,9 @@ class Vestec {
 
   /**
    * Check if user is still logged in and authorized
-   * E.g. is the current session associated with this deemed as active or has it expired.
-   * The authorization status can be accessed through CosmoScout.vestec.authorized
-   * Calls /flask/authorised
+   * E.g. is the current session associated with this deemed as active or has it
+   * expired. The authorization status can be accessed through
+   * CosmoScout.vestec.authorized Calls /flask/authorised
    *
    * // Success
    * Status: 200
@@ -191,7 +183,7 @@ class Vestec {
       return response;
     }
 
-    const data       = await response.json();
+    const data = await response.json();
     this._authorized = data.status === 200;
 
     return Vestec.buildResponse(data);
@@ -221,17 +213,18 @@ class Vestec {
   }
 
   /**
-   * Enables a potential user to signup to the VESTEC system and create a user account.
-   * Note that all user accounts are created disabled and it requires an administrator
-   * to explicitly enable these so that the user can login to the VESTEC system.
+   * Enables a potential user to signup to the VESTEC system and create a user
+   * account. Note that all user accounts are created disabled and it requires
+   * an administrator to explicitly enable these so that the user can login to
+   * the VESTEC system.
    *
    * // Success
    * Status: 200
    * StatusText: User successfully created. Log in.
    *
    * // Failure
-   * Status: varying - User already exists: 409 | JSON data incorrectly formatted: 400
-   * StatusText: Associated error message
+   * Status: varying - User already exists: 409 | JSON data incorrectly
+   * formatted: 400 StatusText: Associated error message
    *
    * @param username {string} The username
    * @param name {string} The persons name
@@ -265,18 +258,19 @@ class Vestec {
    *    status: Status of the incident (e.g. pending, active, completed etc),
    *    comment: Optional incident comment,
    *    creator: User who created the incident,
-   *    date_started: Date that the incident was started if incident has started,
-   *    date_completed: Date that the incident was completed if incident has completed,
-   *    upper_left_latlong: Lat/long of the upper right corner of the area of interest,
-   *    lower_right_latlong: Lat/long of the lower left corner of the area of interest,
-   *    duration: Duration of the simulation,
+   *    date_started: Date that the incident was started if incident has
+   * started, date_completed: Date that the incident was completed if incident
+   * has completed, upper_left_latlong: Lat/long of the upper right corner of
+   * the area of interest, lower_right_latlong: Lat/long of the lower left
+   * corner of the area of interest, duration: Duration of the simulation,
    *    incident_date: Date incident was created,
    *  }]
    * }
    *
    * // Failure
    *
-   * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#get-incidents
+   * See:
+   * https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#get-incidents
    *
    * @param types {string|string[]} List of incident filters
    * @see {incidentTypes}
@@ -285,13 +279,14 @@ class Vestec {
   async getIncidents(...types) {
     types.forEach((type) => {
       if (!this.incidentTypes.includes(type)) {
-        throw new Error(`Incident type '${type}' not in [${this.incidentTypes.concat(', ')}].`);
+        throw new Error(`Incident type '${type}' not in [${
+            this.incidentTypes.concat(', ')}].`);
       }
     });
 
     const response = await fetch(
         this._buildRequest('getincidents', {
-          uriParams: types.reduce((obj, cur) => ({...obj, [cur]: true}), {}),
+          uriParams : types.reduce((obj, cur) => ({...obj, [cur] : true}), {}),
         }),
     );
 
@@ -299,10 +294,10 @@ class Vestec {
   }
 
   /**
-   * This call enables a user to create a new incident and will return the incident unique
-   * identifier. Note that incidents are created in a pending state, and need to be explicitly
-   * activated by the corresponding API call. Incidents will be associated with the user who created
-   * them.
+   * This call enables a user to create a new incident and will return the
+   * incident unique identifier. Note that incidents are created in a pending
+   * state, and need to be explicitly activated by the corresponding API call.
+   * Incidents will be associated with the user who created them.
    *
    * // Success
    * Status: 200
@@ -315,7 +310,8 @@ class Vestec {
    * Status: 400
    * StatusText: Incident name or type is missing
    *
-   * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#create-incident
+   * See:
+   * https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#create-incident
    *
    * Access the response data as response.text() instead of response.json()
    * Trying to parse the UUID as json results in an error
@@ -335,14 +331,14 @@ class Vestec {
   async createIncident(incident) {
     const response = await fetch(
         this._buildRequest('createincident', {
-          name: incident.name,
-          kind: incident.kind,
-          upperLeftLatlong: incident.upperLeftLatlong,
-          lowerRightLatlong: incident.lowerRightLatlong,
-          duration: incident.duration,
-          simulationRuns: incident.simulationRuns,
-          mosquitoSpecies: incident.mosquitoSpecies,
-          diseaseOfInterest: incident.diseaseOfInterest,
+          name : incident.name,
+          kind : incident.kind,
+          upperLeftLatlong : incident.upperLeftLatlong,
+          lowerRightLatlong : incident.lowerRightLatlong,
+          duration : incident.duration,
+          simulationRuns : incident.simulationRuns,
+          mosquitoSpecies : incident.mosquitoSpecies,
+          diseaseOfInterest : incident.diseaseOfInterest,
         }),
     );
 
@@ -350,7 +346,8 @@ class Vestec {
   }
 
   /**
-   * Retrieves detailed information about a specific incident that the current user has access to.
+   * Retrieves detailed information about a specific incident that the current
+   * user has access to.
    *
    * // Success
    * Status: 200
@@ -362,28 +359,31 @@ class Vestec {
    *   comment: Optional incident comment,
    *   creator: User who created the incident,
    *   date_started: Date that the incident was started if incident has started,
-   *   date_completed: Date that the incident was completed if incident has completed,
-   *   upper_left_latlong: Lat/long of the upper right corner of the area of interest,
-   *   lower_right_latlong: Lat/long of the lower left corner of the area of interest,
-   *   duration: Duration of the simulation,
-   *   incident_date: Date incident was created,
-   *   digraph: Digraph of workflow execution status,
-   *   data_queue_name: The name of the EDI endpoint to use when adding data manually, empty means
-   * that the incident does not support this feature, data_sets: { uuid: UUID of the data-set, name:
-   * Name of this specific data-set, type: The type or kind of data-set (note this is NOT the
-   * file-type, but instead the provided type/kind of the data), comments: Any comments associated
-   * with the data-set, date_created: Timestamp when the data-set was created,
+   *   date_completed: Date that the incident was completed if incident has
+   * completed, upper_left_latlong: Lat/long of the upper right corner of the
+   * area of interest, lower_right_latlong: Lat/long of the lower left corner of
+   * the area of interest, duration: Duration of the simulation, incident_date:
+   * Date incident was created, digraph: Digraph of workflow execution status,
+   *   data_queue_name: The name of the EDI endpoint to use when adding data
+   * manually, empty means that the incident does not support this feature,
+   * data_sets: { uuid: UUID of the data-set, name: Name of this specific
+   * data-set, type: The type or kind of data-set (note this is NOT the
+   * file-type, but instead the provided type/kind of the data), comments: Any
+   * comments associated with the data-set, date_created: Timestamp when the
+   * data-set was created,
    *   },
    *   simulations: {
    *     uuid: UUID of the data-set,
    *     jobID: Machine assigned job ID (e.g. from the queue system),
-   *     status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED, CANCELLED, ERROR),
-   *     status_updated: Timestamp when the job status was last updated,
-   *     status_message: Any message associated with the status (e.g. a failure message in the event
-   * of error), created: Timestamp when the simulation was created, walltime: Execution walltime
-   * (either entire walltime if completed, or walltime to date if running), kind: The kind of
-   * simulation (a brief description), num_nodes: Number of nodes requested, requested_walltime: The
-   * requested walltime, machine: Name of the machine running this simulation,
+   *     status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED,
+   * CANCELLED, ERROR), status_updated: Timestamp when the job status was last
+   * updated, status_message: Any message associated with the status (e.g. a
+   * failure message in the event of error), created: Timestamp when the
+   * simulation was created, walltime: Execution walltime (either entire
+   * walltime if completed, or walltime to date if running), kind: The kind of
+   * simulation (a brief description), num_nodes: Number of nodes requested,
+   * requested_walltime: The requested walltime, machine: Name of the machine
+   * running this simulation,
    *   }
    * }
    *
@@ -391,7 +391,8 @@ class Vestec {
    * Status: 401
    * StatusText: Error retrieving incident
    *
-   * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#retrieve-incident
+   * See:
+   * https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#retrieve-incident
    *
    * @param uuid {string} Incident unique identifier
    * @returns {Promise<Response>}
@@ -413,7 +414,8 @@ class Vestec {
    *
    * // Failure
    *
-   * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#delete-incident
+   * See:
+   * https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#delete-incident
    *
    * @param uuid {string} Incident unique identifier
    * @returns {Promise<Response>}
@@ -438,7 +440,8 @@ class Vestec {
    * Status: 401
    * StatusText: Error archiving incident
    *
-   * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#archive-incident
+   * See:
+   * https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#archive-incident
    *
    * @param uuid {string} Incident unique identifier
    * @returns {Promise<Response>}
@@ -452,8 +455,8 @@ class Vestec {
   }
 
   /**
-   * Activates an incident, calling into the appropriate workflow initialisation stage
-   * which will set up things like listeners in the EDI
+   * Activates an incident, calling into the appropriate workflow initialisation
+   * stage which will set up things like listeners in the EDI
    *
    * // Success
    * Status: 200
@@ -463,7 +466,8 @@ class Vestec {
    * Status: 401
    * StatusText: Error retrieving incident
    *
-   * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#activating-an-incident
+   * See:
+   * https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#activating-an-incident
    *
    * @param uuid {string} Incident unique identifier
    * @returns {Promise<Response>}
@@ -477,7 +481,8 @@ class Vestec {
   }
 
   /**
-   * This retrieves the meta-data of incident's data-sets which match a specific type
+   * This retrieves the meta-data of incident's data-sets which match a specific
+   * type
    *
    * // Success
    * Status: 200
@@ -487,9 +492,10 @@ class Vestec {
    *     {
    *      uuid: UUID of the data-set,
    *      name: Name of this specific data-set,
-   *      type: The type or kind of data-set (note this is NOT the file-type, but instead the
-   * provided type/kind of the data) comment: Any comments associated with the data-set,
-   *      date_created: Timestamp when the data-set was created,
+   *      type: The type or kind of data-set (note this is NOT the file-type,
+   * but instead the provided type/kind of the data) comment: Any comments
+   * associated with the data-set, date_created: Timestamp when the data-set was
+   * created,
    *     }
    *   ]
    * }
@@ -508,9 +514,9 @@ class Vestec {
   async getDatasetsMetadata(type, uuid) {
     const response = await fetch(
         this._buildRequest('datasets', {
-          uriParams: {
+          uriParams : {
             type,
-            incident_uuid: uuid,
+            incident_uuid : uuid,
           },
         }),
     );
@@ -529,9 +535,10 @@ class Vestec {
    *     {
    *      uuid: UUID of the data-set,
    *      name: Name of this specific data-set,
-   *      type: The type or kind of data-set (note this is NOT the file-type, but instead the
-   * provided type/kind of the data) comment: Any comments associated with the data-set,
-   *      date_created: Timestamp when the data-set was created,
+   *      type: The type or kind of data-set (note this is NOT the file-type,
+   * but instead the provided type/kind of the data) comment: Any comments
+   * associated with the data-set, date_created: Timestamp when the data-set was
+   * created,
    *     }
    *   ]
    * }
@@ -550,9 +557,9 @@ class Vestec {
   async getIncidentDatasetMetadata(dataId, incidentId) {
     const response = await fetch(
         this._buildRequest('metadata', {
-          uriParams: {
-            data_uuid: dataId,
-            incident_uuid: incidentId,
+          uriParams : {
+            data_uuid : dataId,
+            incident_uuid : incidentId,
           },
         }),
     );
@@ -588,8 +595,8 @@ class Vestec {
   ) {
     const response = await fetch(
         this._buildRequest('metadata', {
-          data_uuid: dataId,
-          incident_uuid: incidentId,
+          data_uuid : dataId,
+          incident_uuid : incidentId,
           type,
           comments,
         }),
@@ -619,12 +626,12 @@ class Vestec {
   async deleteIncidentDataset(dataId, incidentId) {
     const response = await fetch(
         this._buildRequest('incident', {
-          uriParams: {
-            data_uuid: dataId,
-            incident_uuid: incidentId,
+          uriParams : {
+            data_uuid : dataId,
+            incident_uuid : incidentId,
           },
         },
-            'DELETE'),
+                           'DELETE'),
     );
 
     return Vestec.buildResponse(response);
@@ -642,7 +649,8 @@ class Vestec {
    * Status: 400
    * StatusText: Only datasets stored on VESTEC server currently supported
    *
-   * See: https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#downloading-a-data-set
+   * See:
+   * https://github.com/EPCCed/vestec-wp5/wiki/Incident-Management-API#downloading-a-data-set
    *
    * @param dataId {string} Dataset unique identifier
    * @returns {Promise<Response>}
@@ -741,13 +749,15 @@ class Vestec {
    * Body: {
    *   uuid: UUID of the data-set,
    *   jobID: Machine assigned job ID (e.g. from the queue system),
-   *   status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED, CANCELLED, ERROR),
-   *   status_updated: Timestamp when the job status was last updated,
-   *   status_message: Any message associated with the status (e.g. a failure message in the event
-   * of error), created: Timestamp when the simulation was created, walltime: Execution walltime
-   * (either entire walltime if completed, or walltime to date if running), kind: The kind of
-   * simulation (a brief description), num_nodes: Number of nodes requested, requested_walltime: The
-   * requested walltime, machine: Name of the machine running this simulation,
+   *   status: Status of the incident (PENDING, QUEUED, RUNNING, COMPLETED,
+   * CANCELLED, ERROR), status_updated: Timestamp when the job status was last
+   * updated, status_message: Any message associated with the status (e.g. a
+   * failure message in the event of error), created: Timestamp when the
+   * simulation was created, walltime: Execution walltime (either entire
+   * walltime if completed, or walltime to date if running), kind: The kind of
+   * simulation (a brief description), num_nodes: Number of nodes requested,
+   * requested_walltime: The requested walltime, machine: Name of the machine
+   * running this simulation,
    * }
    *
    * // Failure
@@ -761,7 +771,7 @@ class Vestec {
   async refreshSimulation(simulationId) {
     const response = await fetch(
         this._buildRequest('refreshsimulation', {
-          sim_uuid: simulationId,
+          sim_uuid : simulationId,
         }),
     );
 
@@ -785,11 +795,11 @@ class Vestec {
   async deleteSimulation(simulationId) {
     const response = await fetch(
         this._buildRequest('simulation', {
-          uriParams: {
-            sim_uuid: simulationId,
+          uriParams : {
+            sim_uuid : simulationId,
           },
         },
-            'DELETE'),
+                           'DELETE'),
     );
 
     return Vestec.buildResponse(response);
@@ -826,7 +836,8 @@ class Vestec {
    * Creates a response object from a vestec response or fetch response
    *
    * @param data {Response|{status: Number, msg: string|undefined, any:any}}
-   * @param responseDataKey {string|undefined} Optional. Vestec body data to use in the response
+   * @param responseDataKey {string|undefined} Optional. Vestec body data to use
+   * in the response
    * @returns {Response}
    * @private
    */
@@ -848,8 +859,8 @@ class Vestec {
 
     /** @type ResponseInit */
     const init = {
-      status: data.status,
-      statusText: typeof data.msg !== 'undefined' ? data.msg : '',
+      status : data.status,
+      statusText : typeof data.msg !== 'undefined' ? data.msg : '',
     };
 
     delete data.status;
@@ -857,13 +868,14 @@ class Vestec {
 
     const body = new Blob(
         [
-          typeof responseDataKey !== 'undefined' && typeof data[responseDataKey] !== 'undefined'
-              ? typeof                                     data[responseDataKey] === 'string'
+          typeof responseDataKey !== 'undefined' &&
+                  typeof data[responseDataKey] !== 'undefined'
+              ? typeof data[responseDataKey] === 'string'
                     ? data[responseDataKey]
                     : JSON.stringify(data[responseDataKey], null, 2)
               : JSON.stringify(data, null, 2),
         ],
-        {type: 'application/json'},
+        {type : 'application/json'},
     );
 
     return new Response(body, init);
@@ -871,11 +883,13 @@ class Vestec {
 
   /**
    * Builds the request object
-   * URL Search params can be appended by setting an 'uriParams' key in the 'data' object
-   * Null values or empty strings will be removed from the data object
+   * URL Search params can be appended by setting an 'uriParams' key in the
+   * 'data' object Null values or empty strings will be removed from the data
+   * object
    *
    * @param uri {string} The uri part to access e.g. 'login'
-   * @param data {Object|undefined} Request body data, gets converted to json automatically
+   * @param data {Object|undefined} Request body data, gets converted to json
+   * automatically
    * @param method {string} ['GET']
    * @returns {Request}
    * @private
@@ -884,7 +898,7 @@ class Vestec {
   _buildRequest(uri, data = undefined, method = 'GET') {
     const init = {
       method,
-      mode: 'cors',
+      mode : 'cors',
     };
 
     if (typeof this._server === 'undefined') {

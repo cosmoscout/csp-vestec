@@ -39,7 +39,8 @@ class CinemaDBNode {
    */
   builder(node) {
     const caseNames = new D3NE.Control(
-        `<select id="case_names_${node.id}" class="combobox"><option>none</option></select>`,
+        `<select id="case_names_${
+            node.id}" class="combobox"><option>none</option></select>`,
         (element, control) => {
           const select = $(`#case_names_${node.id}`);
 
@@ -52,7 +53,8 @@ class CinemaDBNode {
           if (this._useVestec()) {
             element.parentElement.classList.add('hidden');
           } else {
-            window.callNative('CinemaDBNode.readCaseNames', node.id, CinemaDBNode.path);
+            window.callNative('CinemaDBNode.readCaseNames', node.id,
+                              CinemaDBNode.path);
           }
 
           element.addEventListener('change', (event) => {
@@ -71,7 +73,8 @@ class CinemaDBNode {
           if (this._useVestec()) {
             element.parentElement.classList.add('hidden');
           } else {
-            window.callNative('CinemaDBNode.getTimeSteps', node.id, CinemaDBNode.path);
+            window.callNative('CinemaDBNode.getTimeSteps', node.id,
+                              CinemaDBNode.path);
           }
         },
     );
@@ -81,12 +84,14 @@ class CinemaDBNode {
     node.addControl(caseNames);
     node.addControl(timeSteps);
 
-    const output = new D3NE.Output('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const output =
+        new D3NE.Output('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
 
     node.addOutput(output);
 
     if (this._useVestec()) {
-      const input = new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
+      const input =
+          new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
       node.addInput(input);
     }
 
@@ -95,7 +100,8 @@ class CinemaDBNode {
 
   /**
    * Worker function
-   * Calls window.convertFile for current case name + time step combination -> CS writes JS vtk file
+   * Calls window.convertFile for current case name + time step combination ->
+   * CS writes JS vtk file
    *
    * @param {Node} node
    * @param {Array} inputs -
@@ -103,14 +109,15 @@ class CinemaDBNode {
    */
   worker(node, inputs, outputs) {
     if (this._useVestec()) {
-      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' ||
-          inputs[0].length === 0) {
+      if (typeof inputs[0] === 'undefined' ||
+          typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
         node.data.caseNameSelectParent.classList.add('hidden');
         node.data.timeSliderParent.classList.add('hidden');
         return;
       }
 
-      if (node.data.currentData === null || node.data.currentData !== inputs[0][0]) {
+      if (node.data.currentData === null ||
+          node.data.currentData !== inputs[0][0]) {
         window.callNative('CinemaDBNode.readCaseNames', node.id, inputs[0][0]);
         window.callNative('CinemaDBNode.getTimeSteps', node.id, inputs[0][0]);
 
@@ -137,13 +144,14 @@ class CinemaDBNode {
     if (node.data.converted !== fileName) {
       console.debug(`[CinemaDB Node #${node.id}] Converting ${fileName}.`);
 
-      window.callNative('CinemaDBNode.convertFile', node.data.caseName, node.data.timeStep, path);
+      window.callNative('CinemaDBNode.convertFile', node.data.caseName,
+                        node.data.timeStep, path);
       node.data.converted = fileName;
     }
 
     outputs[0] = {
-      caseName: node.data.caseName,
-      timeStep: node.data.timeStep,
+      caseName : node.data.caseName,
+      timeStep : node.data.timeStep,
       path,
     };
   }
@@ -158,8 +166,8 @@ class CinemaDBNode {
     this._checkD3NE();
 
     return new D3NE.Component('CinemaDBNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -168,9 +176,7 @@ class CinemaDBNode {
    * @return {boolean}
    * @private
    */
-  _useVestec() {
-    return typeof CinemaDBNode.path === 'undefined';
-  }
+  _useVestec() { return typeof CinemaDBNode.path === 'undefined'; }
 
   /**
    * Creates a noUiSlider for given time step args
@@ -186,20 +192,21 @@ class CinemaDBNode {
 
     const rangers = {};
 
-    rangers.min = [min];
+    rangers.min = [ min ];
     for (let i = 2; i < json.length; ++i) {
       const percent = ((json[i] - min) / (max - min)) * 100;
 
       if (i < json.length - 1) {
-        rangers[`${percent}%`] = [json[i], json[i + 1] - json[i]];
+        rangers[`${percent}%`] = [ json[i], json[i + 1] - json[i] ];
       }
     }
-    rangers.max = [max];
+    rangers.max = [ max ];
 
     // Initialize slider
     const slider = document.getElementById(`time_slider_${id}`);
     if (slider === null) {
-      console.error(`[CinemaDB Node #${id}] Slider with id #time_slider_${id} not found.`);
+      console.error(`[CinemaDB Node #${id}] Slider with id #time_slider_${
+          id} not found.`);
       return;
     }
 
@@ -208,14 +215,15 @@ class CinemaDBNode {
     }
 
     noUiSlider.create(slider, {
-      start: 10,
-      snap: true,
-      animate: false,
-      range: rangers,
+      start : 10,
+      snap : true,
+      animate : false,
+      range : rangers,
     });
 
     slider.noUiSlider.on('update', (values) => {
-      const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
+      const node = CosmoScout.vestecNE.editor.nodes.find(
+          (editorNode) => editorNode.id === id);
 
       if (typeof node !== 'undefined') {
         node.data.timeStep = Number(values[0]).toFixed(0);
@@ -224,9 +232,7 @@ class CinemaDBNode {
       }
     });
 
-    slider.noUiSlider.on('set', () => {
-      CosmoScout.vestecNE.updateEditor();
-    });
+    slider.noUiSlider.on('set', () => { CosmoScout.vestecNE.updateEditor(); });
   }
 
   /**
@@ -251,14 +257,15 @@ class CinemaDBNode {
 
     json.forEach((simulation) => {
       const option = document.createElement('option');
-      option.text  = simulation;
+      option.text = simulation;
 
       element.appendChild(option);
     });
 
     $(element).selectpicker();
 
-    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
+    const node = CosmoScout.vestecNE.editor.nodes.find(
+        (editorNode) => editorNode.id === id);
 
     if (typeof node !== 'undefined') {
       node.data.caseName = $(element).val();
@@ -272,9 +279,7 @@ class CinemaDBNode {
    *
    * @param {string} path
    */
-  static setPath(path) {
-    CinemaDBNode.path = path;
-  }
+  static setPath(path) { CinemaDBNode.path = path; }
 
   /**
    * Check if D3NE is available

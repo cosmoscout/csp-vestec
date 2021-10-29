@@ -34,26 +34,27 @@ class PersistenceNode {
    * @returns {Node} D3NE Node
    */
   builder(node) {
-    const renderer =
-        new D3NE.Control(`<div id="render_control_${node.id}"></div>`, (element, control) => {
+    const renderer = new D3NE.Control(
+        `<div id="render_control_${node.id}"></div>`, (element, control) => {
           const color = 'rgb(221, 221, 255)';
 
-          const persistenceRenderer = new PersistenceRenderer(element, node.id, {
-            strokeStyle: color,
-            axesTextColor: color,
-            axesColor: color,
-            axesTickColor: color,
-            padding: {
-              left: 40,
-              top: 20,
-              right: 20,
-              bottom: 40,
-            },
-            waitTime: 2,
-            enablePersistenceFilter: true,
-            enableSelectionFilter: true,
-            selectionStopPropagation: true,
-          });
+          const persistenceRenderer =
+              new PersistenceRenderer(element, node.id, {
+                strokeStyle : color,
+                axesTextColor : color,
+                axesColor : color,
+                axesTickColor : color,
+                padding : {
+                  left : 40,
+                  top : 20,
+                  right : 20,
+                  bottom : 40,
+                },
+                waitTime : 2,
+                enablePersistenceFilter : true,
+                enableSelectionFilter : true,
+                selectionStopPropagation : true,
+              });
 
           // Update graph processing on selection changes
           persistenceRenderer.container.addEventListener(
@@ -74,16 +75,16 @@ class PersistenceNode {
         '<button data-minimized="false" class="hidden"><i class="material-icons minimize">picture_in_picture</i></button>',
         (element, control) => {
           Object.assign(element.style, {
-            border: 0,
-            background: 'none',
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            zIndex: 1,
+            border : 0,
+            background : 'none',
+            position : 'absolute',
+            top : 0,
+            right : 0,
+            zIndex : 1,
           });
 
           Object.assign(element.parentNode.style, {
-            padding: 0,
+            padding : 0,
           });
 
           const canvas = control.getData('canvas');
@@ -123,11 +124,13 @@ class PersistenceNode {
 
     node.data.activeFile = null;
 
-    const input = new D3NE.Input('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
+    const input =
+        new D3NE.Input('Cinema DB', CosmoScout.vestecNE.sockets.CINEMA_DB);
 
     node.addInput(input);
 
-    const output = new D3NE.Output('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
+    const output =
+        new D3NE.Output('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
 
     node.addOutput(output);
 
@@ -154,7 +157,8 @@ class PersistenceNode {
     }
 
     if (inputs[0][0] === null) {
-      console.warn(`[Persistence Node #${node.id}] Case name or time step undefined.`);
+      console.warn(
+          `[Persistence Node #${node.id}] Case name or time step undefined.`);
       return;
     }
 
@@ -173,12 +177,14 @@ class PersistenceNode {
       return;
     }
 
-    const modPath = PersistenceNode.pathDIR.substr(3, PersistenceNode.pathDIR.length - 3);
+    const modPath =
+        PersistenceNode.pathDIR.substr(3, PersistenceNode.pathDIR.length - 3);
 
     let path = `/${modPath}/export/${fileName}`;
 
     if (typeof inputs[0][0].uuid !== 'undefined') {
-      path = `/${CosmoScout.vestec.downloadDir}/extracted/${inputs[0][0].uuid}/${fileName}`;
+      path = `/${CosmoScout.vestec.downloadDir}/extracted/${
+          inputs[0][0].uuid}/${fileName}`;
     }
 
     if (typeof inputs[0][0].path !== 'undefined') {
@@ -189,7 +195,7 @@ class PersistenceNode {
       node.data.activeFile = fileName;
       renderer.update();
     }),
-        250);
+               250);
   }
 
   /**
@@ -202,8 +208,8 @@ class PersistenceNode {
     this._checkD3NE();
 
     return new D3NE.Component('PersistenceNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -222,15 +228,15 @@ class PersistenceNode {
   /**
    * Set path to load data
    *
-   * @param {string} myPath - Path to the exported persistence diagram in vtk js format
+   * @param {string} myPath - Path to the exported persistence diagram in vtk js
+   * format
    */
-  static setPath(myPath) {
-    this.pathDIR = myPath.toString();
-  }
+  static setPath(myPath) { this.pathDIR = myPath.toString(); }
 }
 
 (() => {
   const persistenceNode = new PersistenceNode();
 
-  CosmoScout.vestecNE.addNode('PersistenceNode', persistenceNode.getComponent());
+  CosmoScout.vestecNE.addNode('PersistenceNode',
+                              persistenceNode.getComponent());
 })();

@@ -33,7 +33,8 @@ class IncidentConfigNode {
   </select>
 </div></div>`,
         (element, control) => {
-          const select = element.querySelector(`#incident_config_node_select_mosquito_${node.id}`);
+          const select = element.querySelector(
+              `#incident_config_node_select_mosquito_${node.id}`);
           $(select).selectpicker();
 
           control.putData('speciesSelect', select);
@@ -42,7 +43,8 @@ class IncidentConfigNode {
 
     const regionSelect = new D3NE.Control(
         `<div class="row">
-<div class="col-4"><label for="incident_config_node_select_region_${node.id}">Region</label></div>
+<div class="col-4"><label for="incident_config_node_select_region_${
+            node.id}">Region</label></div>
 <div class="col-8">
   <select id="incident_config_node_select_region_${node.id}" class="combobox">
     <option value="rome">Rome</option>
@@ -50,7 +52,8 @@ class IncidentConfigNode {
   </select>
 </div></div>`,
         (element, control) => {
-          const select = element.querySelector(`#incident_config_node_select_region_${node.id}`);
+          const select = element.querySelector(
+              `#incident_config_node_select_region_${node.id}`);
           $(select).selectpicker();
 
           control.putData('regionSelect', select);
@@ -70,7 +73,8 @@ class IncidentConfigNode {
   </select>
 </div></div>`,
         (element, control) => {
-          const select = element.querySelector(`#incident_config_node_select_disease_${node.id}`);
+          const select = element.querySelector(
+              `#incident_config_node_select_disease_${node.id}`);
           $(select).selectpicker();
 
           control.putData('diseaseSelect', select);
@@ -79,13 +83,15 @@ class IncidentConfigNode {
 
     const countInput = new D3NE.Control(
         `<div class="row">
-<div class="col-4"><label for="incident_config_node_count_input_${node.id}">Count</label></div>
+<div class="col-4"><label for="incident_config_node_count_input_${
+            node.id}">Count</label></div>
 <div class="col-8"><input id="incident_config_node_count_input_${
             node.id}" type="number" min="1" value="200" style="display: block; width: 100%" /></div>
 </div>`,
         (element, control) => {
-          control.putData(
-              'countInput', element.querySelector(`#incident_config_node_count_input_${node.id}`));
+          control.putData('countInput',
+                          element.querySelector(
+                              `#incident_config_node_count_input_${node.id}`));
         },
     );
 
@@ -94,8 +100,8 @@ class IncidentConfigNode {
     node.addControl(diseaseSelect);
     node.addControl(countInput);
 
-    const configOutput =
-        new D3NE.Output('Test Stage Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG)
+    const configOutput = new D3NE.Output(
+        'Test Stage Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG)
 
     node.addOutput(configOutput);
 
@@ -109,10 +115,10 @@ class IncidentConfigNode {
    */
   async worker(node, _inputs, outputs) {
     outputs[0] = {
-      species: node.data.speciesSelect.value,
-      region: node.data.regionSelect.value,
-      disease: node.data.diseaseSelect.value,
-      count: node.data.countInput.value,
+      species : node.data.speciesSelect.value,
+      region : node.data.regionSelect.value,
+      disease : node.data.diseaseSelect.value,
+      count : node.data.countInput.value,
     };
   }
 
@@ -126,8 +132,8 @@ class IncidentConfigNode {
     this._checkD3NE();
 
     return new D3NE.Component('IncidentConfigNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -147,5 +153,6 @@ class IncidentConfigNode {
 (() => {
   const incidentConfigNode = new IncidentConfigNode();
 
-  CosmoScout.vestecNE.addNode('IncidentConfigNode', incidentConfigNode.getComponent());
+  CosmoScout.vestecNE.addNode('IncidentConfigNode',
+                              incidentConfigNode.getComponent());
 })();

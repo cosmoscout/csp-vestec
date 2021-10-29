@@ -46,7 +46,8 @@ class TextureLoaderNode {
     node.addControl(texture);
 
     // Define the output type
-    const output = new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
+    const output =
+        new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
@@ -81,8 +82,8 @@ class TextureLoaderNode {
     this._checkD3NE();
 
     return new D3NE.Component('TextureLoaderNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -107,7 +108,8 @@ class TextureLoaderNode {
    * @returns void
    */
   static fillTextureSelect(textures, id) {
-    const node = CosmoScout.vestecNE.editor.nodes.find((eNode) => {return eNode.id === id});
+    const node = CosmoScout.vestecNE.editor.nodes.find(
+        (eNode) => {return eNode.id === id});
 
     if (typeof node === 'undefined') {
       return;
@@ -116,7 +118,8 @@ class TextureLoaderNode {
     textures = JSON.parse(textures);
 
     node.data.textures = textures;
-    const element      = document.getElementById(`texture_loader_node_${node.id}_texture_select`);
+    const element = document.getElementById(
+        `texture_loader_node_${node.id}_texture_select`);
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -124,16 +127,15 @@ class TextureLoaderNode {
     textures.forEach((texture) => {
       const option = document.createElement('option');
       option.value = texture;
-      option.text  = texture.split('/').pop().toString();
+      option.text = texture.split('/').pop().toString();
 
       element.appendChild(option);
     });
 
     $(element).selectpicker();
 
-    element.addEventListener('change', (event) => {
-      node.data.activeTexture = event.target.value;
-    });
+    element.addEventListener(
+        'change', (event) => { node.data.activeTexture = event.target.value; });
 
     node.data.activeTexture = $(element).val();
     node.data.activeFileSet = textures;
@@ -142,5 +144,6 @@ class TextureLoaderNode {
 
 (() => {
   const textureLoaderNode = new TextureLoaderNode();
-  CosmoScout.vestecNE.addNode('TextureLoaderNode', textureLoaderNode.getComponent());
+  CosmoScout.vestecNE.addNode('TextureLoaderNode',
+                              textureLoaderNode.getComponent());
 })();

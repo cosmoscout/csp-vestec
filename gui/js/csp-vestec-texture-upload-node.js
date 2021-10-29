@@ -42,13 +42,15 @@ class TextureUploadNode {
 
     node.addControl(uploadButtonControl);
 
-    const incidentInput = new D3NE.Input('Incident', CosmoScout.vestecNE.sockets.INCIDENT);
-    const textureInput  = new D3NE.Input('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
+    const incidentInput =
+        new D3NE.Input('Incident', CosmoScout.vestecNE.sockets.INCIDENT);
+    const textureInput =
+        new D3NE.Input('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
 
     node.addInput(incidentInput);
     node.addInput(textureInput);
 
-    node.data.inputTextures    = [];
+    node.data.inputTextures = [];
     node.data.uploadedTextures = [];
 
     return node;
@@ -66,7 +68,7 @@ class TextureUploadNode {
     }
 
     node.data.activeIncident = inputs[0];
-    node.data.inputTextures  = inputs[1];
+    node.data.inputTextures = inputs[1];
 
     node.data.button.removeAttribute('disabled');
     node.data.button.classList.remove('disabled');
@@ -83,8 +85,8 @@ class TextureUploadNode {
     this._checkD3NE();
 
     return new D3NE.Component('TextureUploadNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -109,12 +111,13 @@ class TextureUploadNode {
   async _upload(node) {
     node.data.inputTextures.flat().forEach(texturePath => {
       if (node.data.uploadedTextures.includes(texturePath)) {
-        CosmoScout.notifications.print('Skipping Upload', 'Texture already uploaded', 'info');
+        CosmoScout.notifications.print('Skipping Upload',
+                                       'Texture already uploaded', 'info');
         return;
       }
 
-      window.callNative(
-          'TextureUploadNode.uploadDataSet', texturePath, node.data.activeIncident[0], node.id);
+      window.callNative('TextureUploadNode.uploadDataSet', texturePath,
+                        node.data.activeIncident[0], node.id);
     })
   }
 
@@ -136,16 +139,18 @@ class TextureUploadNode {
         await CosmoScout.vestec.api
             .uploadDataset('add_data_simple', incidentUUID, {
               filename,
-              filetype: 'TEXTURE',
-              filecomment: 'CosmoScout VR Upload',
-              payload: `data:application/octet-stream;base64,${base64Data}`,
+              filetype : 'TEXTURE',
+              filecomment : 'CosmoScout VR Upload',
+              payload : `data:application/octet-stream;base64,${base64Data}`,
             })
             .catch(() => {
-              CosmoScout.notifications.print('Upload failed', 'Is the incident active?', 'error');
+              CosmoScout.notifications.print(
+                  'Upload failed', 'Is the incident active?', 'error');
             });
 
     if (typeof response !== 'undefined' && response.status <= 500) {
-      const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === nodeId);
+      const node = CosmoScout.vestecNE.editor.nodes.find(
+          (editorNode) => editorNode.id === nodeId);
 
       if (typeof node !== 'undefined') {
         // TODO Add texture to list of uploaded ones
@@ -163,5 +168,6 @@ class TextureUploadNode {
 (() => {
   const textureUploadNode = new TextureUploadNode();
 
-  CosmoScout.vestecNE.addNode('TextureUploadNode', textureUploadNode.getComponent());
+  CosmoScout.vestecNE.addNode('TextureUploadNode',
+                              textureUploadNode.getComponent());
 })();
