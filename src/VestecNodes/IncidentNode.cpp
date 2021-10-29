@@ -53,7 +53,8 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
           auto success = IncidentNode::DownloadDataset(uuid, token);
 
           pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady", id, uuid, success);
-        })).detach();
+        }))
+            .detach();
       }));
 
   pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
@@ -75,7 +76,8 @@ void IncidentNode::Init(VNE::NodeEditor* pEditor) {
 
               pEditor->GetGuiItem()->callJavascript(
                   "IncidentNode.setDatasetReady", id, uuid, download && extract);
-            })).detach();
+            }))
+                .detach();
           }));
 }
 

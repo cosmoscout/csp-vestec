@@ -402,7 +402,11 @@ class IncidentNode {
       return;
     }
 
-    const datasetIds = node.data.activeIncidentDatasets ?? [];
+    // Nullish coalescing operator breaks clang format...
+    const datasetIds = (typeof node.data.activeIncidentDatasets !== 'undefined' &&
+                           node.data.activeIncidentDatasets !== null)
+                           ? node.data.activeIncidentDatasets
+                           : [];
 
     if (incidentId.length === 0) {
       return;
@@ -893,7 +897,12 @@ class IncidentNode {
       return false;
     }
 
-    const datasets      = await CosmoScout.vestec.getIncidentDatasets(id) ?? [];
+    // Nullish coalescing operator breaks clang format...
+    let datasets = await CosmoScout.vestec.getIncidentDatasets(id);
+    if (typeof datasets === 'undefined' || datasets === null) {
+      datasets = [];
+    }
+
     const activeDataset = Array.from(element.selectedOptions).map(option => option.value);
 
     if (datasets.length === 0 && node.data.incidentDatasets.length === 0) {

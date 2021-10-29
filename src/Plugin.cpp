@@ -219,15 +219,13 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("TRANSFER_FUNCTION");
 
   // Register our node types for the flow editor
-  m_pNodeEditor->RegisterNodeType(
-      TransferFunctionSourceNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(TransferFunctionSourceNode::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) {
         return new TransferFunctionSourceNode(mPluginSettings, webView, id);
       },
       [](VNE::NodeEditor* editor) { TransferFunctionSourceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      CinemaDBNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
       [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
 
@@ -252,41 +250,34 @@ void Plugin::init() {
   //    },
   //    [](VNE::NodeEditor* editor) { DiseasesSimulation::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      TextureUploadNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(TextureUploadNode::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) { return new TextureUploadNode(webView, id); },
       [](VNE::NodeEditor* editor) { TextureUploadNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      TextureLoaderNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(TextureLoaderNode::GetName(), "Sources",
       [this](cs::gui::GuiItem* webView, int id) { return new TextureLoaderNode(webView, id); },
       [](VNE::NodeEditor* editor) { TextureLoaderNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      IncidentNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(IncidentNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new IncidentNode(webView, id); },
       [](VNE::NodeEditor* editor) { IncidentNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      IncidentConfigNode::GetName(), "Sources",
+  m_pNodeEditor->RegisterNodeType(IncidentConfigNode::GetName(), "Sources",
       [](cs::gui::GuiItem* webView, int id) { return new IncidentConfigNode(webView, id); },
       [](VNE::NodeEditor* editor) { IncidentConfigNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      PersistenceNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
       [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
       [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      TextureRenderNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(TextureRenderNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
         return new TextureRenderNode(mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
       },
       [](VNE::NodeEditor* editor) { TextureRenderNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(
-      CriticalPointsNode::GetName(), "Renderer",
+  m_pNodeEditor->RegisterNodeType(CriticalPointsNode::GetName(), "Renderer",
       [this](cs::gui::GuiItem* webView, int id) {
         return new CriticalPointsNode(mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
