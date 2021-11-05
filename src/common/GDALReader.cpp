@@ -8,6 +8,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 std::map<std::string, GDALReader::GreyScaleTexture> GDALReader::TextureCache;
 std::mutex GDALReader::mMutex;
