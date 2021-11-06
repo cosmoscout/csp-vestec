@@ -10,7 +10,7 @@ on:
 
 jobs:
   clang_format:
-    name: Check Clang-Format
+    name: Run Clang-Format
     runs-on: ubuntu-18.04
     steps:
       - name: Checkout Repository
@@ -34,5 +34,5 @@ jobs:
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'cosmoscout-vr@users.noreply.github.com'
-          git commit -am ":sparkles: Automated Clang-Format"
+          git commit -am ":sparkles: Automated Clang-Format" || echo "Nothing to commit"
           git push
