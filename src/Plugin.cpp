@@ -276,14 +276,14 @@ void Plugin::init() {
 
   m_pNodeEditor->RegisterNodeType(
       TextureUploadNode::GetName(), "Sources",
-      [this](cs::gui::GuiItem *webView, int id) {
+      [](cs::gui::GuiItem *webView, int id) {
         return new TextureUploadNode(webView, id);
       },
       [](VNE::NodeEditor *editor) { TextureUploadNode::Init(editor); });
 
   m_pNodeEditor->RegisterNodeType(
       TextureLoaderNode::GetName(), "Sources",
-      [this](cs::gui::GuiItem *webView, int id) {
+      [](cs::gui::GuiItem *webView, int id) {
         return new TextureLoaderNode(webView, id);
       },
       [](VNE::NodeEditor *editor) { TextureLoaderNode::Init(editor); });
