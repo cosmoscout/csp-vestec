@@ -121,7 +121,8 @@ bool IncidentNode::DownloadDataset(const std::string uuid, const std::string tok
     request.reset();
     if (out.tellp() == 0) {
       csp::vestec::logger().warn(
-          "Download is corrupt. File size of '{}' is 0 bytes. Retry now", downloadPath);
+          "Download is corrupt. File size of '{}' is 0 bytes. Retry now",
+          downloadPath);
       retry++;
     }
   }
