@@ -109,8 +109,9 @@ class TextureRenderNode {
               slider, {start : 1, animate : false, range : {min : 1, max : 1}});
 
           $(element).hide();
-  
-          // Read the files for the given simulation mode and fill combobox when mode is changed
+
+          // Read the files for the given simulation mode and fill combobox when
+          // mode is changed
           slider.noUiSlider.on('slide', (values, handle) => {
             console.log("Changed layer " + parseFloat(values[handle]));
             window.callNative('TextureRenderNode.setTextureLayer', node.id,
@@ -472,11 +473,11 @@ class TextureRenderNode {
       return;
     }
 
-    const group = document.querySelector(`#texture-node_${node.id}-layer_group`);
-    if(layers == 1)
-    {
+    const group =
+        document.querySelector(`#texture-node_${node.id}-layer_group`);
+    if (layers == 1) {
       $(group).hide();
-    }else{
+    } else {
       $(group).show();
     }
 
