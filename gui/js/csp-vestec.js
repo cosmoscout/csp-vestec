@@ -120,13 +120,6 @@
             window.callNative('vestec.addStartMark');
           });
 
-      document.getElementById('csp-vestec-incident-select-lower-right')
-          .addEventListener('click', () => {
-            CosmoScout.notifications.print('Set End Region', 'Move the mark.',
-                                           'add_circle_outline');
-            window.callNative('vestec.addEndMark');
-          });
-
       document.getElementById('csp-vestec-create-incident-btn')
           .addEventListener(
               'click',
