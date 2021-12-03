@@ -83,6 +83,11 @@ public:
   void SetOverlayTexture(GDALReader::GreyScaleTexture &texture);
 
   /**
+   * Change the min and max value used to compute a color
+   */
+  void SetDataRange(float min, float max);
+
+  /**
    * Unloads the currently active texture
    */
   void UnloadTexture();

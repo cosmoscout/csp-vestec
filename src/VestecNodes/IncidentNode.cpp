@@ -108,16 +108,24 @@ bool IncidentNode::DownloadDataset(const std::string uuid,
 
   csp::vestec::logger().debug("Downloading '{}' to '{}'.", url, downloadPath);
 
-  curlpp::Easy request;
-  request.setOpt(curlpp::options::ConnectTimeout(1L));
-  request.setOpt(curlpp::options::HttpHeader(header));
-  request.setOpt(curlpp::options::Url(url));
-  request.setOpt(curlpp::options::WriteStream(&out));
-  request.setOpt(curlpp::options::NoSignal(true));
+  int retry = 0;
 
-  request.perform();
-  request.reset();
+  while (out.tellp() == 0 && retry < 5) {
+    curlpp::Easy request;
+    request.setOpt(curlpp::options::ConnectTimeout(10L));
+    request.setOpt(curlpp::options::HttpHeader(header));
+    request.setOpt(curlpp::options::Url(url));
+    request.setOpt(curlpp::options::WriteStream(&out));
+    request.setOpt(curlpp::options::NoSignal(true));
 
+    request.perform();
+    request.reset();
+    if (out.tellp() == 0) {
+      csp::vestec::logger().warn(
+          "Download is corrupt. File size of '{}' is 0 bytes. Retry now", downloadPath);
+      retry++;
+    }
+  }
   out.close();
 
   return true;

@@ -204,7 +204,7 @@ class IncidentNode {
 <button id="incident_node_${
             node.id}_incident_delete_button" class="btn glass">Delete Incident</button>
 <button id="incident_node_${
-            node.id}_incident_test_stage_button" class="btn glass">Start Test Stage</button>
+            node.id}_incident_test_stage_button" class="btn glass">Run Workflow</button>
 </div>`,
         (element, control) => {
           const incidentStartButton = element.querySelector(
@@ -297,8 +297,8 @@ class IncidentNode {
                   setInterval(this._checkSimulationStatus, 5000, node)
 
               CosmoScout.notifications.print(
-                  'Test started',
-                  'Successfully started test stage.',
+                  'Workflow started',
+                  'Successfully started workflow.',
                   'done',
               );
             }
