@@ -1,3 +1,4 @@
+/*
 
 #include "CriticalPointsRenderer.hpp"
 #include <string>
@@ -27,7 +28,7 @@ void main()
     vs_out.persistence = inPersistence;
     vs_out.criticalType = inCriticalType;
 
-    gl_Position = vec4(inPos, 1.0);
+    gl_Position = vec4(inPos.xy, 0.0, 0.0);
 }
 )";
 
@@ -35,7 +36,7 @@ const std::string CriticalPointsRenderer::SURFACE_GEOM = R"(
 #version 430
 
 layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
+layout (points) out;
 
 uniform mat4          uMatP;
 uniform mat4          uMatMV;
@@ -57,8 +58,6 @@ out GS_OUT
     float persistence;
     flat int criticalType;
     vec3 normal;
-
-    vec3 center;
 } gs_out;
 
 const float PI = 3.14159265359;
@@ -70,17 +69,17 @@ vec3 geodeticSurfaceNormal(vec2 lngLat) {
 
 vec3 toCartesian(vec2 lonLat, float h) {
   vec3 n = geodeticSurfaceNormal(lonLat);
-  vec3 k = n * (uRadii + h + 50);
+  vec3 k = n * (uRadii + h);
   return k;
 }
 
 
 // Emits a vertex and sets gs_out values
-void outputVertex(vec4 vPos, int i, int sides, vec4[4] positions)
+void outputVertex(vec4 vPos, int i, int sides, vec4[5] positions)
 {
-    vec4 mvPos = vec4(vPos.xyz, 1);
+    vec4 mvPos = uMatMV * vec4(vPos.xyz, 1);
 
-    gs_out.vPos = mvPos;
+    gs_out.vPos = vec4(mvPos.xyz, 1);
     gs_out.persistence = gs_in_vs[0].persistence;
     gs_out.criticalType = gs_in_vs[0].criticalType;
 
@@ -89,40 +88,38 @@ void outputVertex(vec4 vPos, int i, int sides, vec4[4] positions)
 
     gs_out.normal = normalize(cross(x, y));
 
-    gl_Position = uMatP * mvPos;
+    gl_Position = uMatP * vec4(mvPos.xyz, 1.0);
 
     EmitVertex();
 }
 
 void main()
 {
-
-
     float normalizedPersistence = (gs_in_vs[0].persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
     float widthScale = uWidthScale * 3.14 / 180; //in degree
     float heightScale = normalizedPersistence * uHeightScale * 1000; //m to km
-vec4 center = uMatMV * vec4(toCartesian(gl_in[0].gl_Position.xy, heightScale), 1);
 
-gs_out.center = center.xyz;
+    // Total number of sides + center position
+    vec4 position;
 
-vec4[4] positions;
+    vec4 inPos = gl_in[0].gl_Position * widthScale;
 
-float scale = mix(0.01, 0.2, uWidthScale);
+    vec3 posV = toCartesian(inPos.xy, heightScale);
 
-// Über Depthbuffer schreiben
-// SIehe texture renderer
+    vec3 scaledPos = posV;
 
-positions[2] = (center + (vec4(scale, scale, 0.0, 0.0)))/center.w;
-positions[3] = (center + (vec4(scale, -scale, 0.0, 0.0)))/center.w;
-positions[1] = (center + (vec4(-scale, scale, 0.0, 0.0)))/center.w;
-positions[0] = (center + (vec4(-scale, -scale, 0.0, 0.0)))/center.w;
+    position = vec4(scaledPos.xyz, 1);
 
-    // Top billboard
-    outputVertex(positions[2], 1, 0, positions);
-    outputVertex(positions[3], 1, 0, positions);
-    outputVertex(positions[1], 1, 0, positions);
-    outputVertex(positions[0], 1, 0, positions);
-    EndPrimitive();
+
+    vec4 mvPos = uMatMV * vec4(position.xyz, 1);
+
+    gs_out.vPos = vec4(mvPos.xyz, 1);
+    gs_out.persistence = gs_in_vs[0].persistence;
+    gs_out.criticalType = gs_in_vs[0].criticalType;
+
+    gs_out.normal = normalize(cross(position, position));
+
+    gl_Position = uMatP * vec4(mvPos.xyz, 1.0);
 }
 )";
 
@@ -135,11 +132,9 @@ in GS_OUT
     float persistence;
     flat int criticalType;
     vec3 normal;
-
-vec3 center;
 } fs_in;
 
-out vec4  FragColor;
+out vec4  vFragColor;
 
 uniform mat4          uMatP;
 uniform mat4          uMatMV;
@@ -154,30 +149,29 @@ uniform vec3          uSunDirection;
 
 uniform sampler1D     uTransferFunction;
 
-
-uniform float         uWidthScale;
-
 void main()
 {
-if (fs_in.criticalType != uVisualizationMode && uVisualizationMode!= 4) {
+    if (fs_in.criticalType != uVisualizationMode && uVisualizationMode!= 4) {
         discard;
     }
 
-float value = (fs_in.persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
-  vec4 color = texture(uTransferFunction, value);
+    float value = (fs_in.persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
+    vec4 color = texture(uTransferFunction, value);
 
-  float ambientStrength = 0.2;
-  vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
-  float diff = max(dot(fs_in.normal, -uSunDirection), 0.0);
-  vec3 diffuse = diff * lightColor;
-  vec3 ambient = ambientStrength * lightColor;
+    // calculate normal from texture coordinates
+    vec3 N;
+    N.xy = gl_PointCoord* 2.0 - vec2(1.0);
+    float mag = dot(N.xy, N.xy);
+    if (mag > 1.0) discard;   // kill pixels outside circle
+    N.z = sqrt(1.0-mag);
 
-  vec3 result = (ambient + diffuse) * color.rgb;
+    // calculate lighting
+    float diffuse = max(0.0, dot(uSunDirection, N));
 
-  FragColor = vec4(result.rgb, color.a);
+    vFragColor = vec4(color,1) * diffuse;
 
-  gl_FragDepth = length(vec3(fs_in.vPos.xyz)) / uFarClip;
-
+    gl_FragDepth = length(vec3(fs_in.vPos.xyz)) / uFarClip;
 }
 )";
+*/
