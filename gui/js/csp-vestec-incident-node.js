@@ -58,8 +58,9 @@ class IncidentNode {
   /**
    * TODO: CHANGE ME
    *
-   * This is the number of simulations that must finish until a test stage run is deemed 'complete'
-   * Ideally we could dynamically derive if/when/how a batch of jobs belongs to the same stage
+   * This is the number of simulations that must finish until a test stage run
+   * is deemed 'complete' Ideally we could dynamically derive if/when/how a
+   * batch of jobs belongs to the same stage
    *
    * @type {number}
    */
@@ -194,7 +195,8 @@ class IncidentNode {
           container.classList.add('hidden');
 
           // Only update the editor if selected datasets were changed
-          // The 'oof.' check is necessary as a change event is generated even when not changing anything
+          // The 'oof.' check is necessary as a change event is generated even
+          // when not changing anything
           element.addEventListener('change', (event) => {
             const selectedEntries = Array.from(event.target.selectedOptions)
                                         .map(option => option.value);
@@ -242,7 +244,8 @@ class IncidentNode {
           incidentDeleteButton.classList.add('hidden');
           incidentTestStageButton.classList.add('hidden');
 
-          // TODO: Sometimes a 200 response is sent even when the incident wasn't activated
+          // TODO: Sometimes a 200 response is sent even when the incident
+          // wasn't activated
           incidentStartButton.addEventListener('click', async () => {
             const activationResponse =
                 await CosmoScout.vestec.api
@@ -310,8 +313,8 @@ class IncidentNode {
                 });
 
             if (testStageResponse.status !== 200) {
-              CosmoScout.notifications.print(
-                  'Test failed', 'Could not run Workflow', 'error');
+              CosmoScout.notifications.print('Test failed',
+                                             'Could not run Workflow', 'error');
             } else {
               clearInterval(node.data.simulationUpdateInterval);
               node.data.simulationUpdateIncidentUUID = node.data.activeIncident;
@@ -332,13 +335,18 @@ class IncidentNode {
     // Displays a progress bar that advances after a stage was completed
     const incidentTestStageStatusControl = new D3NE.Control(
         `<div id="incident_node_${node.id}_test_stage_status_container">
-            <span id="incident_node_${node.id}_test_stage_status" class="text"></span>
-            <progress id="incident_node_${node.id}_test_stage_progress" max="${IncidentNode.NUM_WORKITEMS_PER_STAGE}" value="0" style="display: block"></progress>
+            <span id="incident_node_${
+            node.id}_test_stage_status" class="text"></span>
+            <progress id="incident_node_${node.id}_test_stage_progress" max="${
+            IncidentNode
+                .NUM_WORKITEMS_PER_STAGE}" value="0" style="display: block"></progress>
         </div>`,
         (element, control) => {
           control.putData('incidentTestStageStatusContainer', element);
-          control.putData('incidentTestStageStatusText', element.querySelector('span'));
-          control.putData('incidentTestStageProgress', element.querySelector('progress'));
+          control.putData('incidentTestStageStatusText',
+                          element.querySelector('span'));
+          control.putData('incidentTestStageProgress',
+                          element.querySelector('progress'));
           element.parentElement.classList.add('hidden');
         });
 
@@ -604,12 +612,11 @@ class IncidentNode {
 
     // There are active simulations
     if (currentSimulations.length > 0) {
-        // Status is returned in UPPERCASE
-        // we convert it to lowercase with the first character being uppercase
+      // Status is returned in UPPERCASE
+      // we convert it to lowercase with the first character being uppercase
       const statusText = currentSimulations[0].status.charAt(0).toUpperCase() +
                          currentSimulations[0].status.slice(1).toLowerCase();
-      const statusElement =
-          document.createTextNode(`Workflow: ${statusText}`);
+      const statusElement = document.createTextNode(`Workflow: ${statusText}`);
       node.data.incidentTestStageStatusContainer.parentElement.classList.remove(
           'hidden');
 
@@ -632,10 +639,12 @@ class IncidentNode {
             'Simulation Step Done', `A simulation step was completed`, 'done');
 
         // Increment the progress bar
-        node.data.incidentTestStageProgress.value = parseInt(node.data.incidentTestStageProgress.value) + 1;
+        node.data.incidentTestStageProgress.value =
+            parseInt(node.data.incidentTestStageProgress.value) + 1;
       }
     } else if (currentSimulations.length === 0 ||
-        parseInt(node.data.incidentTestStageProgress.value) === IncidentNode.NUM_WORKITEMS_PER_STAGE ) {
+               parseInt(node.data.incidentTestStageProgress.value) ===
+                   IncidentNode.NUM_WORKITEMS_PER_STAGE) {
       node.data.incidentTestStageStatusContainer.parentElement.classList.add(
           'hidden');
       node.data.incidentTestStageStatusText.innerText = '';
@@ -889,7 +898,7 @@ class IncidentNode {
       }
     }
 
-    node.data.activeIncident = incidents[0]?.uuid;
+    node.data.activeIncident = incidents[0] ?.uuid;
 
     CosmoScout.gui.clearHtml(incidentSelect);
 
@@ -1254,7 +1263,8 @@ class IncidentNode {
    *
    * The incident note requests CosmoScout to download / extract a given dataset
    * After the dataset is ready, CosmoScout calls this method
-   * This should fix the issue where a node tries to access a dataset that isn't ready yet
+   * This should fix the issue where a node tries to access a dataset that isn't
+   * ready yet
    *
    * @param {Number} nodeId
    * @param {String} datasetUuid

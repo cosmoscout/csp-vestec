@@ -115,17 +115,16 @@ void Plugin::init() {
   mGuiManager->addTimelineButton("Toggle Vestec Node Editor", "dashboard",
                                  callback);
 
-    mGuiManager->getGui()->registerCallback(
-        "vestec.addStartMark", "", std::function([this]() {
-
-
+  mGuiManager->getGui()->registerCallback(
+      "vestec.addStartMark", "", std::function([this]() {
         auto intersection = mInputManager->pHoveredObject.get().mObject;
 
         if (!intersection) {
           return;
         }
 
-        auto body = std::dynamic_pointer_cast<cs::scene::CelestialBody>(intersection);
+        auto body =
+            std::dynamic_pointer_cast<cs::scene::CelestialBody>(intersection);
 
         if (!body || body->getCenterName() != "Earth") {
           return;
@@ -134,8 +133,9 @@ void Plugin::init() {
         auto radii = body->getRadii();
 
         if (!mTool) {
-          mTool = std::make_shared<csp::vestec::IncidentsBoundsTool>(mInputManager, mSolarSystem,
-              mAllSettings, mTimeControl, body->getCenterName(), body->getFrameName());
+          mTool = std::make_shared<csp::vestec::IncidentsBoundsTool>(
+              mInputManager, mSolarSystem, mAllSettings, mTimeControl,
+              body->getCenterName(), body->getFrameName());
         } else {
           if (mPointsActive) {
             mTool->reset();
@@ -148,15 +148,19 @@ void Plugin::init() {
             mInputManager->pHoveredObject.get().mPosition, radii));
 
         mTool->pStartPosition.connect([this](glm::vec2 latlong) {
-          std::string data = std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
-                             std::to_string(cs::utils::convert::toDegrees(latlong[1]));
-          mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setStartLatLong", data);
+          std::string data =
+              std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
+              std::to_string(cs::utils::convert::toDegrees(latlong[1]));
+          mGuiManager->getGui()->callJavascript(
+              "CosmoScout.vestec.setStartLatLong", data);
         });
 
         mTool->pEndPosition.connect([this](glm::vec2 latlong) {
-          std::string data = std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
-                             std::to_string(cs::utils::convert::toDegrees(latlong[1]));
-          mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setEndLatLong", data);
+          std::string data =
+              std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
+              std::to_string(cs::utils::convert::toDegrees(latlong[1]));
+          mGuiManager->getGui()->callJavascript(
+              "CosmoScout.vestec.setEndLatLong", data);
         });
 
         mPointsActive = true;
@@ -164,10 +168,10 @@ void Plugin::init() {
 
   mGuiManager->getGui()->registerCallback("vestec.removeMarks", "",
                                           std::function([this]() {
-if (mTool) {
-  mTool->reset();
-  mPointsActive = false;
-}
+                                            if (mTool) {
+                                              mTool->reset();
+                                              mPointsActive = false;
+                                            }
                                           }));
 
   mGuiManager->getGui()->registerCallback(
@@ -334,8 +338,6 @@ void Plugin::update() {
   //    cs::utils::convert::time::toPosix(simTime).time_of_day().total_milliseconds()
   //    / 1000.0;
   // Update plugin per frame
-
-
 
   if (mTool) {
     mTool->update();
