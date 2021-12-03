@@ -16,7 +16,9 @@
  *   incidentStartButton: HTMLButtonElement,
  *   incidentDeleteButton: HTMLButtonElement,
  *   incidentTestStageButton: HTMLButtonElement,
+ *   incidentTestStageStatusContainer: HTMLDivElement,
  *   incidentTestStageStatusText: HTMLSpanElement,
+ *   incidentTestStageProgress: HTMLProgressElement,
  *
  *   incidentsLoaded: boolean,
  *   incidentDatasetLoaded: boolean,
@@ -53,6 +55,16 @@
  */
 
 class IncidentNode {
+  /**
+   * TODO: CHANGE ME
+   *
+   * This is the number of simulations that must finish until a test stage run is deemed 'complete'
+   * Ideally we could dynamically derive if/when/how a batch of jobs belongs to the same stage
+   *
+   * @type {number}
+   */
+  static NUM_WORKITEMS_PER_STAGE = 4;
+
   /**
    * Supported output types
    *
@@ -136,6 +148,8 @@ class IncidentNode {
 
           element.parentElement.parentElement.classList.add('hidden');
 
+          // After the incident was changed, load the datasets
+          // This also resets all output types
           element.addEventListener('change', async (event) => {
             if (node.data.activeIncident === event.target.value) {
               return;
@@ -179,6 +193,8 @@ class IncidentNode {
 
           container.classList.add('hidden');
 
+          // Only update the editor if selected datasets were changed
+          // The 'oof.' check is necessary as a change event is generated even when not changing anything
           element.addEventListener('change', (event) => {
             const selectedEntries = Array.from(event.target.selectedOptions)
                                         .map(option => option.value);
@@ -197,6 +213,7 @@ class IncidentNode {
         },
     );
 
+    // Button group for starting various incident related tasks
     const incidentButtonControl = new D3NE.Control(
         `<div class="btn-group incident-button-control" style="flex-direction: column">
 <button id="incident_node_${
@@ -204,7 +221,7 @@ class IncidentNode {
 <button id="incident_node_${
             node.id}_incident_delete_button" class="btn glass">Delete Incident</button>
 <button id="incident_node_${
-            node.id}_incident_test_stage_button" class="btn glass">Start Test Stage</button>
+            node.id}_incident_test_stage_button" class="btn glass">Start Workflow</button>
 </div>`,
         (element, control) => {
           const incidentStartButton = element.querySelector(
@@ -225,6 +242,7 @@ class IncidentNode {
           incidentDeleteButton.classList.add('hidden');
           incidentTestStageButton.classList.add('hidden');
 
+          // TODO: Sometimes a 200 response is sent even when the incident wasn't activated
           incidentStartButton.addEventListener('click', async () => {
             const activationResponse =
                 await CosmoScout.vestec.api
@@ -252,6 +270,7 @@ class IncidentNode {
             }
           });
 
+          // Deletes the incident and updates the dropdown
           incidentDeleteButton.addEventListener('click', async () => {
             const deletionResponse =
                 await CosmoScout.vestec.api
@@ -280,16 +299,19 @@ class IncidentNode {
             }
           });
 
+          // Starts the workflow
+          // Uses the input from 'Test Stage Config' if the node is present
+          // TODO: Support for incident configs need to be re-added to vestec
           incidentTestStageButton.addEventListener('click', async () => {
             const testStageResponse =
                 await CosmoScout.vestec.api.testIncident(node.data.activeIncident, node.data?.testStageConfig[0] ?? {}).catch(() => {
           CosmoScout.notifications.print('Test failed',
-                                         'Could not run Test Stage', 'error');
+                                         'Could not run Workflow', 'error');
                 });
 
             if (testStageResponse.status !== 200) {
               CosmoScout.notifications.print(
-                  'Test failed', 'Could not run Test Stage', 'error');
+                  'Test failed', 'Could not run Workflow', 'error');
             } else {
               clearInterval(node.data.simulationUpdateInterval);
               node.data.simulationUpdateIncidentUUID = node.data.activeIncident;
@@ -305,12 +327,18 @@ class IncidentNode {
           });
         });
 
-    // Test Stage Status text
+    // Workflow Status text
+    // Displays the status of the current simulation stage
+    // Displays a progress bar that advances after a stage was completed
     const incidentTestStageStatusControl = new D3NE.Control(
-        `<span id="incident_node_${
-            node.id}_test_stage_status" class="text"></span>`,
+        `<div id="incident_node_${node.id}_test_stage_status_container">
+            <span id="incident_node_${node.id}_test_stage_status" class="text"></span>
+            <progress id="incident_node_${node.id}_test_stage_progress" max="${IncidentNode.NUM_WORKITEMS_PER_STAGE}" value="0" style="display: block"></progress>
+        </div>`,
         (element, control) => {
-          control.putData('incidentTestStageStatusText', element);
+          control.putData('incidentTestStageStatusContainer', element);
+          control.putData('incidentTestStageStatusText', element.querySelector('span'));
+          control.putData('incidentTestStageProgress', element.querySelector('progress'));
           element.parentElement.classList.add('hidden');
         });
 
@@ -332,7 +360,7 @@ class IncidentNode {
     );
 
     const configInput = new D3NE.Input(
-        'Test Stage Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG);
+        'Workflow Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG);
 
     node.addControl(loginMessageControl);
 
@@ -349,6 +377,7 @@ class IncidentNode {
     IncidentNode.unsetNodeValues(node);
 
     node.data['INCIDENT_CONFIG'] = configInput;
+    // Checks for new incidents and datasets
     node.data.updateIntervalId = setInterval(this._updateNode, 5000, node);
     node.data.simulationUpdateInterval = null;
 
@@ -484,7 +513,7 @@ class IncidentNode {
   }
 
   /**
-   * This runs on a 5 second interval
+   * This runs on a 5 second interval and is started from builder()
    * Checks for new Incidents and incident datasets
    *
    * @param {Node} node
@@ -516,8 +545,9 @@ class IncidentNode {
   }
 
   /**
-   * This runs on a 5 second interval after the "Start Test Stage" button was
-   * clicked Checks the status of the latest simulation process
+   * This runs on a 5 second interval after the "Start Workflow" button was
+   * clicked
+   * Checks the status of the latest simulation process
    *
    * @param {Node} node
    * @private
@@ -529,7 +559,7 @@ class IncidentNode {
       return;
     }
 
-    // Only check simulations from the last 15 minutes
+    // Only check simulations from the last 60 minutes
     const includeMinutes = 60;
     const includeDate = new Date(Date.now() - (1000 * 60 * includeMinutes));
 
@@ -543,7 +573,7 @@ class IncidentNode {
     }
 
     // Because dates are fun...
-    // Parses the date returned by vestec (DD-MM-YYYY, HH:mm:ii) into a ISO8601
+    // Parses the date returned by vestec (DD-MM-YYYY, HH:mm:ii) into an ISO8601
     // String
     const parseDate =
         (date) => {
@@ -562,7 +592,7 @@ class IncidentNode {
           return parsedDate;
         }
 
-    const currentSimulations =
+    let currentSimulations =
         activeIncident.simulations
             .filter(simulation => {
               return (parseDate(simulation.created) - includeDate) >= 0;
@@ -572,14 +602,18 @@ class IncidentNode {
               return parseDate(b.created) - parseDate(a.created);
             });
 
+    // There are active simulations
     if (currentSimulations.length > 0) {
+        // Status is returned in UPPERCASE
+        // we convert it to lowercase with the first character being uppercase
       const statusText = currentSimulations[0].status.charAt(0).toUpperCase() +
                          currentSimulations[0].status.slice(1).toLowerCase();
       const statusElement =
-          document.createTextNode(`Test Stage: ${statusText}`);
-      node.data.incidentTestStageStatusText.parentElement.classList.remove(
+          document.createTextNode(`Workflow: ${statusText}`);
+      node.data.incidentTestStageStatusContainer.parentElement.classList.remove(
           'hidden');
 
+      // Just a spinning element indicating that something is active
       const spinner = document.createElement('i');
       spinner.classList.add('material-icons');
       spinner.innerText = 'autorenew';
@@ -591,16 +625,21 @@ class IncidentNode {
 
       if (currentSimulations[0].status !== 'COMPLETED') {
         node.data.incidentTestStageStatusText.appendChild(spinner)
-        console.log(`Test Stage: ${statusText}`);
+        console.log(`Workflow: ${statusText}`);
       }
       else {
         CosmoScout.notifications.print(
             'Simulation Step Done', `A simulation step was completed`, 'done');
+
+        // Increment the progress bar
+        node.data.incidentTestStageProgress.value = parseInt(node.data.incidentTestStageProgress.value) + 1;
       }
-    } else {
-      node.data.incidentTestStageStatusText.parentElement.classList.add(
+    } else if (currentSimulations.length === 0 ||
+        parseInt(node.data.incidentTestStageProgress.value) === IncidentNode.NUM_WORKITEMS_PER_STAGE ) {
+      node.data.incidentTestStageStatusContainer.parentElement.classList.add(
           'hidden');
       node.data.incidentTestStageStatusText.innerText = '';
+      node.data.incidentTestStageProgress.value = 0;
       node.data.simulationUpdateIncidentUUID = null;
       clearInterval(node.data.simulationUpdateInterval);
     }
@@ -827,7 +866,8 @@ class IncidentNode {
     const incidents = await CosmoScout.vestec.getIncidents();
     const activeIncident = incidentSelect.value;
 
-    if (incidents.length === 0 && node.data.incidents.length === 0) {
+    if (incidents.length === 0 && node.data.incidents.length === 0 ||
+        incidents.length === 0 && node.data.incidents.length > 0) {
       return false;
     }
 
@@ -849,7 +889,7 @@ class IncidentNode {
       }
     }
 
-    node.data.activeIncident = incidents[0].uuid;
+    node.data.activeIncident = incidents[0]?.uuid;
 
     CosmoScout.gui.clearHtml(incidentSelect);
 
@@ -974,7 +1014,7 @@ class IncidentNode {
 
     datasets.forEach((dataset, index, datasets) => {
       // Insert a divider, if the day of the previous created date differs from
-      // the current one
+      // the current one (we only check the days)
       const addDivider = typeof datasets[index - 1] !== 'undefined' &&
                          dataset.date_created.substr(0, 2) !==
                              datasets[index - 1].date_created.substr(0, 2) &&
@@ -1124,10 +1164,11 @@ class IncidentNode {
   }
 
   /**
-   * Extends the data object with additional functions
-   * Adds methods only present in builder to the data object
+   * Adds functions from the builder to the nodes' data object
    *
    * This can ONLY be called from the BUILDER function!
+   *
+   * These functions allow do dynamically add / remove output ports
    *
    * @see {builder}
    *
@@ -1210,6 +1251,10 @@ class IncidentNode {
    * Only if the dataset state is true, the output will be populated
    *
    * Called by CosmoScout
+   *
+   * The incident note requests CosmoScout to download / extract a given dataset
+   * After the dataset is ready, CosmoScout calls this method
+   * This should fix the issue where a node tries to access a dataset that isn't ready yet
    *
    * @param {Number} nodeId
    * @param {String} datasetUuid
