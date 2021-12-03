@@ -25,10 +25,12 @@
 
 #define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
 
-CriticalPointsRenderer::CriticalPointsRenderer(cs::core::SolarSystem* pSolarSystem)
-    : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
-          boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json")))
-    , mSolarSystem(pSolarSystem) {
+CriticalPointsRenderer::CriticalPointsRenderer(
+    cs::core::SolarSystem *pSolarSystem)
+    : mTransferFunction(
+          std::make_unique<cs::graphics::ColorMap>(boost::filesystem::path(
+              "../share/resources/transferfunctions/BlackBody.json"))),
+      mSolarSystem(pSolarSystem) {
   csp::vestec::logger().debug("[CriticalPointsRenderer] Compiling shader");
   m_pSurfaceShader = nullptr;
 
@@ -55,9 +57,7 @@ CriticalPointsRenderer::~CriticalPointsRenderer() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CriticalPointsRenderer::SetOpacity(float val) {
-  mOpacity = val;
-}
+void CriticalPointsRenderer::SetOpacity(float val) { mOpacity = val; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,15 +79,13 @@ void CriticalPointsRenderer::SetHeightScale(float scale) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CriticalPointsRenderer::SetWidthScale(float scale) {
-  mWidthScale = scale;
-}
+void CriticalPointsRenderer::SetWidthScale(float scale) { mWidthScale = scale; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
-  csp::vestec::logger().debug(
-      "[CriticalPointsRenderer] Copy data to VBO: {}", std::to_string(vecPoints.size()));
+void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint> &vecPoints) {
+  csp::vestec::logger().debug("[CriticalPointsRenderer] Copy data to VBO: {}",
+                              std::to_string(vecPoints.size()));
   m_vecPoints.clear();
 
   // Get persistence range
@@ -100,23 +98,26 @@ void CriticalPointsRenderer::SetPoints(std::vector<CriticalPoint>& vecPoints) {
 
   // Copy data to VBO
   m_VBO->Bind(GL_ARRAY_BUFFER);
-  m_VBO->BufferData(vecPoints.size() * sizeof(CriticalPoint), &(vecPoints[0]), GL_STATIC_DRAW);
+  m_VBO->BufferData(vecPoints.size() * sizeof(CriticalPoint), &(vecPoints[0]),
+                    GL_STATIC_DRAW);
   m_VBO->Release();
   csp::vestec::logger().debug("[CriticalPointsRenderer] Copy data to VBO done");
 
   // Configure vertex positions
   m_VAO->EnableAttributeArray(0);
-  m_VAO->SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(CriticalPoint), 0, m_VBO);
+  m_VAO->SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE,
+                                    sizeof(CriticalPoint), 0, m_VBO);
 
   // Configure scalar attribute for persistence
   m_VAO->EnableAttributeArray(1);
-  m_VAO->SpecifyAttributeArrayFloat(
-      1, 1, GL_FLOAT, GL_FALSE, sizeof(CriticalPoint), 3 * sizeof(float), m_VBO);
+  m_VAO->SpecifyAttributeArrayFloat(1, 1, GL_FLOAT, GL_FALSE,
+                                    sizeof(CriticalPoint), 3 * sizeof(float),
+                                    m_VBO);
 
   // Configure scalar attribute for critical type
   m_VAO->EnableAttributeArray(2);
-  m_VAO->SpecifyAttributeArrayInteger(
-      2, 1, GL_INT, sizeof(CriticalPoint), 4 * sizeof(float), m_VBO);
+  m_VAO->SpecifyAttributeArrayInteger(2, 1, GL_INT, sizeof(CriticalPoint),
+                                      4 * sizeof(float), m_VBO);
 
   m_vecPoints = vecPoints;
   csp::vestec::logger().debug("[CriticalPointsRenderer] Configure VAO done");
@@ -134,7 +135,8 @@ bool CriticalPointsRenderer::Do() {
   // get active planet
   if (mSolarSystem->pActiveBody.get() == nullptr ||
       mSolarSystem->pActiveBody.get()->getCenterName() != "Earth") {
-    csp::vestec::logger().info("[CriticalPointsRenderer::Do] No active planet set");
+    csp::vestec::logger().info(
+        "[CriticalPointsRenderer::Do] No active planet set");
     return false;
   }
 
@@ -161,7 +163,7 @@ bool CriticalPointsRenderer::Do() {
   glGetFloatv(GL_PROJECTION_MATRIX, &glMat[0]);
   VistaTransformMatrix matProjection(glMat, true);
 
-  auto       activeBody        = mSolarSystem->pActiveBody.get();
+  auto activeBody = mSolarSystem->pActiveBody.get();
   glm::dmat4 matWorldTransform = activeBody->getWorldTransform();
 
   VistaTransformMatrix matM(glm::value_ptr(matWorldTransform), true);
@@ -174,34 +176,42 @@ bool CriticalPointsRenderer::Do() {
 
   mTransferFunction->bind(GL_TEXTURE0);
 
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTransferFunction"), 0);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uTransferFunction"), 0);
 
   int loc = m_pSurfaceShader->GetUniformLocation("uMatP");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matProjection.GetData());
   loc = m_pSurfaceShader->GetUniformLocation("uMatMV");
   glUniformMatrix4fv(loc, 1, GL_FALSE, matModelView.GetData());
 
-  m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uFarClip"), static_cast<float>(farClip));
+  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uFarClip"),
+                               static_cast<float>(farClip));
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uMaxPersistence"), mMaxPersistence);
   m_pSurfaceShader->SetUniform(
       m_pSurfaceShader->GetUniformLocation("uMinPersistence"), mMinPersistence);
   m_pSurfaceShader->SetUniform(
-      m_pSurfaceShader->GetUniformLocation("uVisualizationMode"), static_cast<int>(mRenderMode));
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uHeightScale"), mHeightScale);
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uWidthScale"), mWidthScale);
+      m_pSurfaceShader->GetUniformLocation("uVisualizationMode"),
+      static_cast<int>(mRenderMode));
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uHeightScale"), mHeightScale);
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uWidthScale"), mWidthScale);
 
   // provide radii to shader
-  auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());
+  auto mRadii = cs::core::SolarSystem::getRadii(
+      mSolarSystem->pActiveBody.get()->getCenterName());
   m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"),
-      static_cast<float>(mRadii[0]), static_cast<float>(mRadii[1]), static_cast<float>(mRadii[2]));
+                               static_cast<float>(mRadii[0]),
+                               static_cast<float>(mRadii[1]),
+                               static_cast<float>(mRadii[2]));
 
   // provide sun direction
-  auto sunDirection =
-      glm::normalize(glm::inverse(matWorldTransform) *
-                     (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
-  m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
+  auto sunDirection = glm::normalize(
+      glm::inverse(matWorldTransform) *
+      (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
+  m_pSurfaceShader->SetUniform(
+      m_pSurfaceShader->GetUniformLocation("uSunDirection"),
       (float)sunDirection[0], (float)sunDirection[1], (float)sunDirection[2]);
 
   // Draw points
@@ -220,7 +230,7 @@ bool CriticalPointsRenderer::Do() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CriticalPointsRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) {
+bool CriticalPointsRenderer::GetBoundingBox(VistaBoundingBox &oBoundingBox) {
   float fMin[3] = {-6371000.0f, -6371000.0f, -6371000.0f};
   float fMax[3] = {6371000.0f, 6371000.0f, 6371000.0f};
 

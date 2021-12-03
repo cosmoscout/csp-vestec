@@ -15,16 +15,18 @@ class NodeEditor;
 }
 
 class UncertaintyRenderNode : public VNE::Node {
- public:
-  UncertaintyRenderNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem,
-      int id, cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
-      cs::core::GraphicsEngine* pEngine);
+public:
+  UncertaintyRenderNode(csp::vestec::Plugin::Settings const &config,
+                        cs::gui::GuiItem *pItem, int id,
+                        cs::core::SolarSystem *pSolarSystem,
+                        cs::scene::CelestialAnchorNode *pAnchor,
+                        cs::core::GraphicsEngine *pEngine);
   virtual ~UncertaintyRenderNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor* pEditor);
+  static void Init(VNE::NodeEditor *pEditor);
 
   /**
    * Returns the unique identifier for the node as string
@@ -60,16 +62,17 @@ class UncertaintyRenderNode : public VNE::Node {
   /**
    * Get the OpenGL uncertainty render node from ViSTA
    */
-  UncertaintyOverlayRenderer* GetRenderNode();
+  UncertaintyOverlayRenderer *GetRenderNode();
 
- private:
+private:
   csp::vestec::Plugin::Settings
-                                  mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
-  cs::scene::CelestialAnchorNode* m_pAnchor =
+      mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
+  cs::scene::CelestialAnchorNode *m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally
                //! centered in earth)
-  UncertaintyOverlayRenderer* m_pRenderer = nullptr; //! The renderer to overlay a texture onto a
-                                                     //! previous renderer image (depthBuffer)
+  UncertaintyOverlayRenderer *m_pRenderer =
+      nullptr; //! The renderer to overlay a texture onto a
+               //! previous renderer image (depthBuffer)
 };
 
 #endif /* SIMPLE_TEXTURE_RENDER_NODE_HPP_ */

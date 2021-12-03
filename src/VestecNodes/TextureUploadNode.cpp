@@ -13,33 +13,31 @@
 // Base64
 #include "../common/base64.hpp"
 
-TextureUploadNode::TextureUploadNode(cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id, 2, 0) {
-}
+TextureUploadNode::TextureUploadNode(cs::gui::GuiItem *pItem, int id)
+    : VNE::Node(pItem, id, 2, 0) {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TextureUploadNode::~TextureUploadNode() {
-}
+TextureUploadNode::~TextureUploadNode() {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::string TextureUploadNode::GetName() {
-  return "TextureUploadNode";
-}
+std::string TextureUploadNode::GetName() { return "TextureUploadNode"; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TextureUploadNode::Init(VNE::NodeEditor* pEditor) {
+void TextureUploadNode::Init(VNE::NodeEditor *pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
 
   const std::string node = cs::utils::filesystem::loadToString(
       "../share/resources/gui/js/csp-vestec-texture-upload-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);
 
-  pEditor->GetGuiItem()->registerCallback("TextureUploadNode.uploadDataSet",
+  pEditor->GetGuiItem()->registerCallback(
+      "TextureUploadNode.uploadDataSet",
       "Uploads a given Dataset to the vestec instance",
-      std::function([pEditor](std::string filePath, std::string incidentUUID, double id) {
+      std::function([pEditor](std::string filePath, std::string incidentUUID,
+                              double id) {
         // Retrieve Filename and convert to base64 -> put back to JS
         if (!boost::filesystem::exists(filePath)) {
           return;
@@ -59,16 +57,18 @@ void TextureUploadNode::Init(VNE::NodeEditor* pEditor) {
         int length = in.tellg();
         in.seekg(0, std::ifstream::beg);
 
-        char* buffer = new char[length];
+        char *buffer = new char[length];
 
         in.read(buffer, length);
 
-        std::string base64data = encode_base64(reinterpret_cast<unsigned char*>(buffer), length);
+        std::string base64data =
+            encode_base64(reinterpret_cast<unsigned char *>(buffer), length);
 
         delete[] buffer;
         in.close();
 
-        pEditor->GetGuiItem()->callJavascript(
-            "TextureUploadNode.doUpload", base64data, filePath, incidentUUID, id);
+        pEditor->GetGuiItem()->callJavascript("TextureUploadNode.doUpload",
+                                              base64data, filePath,
+                                              incidentUUID, id);
       }));
 }

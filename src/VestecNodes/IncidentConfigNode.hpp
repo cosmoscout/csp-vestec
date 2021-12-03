@@ -18,14 +18,14 @@ class NodeEditor;
  *
  */
 class IncidentConfigNode : public VNE::Node {
- public:
-  IncidentConfigNode(cs::gui::GuiItem* pItem, int id);
+public:
+  IncidentConfigNode(cs::gui::GuiItem *pItem, int id);
   virtual ~IncidentConfigNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor* filePath);
+  static void Init(VNE::NodeEditor *filePath);
 
   /**
    * Returns the unique identifier for the node as string

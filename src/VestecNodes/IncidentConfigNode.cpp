@@ -10,24 +10,20 @@
 #include "../NodeEditor/NodeEditor.hpp"
 #include "../Plugin.hpp"
 
-IncidentConfigNode::IncidentConfigNode(cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id, 0, 1) {
-}
+IncidentConfigNode::IncidentConfigNode(cs::gui::GuiItem *pItem, int id)
+    : VNE::Node(pItem, id, 0, 1) {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-IncidentConfigNode::~IncidentConfigNode() {
-}
+IncidentConfigNode::~IncidentConfigNode() {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::string IncidentConfigNode::GetName() {
-  return "IncidentConfigNode";
-}
+std::string IncidentConfigNode::GetName() { return "IncidentConfigNode"; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentConfigNode::Init(VNE::NodeEditor* pEditor) {
+void IncidentConfigNode::Init(VNE::NodeEditor *pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
 
   const std::string node = cs::utils::filesystem::loadToString(
