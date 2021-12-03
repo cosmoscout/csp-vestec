@@ -85,45 +85,52 @@
      */
     init() {
       this._statusTextElement =
-          /** @type {HTMLSpanElement} */ document.getElementById('csp-vestec-status-text');
+          /** @type {HTMLSpanElement} */ document.getElementById(
+              'csp-vestec-status-text');
       this._usernameInput =
-          /** @type {HTMLInputElement} */ document.getElementById('csp-vestec-username');
+          /** @type {HTMLInputElement} */ document.getElementById(
+              'csp-vestec-username');
       this._passwordInput =
-          /** @type {HTMLInputElement} */ document.getElementById('csp-vestec-password');
-      this._incidentWindow = document.getElementById('csp-vestec-incident-window');
+          /** @type {HTMLInputElement} */ document.getElementById(
+              'csp-vestec-password');
+      this._incidentWindow =
+          document.getElementById('csp-vestec-incident-window');
       this._incidentUpperLeftInput =
-          /** @type {HTMLInputElement} */ document.getElementById('csp-vestec-incident-upper-left');
+          /** @type {HTMLInputElement} */ document.getElementById(
+              'csp-vestec-incident-upper-left');
       this._incidentLowerRightInput =
           /** @type {HTMLInputElement} */ document.getElementById(
               'csp-vestec-incident-lower-right');
 
-      document.getElementById('csp-vestec-login-btn').addEventListener('click', () => {
-        this.login(
-            this._usernameInput.value,
-            this._passwordInput.value,
-        );
-      });
+      document.getElementById('csp-vestec-login-btn')
+          .addEventListener('click', () => {
+            this.login(
+                this._usernameInput.value,
+                this._passwordInput.value,
+            );
+          });
 
       document.getElementById('csp-vestec-logout-btn')
           .addEventListener('click', this.logout.bind(this));
 
       document.getElementById('csp-vestec-incident-select-upper-left')
           .addEventListener('click', () => {
-            CosmoScout.notifications.print(
-                'Set Start Region', 'Move the mark.', 'add_circle_outline');
+            CosmoScout.notifications.print('Set Start Region', 'Move the mark.',
+                                           'add_circle_outline');
             window.callNative('vestec.addStartMark');
           });
 
       document.getElementById('csp-vestec-incident-select-lower-right')
           .addEventListener('click', () => {
-            CosmoScout.notifications.print(
-                'Set End Region', 'Move the mark.', 'add_circle_outline');
+            CosmoScout.notifications.print('Set End Region', 'Move the mark.',
+                                           'add_circle_outline');
             window.callNative('vestec.addEndMark');
           });
 
-      document.getElementById('csp-vestec-create-incident-btn').addEventListener('click', () => {
-        this._incidentWindow.classList.toggle('visible');
-      });
+      document.getElementById('csp-vestec-create-incident-btn')
+          .addEventListener(
+              'click',
+              () => { this._incidentWindow.classList.toggle('visible'); });
 
       document.getElementById('csp-vestec-incident-submit')
           .addEventListener('click', this._submitIncident.bind(this));
@@ -166,7 +173,8 @@
       try {
         this._vestecApi.server = url;
       } catch (e) {
-        CosmoScout.notifications.print('Invalid URL', 'The provided url is not valid.', 'error');
+        CosmoScout.notifications.print(
+            'Invalid URL', 'The provided url is not valid.', 'error');
 
         return;
       }
@@ -174,7 +182,8 @@
       window.callNative('vestec.setServer', this._vestecApi.server);
 
       console.debug(`Set vestec server to ${url}`);
-      document.getElementById('csp-vestec-server').innerText = this._vestecApi.server;
+      document.getElementById('csp-vestec-server').innerText =
+          this._vestecApi.server;
     }
 
     /**
@@ -183,9 +192,7 @@
      * @param {string} path - Path where vestec data gets downloaded to, config
      * key 'vestec-download-dir'
      */
-    setDownloadDir(path) {
-      this._downloadDir = path;
-    }
+    setDownloadDir(path) { this._downloadDir = path; }
 
     /**
      * @throws {Error} If downloadDir is null
@@ -206,16 +213,12 @@
      * @see {Vestec.token}
      * @returns {string} Auth token
      */
-    getToken() {
-      return this._vestecApi.token;
-    }
+    getToken() { return this._vestecApi.token; }
 
     /**
      * @returns {Vestec}
      */
-    get api() {
-      return this._vestecApi;
-    }
+    get api() { return this._vestecApi; }
 
     /**
      * Vestec Api Interfacing Methods
@@ -245,10 +248,11 @@
 
       CosmoScout.notifications.print('Login', 'Logging in...', 'play_arrow');
 
-      const response = await this._vestecApi.login(username, password).catch(() => {
-        this._handleLogout();
-        this._defaultCatch();
-      });
+      const response =
+          await this._vestecApi.login(username, password).catch(() => {
+            this._handleLogout();
+            this._defaultCatch();
+          });
 
       const data = await response.json();
 
@@ -257,7 +261,8 @@
 
         this._setLoginInputValidity(false);
 
-        CosmoScout.notifications.print('Login failed', response.statusText, 'warning');
+        CosmoScout.notifications.print('Login failed', response.statusText,
+                                       'warning');
 
         return false;
       }
@@ -273,28 +278,31 @@
         return false;
       }
 
-      CosmoScout.notifications.print('Login successful', 'Successfully logged in.', 'done');
-      document.getElementById('csp-vestec-current-user').innerText = `Logged in as ${username}`;
+      CosmoScout.notifications.print('Login successful',
+                                     'Successfully logged in.', 'done');
+      document.getElementById('csp-vestec-current-user').innerText =
+          `Logged in as ${username}`;
 
       this._show('logout', 'create-incident');
 
-      const authorized = await this._vestecApi.authorized()
-                             .then((authResponse) => {
-                               if (authResponse.status === 200) {
-                                 this._enableAuthIntervalChecks();
-                                 this._showIncidentWindowContent();
-                                 CosmoScout.vestecNE.updateEditor();
-                                 return true;
-                               }
+      const authorized =
+          await this._vestecApi.authorized()
+              .then((authResponse) => {
+                if (authResponse.status === 200) {
+                  this._enableAuthIntervalChecks();
+                  this._showIncidentWindowContent();
+                  CosmoScout.vestecNE.updateEditor();
+                  return true;
+                }
 
-                               if (authResponse.status === 403) {
-                                 CosmoScout.notifications.print(
-                                     'Unauthorized', 'Account not authorized.', 'warning');
-                               }
+                if (authResponse.status === 403) {
+                  CosmoScout.notifications.print(
+                      'Unauthorized', 'Account not authorized.', 'warning');
+                }
 
-                               return false;
-                             })
-                             .catch(this._defaultCatch.bind(this));
+                return false;
+              })
+              .catch(this._defaultCatch.bind(this));
 
       this._hide('status');
       this._statusText();
@@ -309,13 +317,16 @@
      * @returns {Promise<void>}
      */
     async logout() {
-      const response = await this._vestecApi.logout().catch(this._defaultCatch.bind(this));
+      const response =
+          await this._vestecApi.logout().catch(this._defaultCatch.bind(this));
 
       if (response.status === 200) {
-        CosmoScout.notifications.print('Logout successful', 'Successfully logged out.', 'done');
+        CosmoScout.notifications.print('Logout successful',
+                                       'Successfully logged out.', 'done');
         this._handleLogout();
       } else {
-        CosmoScout.notifications.print('Logout unsuccessful', 'Could not logout.', 'error');
+        CosmoScout.notifications.print('Logout unsuccessful',
+                                       'Could not logout.', 'error');
       }
     }
 
@@ -326,7 +337,8 @@
      * @throws {Error} If user is not logged in
      */
     async getWorkflows() {
-      const response = await this._vestecApi.getWorkflows().catch(this._defaultCatch.bind(this));
+      const response = await this._vestecApi.getWorkflows().catch(
+          this._defaultCatch.bind(this));
 
       const data = await response.json();
 
@@ -343,8 +355,9 @@
      * Retrieves a summary list of completed incidents
      */
     async getIncidents() {
-      const response = await this._vestecApi.getIncidents('active', 'completed', 'pending')
-                           .catch(this._defaultCatch.bind(this));
+      const response =
+          await this._vestecApi.getIncidents('active', 'completed', 'pending')
+              .catch(this._defaultCatch.bind(this));
 
       const data = await response.json();
 
@@ -361,7 +374,8 @@
      * Retrieves a specific incident
      */
     async getIncident(uuid) {
-      const response = await this._vestecApi.getIncident(uuid).catch(this._defaultCatch.bind(this));
+      const response = await this._vestecApi.getIncident(uuid).catch(
+          this._defaultCatch.bind(this));
 
       const data = await response.json();
 
@@ -382,8 +396,8 @@
      * @returns {Promise<[{uuid: String, date_created: String, name: String}]>}
      */
     async getIncidentDatasets(incidentId) {
-      const response =
-          await this._vestecApi.getIncident(incidentId).catch(this._defaultCatch.bind(this));
+      const response = await this._vestecApi.getIncident(incidentId)
+                           .catch(this._defaultCatch.bind(this));
 
       const data = await response.json();
 
@@ -405,7 +419,8 @@
      * @returns {Promise<*[]|*>}
      */
     async getIncidentDatasetMetadata(datasetId, incidentId) {
-      const response = await this._vestecApi.getIncidentDatasetMetadata(datasetId, incidentId)
+      const response = await this._vestecApi
+                           .getIncidentDatasetMetadata(datasetId, incidentId)
                            .catch(this._defaultCatch.bind(this));
 
       const data = await response.json();
@@ -425,9 +440,7 @@
      * @see {Vestec.isAuthorized}
      * @returns {boolean}
      */
-    isAuthorized() {
-      return this._vestecApi.isAuthorized();
-    }
+    isAuthorized() { return this._vestecApi.isAuthorized(); }
 
     /**
      * Things to handle on logout
@@ -452,7 +465,8 @@
      * @private
      */
     _defaultCatch() {
-      CosmoScout.notifications.print('Connection failed', 'Could not connect to server.', 'error');
+      CosmoScout.notifications.print('Connection failed',
+                                     'Could not connect to server.', 'error');
       throw new Error('Connection timed out.');
     }
 
@@ -480,7 +494,8 @@
      */
     _show(...elements) {
       elements.forEach((el) => {
-        document.getElementById(`csp-vestec-${el}-row`).classList.remove('invisible');
+        document.getElementById(`csp-vestec-${el}-row`)
+            .classList.remove('invisible');
       });
     }
 
@@ -493,7 +508,8 @@
      */
     _hide(...elements) {
       elements.forEach((el) => {
-        document.getElementById(`csp-vestec-${el}-row`).classList.add('invisible');
+        document.getElementById(`csp-vestec-${el}-row`)
+            .classList.add('invisible');
       });
     }
 
@@ -505,7 +521,8 @@
      */
     _checkLogin() {
       if (!this._vestecApi.isAuthorized()) {
-        CosmoScout.notifications.print('Not logged in', 'You are not logged in.', 'error');
+        CosmoScout.notifications.print('Not logged in',
+                                       'You are not logged in.', 'error');
 
         throw new Error('You are not logged in into the vestec system.');
       }
@@ -559,7 +576,8 @@
         return;
       }
 
-      const workflowSelect = document.getElementById('csp-vestec-incident-workflow');
+      const workflowSelect =
+          document.getElementById('csp-vestec-incident-workflow');
 
       $(workflowSelect).selectpicker('destroy');
       CosmoScout.gui.clearHtml(workflowSelect);
@@ -567,7 +585,7 @@
       workflows.forEach((workflow) => {
         const option = document.createElement('option');
         option.value = workflow;
-        option.text  = workflow;
+        option.text = workflow;
         workflowSelect.appendChild(option);
       });
 
@@ -596,11 +614,14 @@
       }
 
       const response = await this._vestecApi.createIncident({
-        name: form.elements.namedItem('csp-vestec-incident-name').value,
-        kind: form.elements.namedItem('csp-vestec-incident-workflow').value,
-        upperLeftLatlong: form.elements.namedItem('csp-vestec-incident-upper-left').value,
-        lowerRightLatlong: form.elements.namedItem('csp-vestec-incident-lower-right').value,
-        duration: form.elements.namedItem('csp-vestec-incident-duration').value,
+        name : form.elements.namedItem('csp-vestec-incident-name').value,
+        kind : form.elements.namedItem('csp-vestec-incident-workflow').value,
+        upperLeftLatlong :
+            form.elements.namedItem('csp-vestec-incident-upper-left').value,
+        lowerRightLatlong :
+            form.elements.namedItem('csp-vestec-incident-lower-right').value,
+        duration :
+            form.elements.namedItem('csp-vestec-incident-duration').value,
       });
 
       if (response.status === 201) {
@@ -617,7 +638,8 @@
 
       // TODO Status code currently missing in vestec response
       if (response.status === 400) {
-        CosmoScout.notifications.print('Creation failed', response.statusText, 'error');
+        CosmoScout.notifications.print('Creation failed', response.statusText,
+                                       'error');
       }
 
       return null;
@@ -631,7 +653,8 @@
      */
     _enableAuthIntervalChecks(interval = 60) {
       if (typeof this._authCheckIntervalId !== 'undefined') {
-        this._authCheckIntervalId = setInterval(this.authorized().bind(this), interval * 1000);
+        this._authCheckIntervalId =
+            setInterval(this.authorized().bind(this), interval * 1000);
       }
     }
 

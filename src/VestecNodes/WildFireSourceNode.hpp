@@ -13,21 +13,22 @@ class NodeEditor;
  * Read Wildfire textures to be displayed by the TextureRenderNode
  */
 class WildFireSourceNode : public VNE::Node {
- public:
-  WildFireSourceNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
+public:
+  WildFireSourceNode(csp::vestec::Plugin::Settings const &config,
+                     cs::gui::GuiItem *pItem, int id);
   virtual ~WildFireSourceNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor* pEditor);
+  static void Init(VNE::NodeEditor *pEditor);
 
   /**
    * Returns the unique identifier for the node as string
    */
   static std::string GetName();
 
- private:
+private:
   /**
    * Read available simulation modes and fill the combobox
    */
@@ -38,7 +39,7 @@ class WildFireSourceNode : public VNE::Node {
    */
   void ReadSimulationFileNames(int id, std::string simMode);
 
- private:
+private:
   csp::vestec::Plugin::Settings mPluginConfig;
 };
 

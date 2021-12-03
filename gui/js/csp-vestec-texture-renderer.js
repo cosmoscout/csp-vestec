@@ -44,14 +44,16 @@ class TextureRenderNode {
         </div>
       </div>`,
         (element, _control) => {
-          const slider = element.querySelector(`#texture-node_${node.id}-slider_opacity`);
-          noUiSlider.create(slider, {start: 1, animate: false, range: {min: 0, max: 1}});
+          const slider =
+              element.querySelector(`#texture-node_${node.id}-slider_opacity`);
+          noUiSlider.create(
+              slider, {start : 1, animate : false, range : {min : 0, max : 1}});
 
           // Read the files for the given simulation mode and fill combobox when
           // mode is changed
           slider.noUiSlider.on('slide', (values, handle) => {
-            window.callNative(
-                'TextureRenderNode.setOpacityTexture', node.id, parseFloat(values[handle]));
+            window.callNative('TextureRenderNode.setOpacityTexture', node.id,
+                              parseFloat(values[handle]));
           });
         },
     );
@@ -61,7 +63,8 @@ class TextureRenderNode {
         `<div class="row">
         <div class="col-2">
           <label class="checklabel">
-            <input type="checkbox" id="texture-node_${node.id}-set_enable_time" />
+            <input type="checkbox" id="texture-node_${
+            node.id}-set_enable_time" />
             <i class="material-icons"></i>
           </label>
         </div>
@@ -71,18 +74,22 @@ class TextureRenderNode {
         </div>
       </div>`,
         (element, _control) => {
-          const slider = element.querySelector(`#texture-node_${node.id}-slider_time`);
-          noUiSlider.create(slider, {start: 20, animate: false, range: {min: 0, max: 20}});
+          const slider =
+              element.querySelector(`#texture-node_${node.id}-slider_time`);
+          noUiSlider.create(
+              slider,
+              {start : 20, animate : false, range : {min : 0, max : 20}});
 
           element.querySelector(`#texture-node_${node.id}-set_enable_time`)
               .addEventListener('click', (event) => {
-                window.callNative(
-                    'TextureRenderNode.setEnableTime', node.id, event.target.checked === true);
+                window.callNative('TextureRenderNode.setEnableTime', node.id,
+                                  event.target.checked === true);
               });
 
           // Set the time value for the renderer
           slider.noUiSlider.on('slide', (values, handle) => {
-            window.callNative('TextureRenderNode.setTime', node.id, parseFloat(values[handle]));
+            window.callNative('TextureRenderNode.setTime', node.id,
+                              parseFloat(values[handle]));
           });
         },
     );
@@ -96,8 +103,10 @@ class TextureRenderNode {
       </div>
     </div>`,
         (element, _control) => {
-          const slider = element.querySelector(`#texture-node_${node.id}-layer`);
-          noUiSlider.create(slider, {start: 1, animate: false, range: {min: 1, max: 1}});
+          const slider =
+              element.querySelector(`#texture-node_${node.id}-layer`);
+          noUiSlider.create(
+              slider, {start : 1, animate : false, range : {min : 1, max : 1}});
 
           $(element).hide();
 
@@ -105,8 +114,8 @@ class TextureRenderNode {
           // mode is changed
           slider.noUiSlider.on('slide', (values, handle) => {
             console.log("Changed layer " + parseFloat(values[handle]));
-            window.callNative(
-                'TextureRenderNode.setTextureLayer', node.id, parseFloat(values[handle]));
+            window.callNative('TextureRenderNode.setTextureLayer', node.id,
+                              parseFloat(values[handle]));
           });
         },
     );
@@ -127,7 +136,8 @@ class TextureRenderNode {
         `<div class="row">
         <div class="col-2">
           <label class="checklabel">
-            <input type="checkbox" id="texture-node_${node.id}-set_enable_manual-mipmap" />
+            <input type="checkbox" id="texture-node_${
+            node.id}-set_enable_manual-mipmap" />
             <i class="material-icons"></i>
           </label>
         </div>
@@ -136,14 +146,13 @@ class TextureRenderNode {
           <div id="texture-node_${node.id}-slider_mipmap"></div>
         </div>
       </div>`,
-        (element, _control) => {
-          this._createMipMapSlider(node, element);
-        },
+        (element, _control) => { this._createMipMapSlider(node, element); },
     );
 
     // Slider and checkbox to control mip map level
     const mipMapReduceMode = new D3NE.Control(
-        `<select id="texture-node_${node.id}-mipmap-mode-select" class="combobox">
+        `<select id="texture-node_${
+            node.id}-mipmap-mode-select" class="combobox">
           <option value="0" selected>Max</option>
           <option value="1">Min</option>
           <option value="2">Average</option>
@@ -152,7 +161,7 @@ class TextureRenderNode {
           $(element).selectpicker();
           element.addEventListener('change', event => {
             window.callNative('TextureRenderNode.setMipMapReduceMode', node.id,
-                Number.parseInt(event.target.value));
+                              Number.parseInt(event.target.value));
           });
         },
     );
@@ -166,13 +175,14 @@ class TextureRenderNode {
     node.addControl(mipMapLevelControl);
 
     // Define the input types
-    const inputTexture = new D3NE.Input('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
+    const inputTexture =
+        new D3NE.Input('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addInput(inputTexture);
-    const inputTransferFunction =
-        new D3NE.Input('Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    const inputTransferFunction = new D3NE.Input(
+        'Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
 
-    node.data.lastFile             = '';
+    node.data.lastFile = '';
     node.data.lastTransferFunction = '';
 
     return node;
@@ -194,9 +204,12 @@ class TextureRenderNode {
         return;
       }
 
-      if (typeof node.data.range !== 'undefined' && eNode.inputs[1].connections.length > 0 &&
-          typeof eNode.inputs[1].connections[0].output.node.data.fn !== 'undefined') {
-        eNode.inputs[1].connections[0].output.node.data.fn.setData(node.data.range);
+      if (typeof node.data.range !== 'undefined' &&
+          eNode.inputs[1].connections.length > 0 &&
+          typeof eNode.inputs[1].connections[0].output.node.data.fn !==
+              'undefined') {
+        eNode.inputs[1].connections[0].output.node.data.fn.setData(
+            node.data.range);
       }
     });
 
@@ -215,8 +228,8 @@ class TextureRenderNode {
     this._checkD3NE();
 
     return new D3NE.Component('TextureRenderNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -254,7 +267,9 @@ class TextureRenderNode {
 
       const slider = document.querySelector(`#texture-node_${node.id}-layer`);
       slider.noUiSlider.destroy();
-      noUiSlider.create(slider, {start: 1, animate: false, range: {min: 1, max: 1}, step: 1});
+      noUiSlider.create(
+          slider,
+          {start : 1, animate : false, range : {min : 1, max : 1}, step : 1});
 
       return;
     }
@@ -286,9 +301,11 @@ class TextureRenderNode {
 
     node.data.lastFile = texture;
 
-    window.callNative('TextureRenderNode.getNumberOfTextureLayers', node.id, texture);
+    window.callNative('TextureRenderNode.getNumberOfTextureLayers', node.id,
+                      texture);
     window.callNative('TextureRenderNode.setMinMaxDataRange', node.id, texture);
-    window.callNative('TextureRenderNode.readSimulationResults', node.id, texture);
+    window.callNative('TextureRenderNode.readSimulationResults', node.id,
+                      texture);
   }
 
   /**
@@ -312,7 +329,8 @@ class TextureRenderNode {
 
     node.data.lastTransferFunction = transferFunction;
 
-    window.callNative('TextureRenderNode.setTransferFunction', node.id, transferFunction);
+    window.callNative('TextureRenderNode.setTransferFunction', node.id,
+                      transferFunction);
   }
 
   /**
@@ -324,7 +342,8 @@ class TextureRenderNode {
    * @returns void
    */
   _fillTextureSelect(textures, node) {
-    const element = document.getElementById(`texture-node_${node.id}-texture-select`);
+    const element =
+        document.getElementById(`texture-node_${node.id}-texture-select`);
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -332,16 +351,15 @@ class TextureRenderNode {
     (textures ?? []).forEach((texture) => {
       const option = document.createElement('option');
       option.value = texture;
-      option.text  = texture.split('/').pop().toString();
+      option.text = texture.split('/').pop().toString();
 
       element.appendChild(option);
     });
 
     $(element).selectpicker();
 
-    element.addEventListener('change', (event) => {
-      node.data.activeTexture = event.target.value;
-    });
+    element.addEventListener(
+        'change', (event) => { node.data.activeTexture = event.target.value; });
 
     node.data.activeTexture = $(element).val();
     node.data.activeFileSet = textures;
@@ -360,7 +378,8 @@ class TextureRenderNode {
       parent = document
     }
 
-    const slider = parent.querySelector(`#texture-node_${node.id}-slider_mipmap`);
+    const slider =
+        parent.querySelector(`#texture-node_${node.id}-slider_mipmap`);
 
     if (slider === null) {
       return;
@@ -370,7 +389,8 @@ class TextureRenderNode {
       node.data.levels = 10
     }
 
-    if (typeof node.data.prevLevels !== 'undefined' && node.data.levels === node.data.prevLevels) {
+    if (typeof node.data.prevLevels !== 'undefined' &&
+        node.data.levels === node.data.prevLevels) {
       return;
     }
 
@@ -383,22 +403,29 @@ class TextureRenderNode {
       slider.classList.add('unresponsive');
     }
 
-    noUiSlider.create(
-        slider, {start: 0, animate: false, range: {min: 0, max: node.data.levels}, step: 1});
+    noUiSlider.create(slider, {
+      start : 0,
+      animate : false,
+      range : {min : 0, max : node.data.levels},
+      step : 1
+    });
 
     parent.querySelector(`#texture-node_${node.id}-set_enable_manual-mipmap`)
         .addEventListener('click', (event) => {
           event.target.checked === true
-              ? (slider.removeAttribute('disabled'), slider.classList.remove('unresponsive'))
-              : (slider.setAttribute('disabled', true), slider.classList.add('unresponsive'));
+              ? (slider.removeAttribute('disabled'),
+                 slider.classList.remove('unresponsive'))
+              : (slider.setAttribute('disabled', true),
+                 slider.classList.add('unresponsive'));
 
-          window.callNative(
-              'TextureRenderNode.setEnableManualMipMap', node.id, event.target.checked === true);
+          window.callNative('TextureRenderNode.setEnableManualMipMap', node.id,
+                            event.target.checked === true);
         });
 
     // Set the time value for the renderer
     slider.noUiSlider.on('slide', (values, handle) => {
-      window.callNative('TextureRenderNode.setMipMapLevel', node.id, parseInt(values[handle]));
+      window.callNative('TextureRenderNode.setMipMapLevel', node.id,
+                        parseInt(values[handle]));
     });
   }
 
@@ -415,7 +442,7 @@ class TextureRenderNode {
       return;
     }
 
-    node.data.range = [min, max];
+    node.data.range = [ min, max ];
   }
 
   /**
@@ -460,20 +487,26 @@ class TextureRenderNode {
     // Re-Initialize slider with given layers for that texture
     const slider = document.querySelector(`#texture-node_${node.id}-layer`);
     slider.noUiSlider.destroy();
-    noUiSlider.create(
-        slider, {start: 1, animate: false, range: {min: 1, max: node.data.layers}, step: 1});
+    noUiSlider.create(slider, {
+      start : 1,
+      animate : false,
+      range : {min : 1, max : node.data.layers},
+      step : 1
+    });
 
     // Read the files for the given simulation mode and fill combobox when mode
     // is changed
     slider.noUiSlider.on('slide', (values, handle) => {
-      window.callNative('TextureRenderNode.setTextureLayer', node.id, parseFloat(values[handle]));
-      window.callNative(
-          'TextureRenderNode.readSimulationResults', node.id, node.data.activeTexture);
+      window.callNative('TextureRenderNode.setTextureLayer', node.id,
+                        parseFloat(values[handle]));
+      window.callNative('TextureRenderNode.readSimulationResults', node.id,
+                        node.data.activeTexture);
     });
   }
 }
 
 (() => {
   const texRenderNode = new TextureRenderNode();
-  CosmoScout.vestecNE.addNode('TextureRenderNode', texRenderNode.getComponent());
+  CosmoScout.vestecNE.addNode('TextureRenderNode',
+                              texRenderNode.getComponent());
 })();

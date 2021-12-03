@@ -21,36 +21,36 @@ class NodeEditor;
  * @see csp::vestec::Plugin::dataDir
  */
 class CinemaDBNode : public VNE::Node {
- public:
-  CinemaDBNode(cs::gui::GuiItem* pItem, int id);
+public:
+  CinemaDBNode(cs::gui::GuiItem *pItem, int id);
   virtual ~CinemaDBNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor* pEditor);
+  static void Init(VNE::NodeEditor *pEditor);
 
   /**
    * Returns the unique identifier for the node as string
    */
   static std::string GetName();
 
- private:
+private:
   /**
    * Read the use case names from the Cinema data base and fill the combobox
    */
-  void ReadCaseNames(int id, const std::string& path);
+  void ReadCaseNames(int id, const std::string &path);
 
   /**
    * Read the time steps from the Cinema data base and initialize the silder
    */
-  void GetTimeSteps(int id, const std::string& path);
+  void GetTimeSteps(int id, const std::string &path);
 
   /**
    * Converts a vtu file to json
    */
-  void static ConvertFile(
-      const std::string& caseName, const std::string& timeStep, const std::string& path);
+  void static ConvertFile(const std::string &caseName,
+                          const std::string &timeStep, const std::string &path);
 };
 
 #endif /* CINEMADB_SOURCE_NODE_HPP_ */

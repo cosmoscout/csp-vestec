@@ -22,69 +22,69 @@
 
 #include <zipper/unzipper.h>
 
-IncidentNode::IncidentNode(cs::gui::GuiItem* pItem, int id)
-    : VNE::Node(pItem, id, 1, 5) {
-}
+IncidentNode::IncidentNode(cs::gui::GuiItem *pItem, int id)
+    : VNE::Node(pItem, id, 1, 5) {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-IncidentNode::~IncidentNode() {
-}
+IncidentNode::~IncidentNode() {}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::string IncidentNode::GetName() {
-  return "IncidentNode";
-}
+std::string IncidentNode::GetName() { return "IncidentNode"; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentNode::Init(VNE::NodeEditor* pEditor) {
+void IncidentNode::Init(VNE::NodeEditor *pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
 
-  const std::string node =
-      cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-incident-node.js");
+  const std::string node = cs::utils::filesystem::loadToString(
+      "../share/resources/gui/js/csp-vestec-incident-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);
 
-  pEditor->GetGuiItem()->registerCallback("incidentNode.downloadDataSet",
-      "Downloads a given Dataset",
+  pEditor->GetGuiItem()->registerCallback(
+      "incidentNode.downloadDataSet", "Downloads a given Dataset",
       std::function([pEditor](double id, std::string uuid, std::string token) {
         std::thread(std::function([pEditor, id, uuid, token]() {
           std::cout << "Downloading dataset" << uuid << std::endl;
           auto success = IncidentNode::DownloadDataset(uuid, token);
 
-          pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady", id, uuid, success);
+          pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady",
+                                                id, uuid, success);
         }))
             .detach();
       }));
 
-  pEditor->GetGuiItem()->registerCallback("incidentNode.extractDataSet", "Extracts a given Dataset",
+  pEditor->GetGuiItem()->registerCallback(
+      "incidentNode.extractDataSet", "Extracts a given Dataset",
       std::function([](std::string uuid, bool appendCDB = false) {
         std::thread(&IncidentNode::ExtractDataset, uuid, appendCDB).detach();
       }));
 
-  pEditor->GetGuiItem()->registerCallback("incidentNode.downloadAndExtractDataSet",
+  pEditor->GetGuiItem()->registerCallback(
+      "incidentNode.downloadAndExtractDataSet",
       "Downloads ans extracts a given Dataset",
-      std::function(
-          [pEditor](double id, std::string uuid, std::string token, bool appendCDB = false) {
-            // TODO: This is not ideal
-            std::thread(std::function([pEditor, id, uuid, token, appendCDB]() {
-              std::cout << "Downloading dataset" << uuid << std::endl;
-              auto download = IncidentNode::DownloadDataset(uuid, token);
+      std::function([pEditor](double id, std::string uuid, std::string token,
+                              bool appendCDB = false) {
+        // TODO: This is not ideal
+        std::thread(std::function([pEditor, id, uuid, token, appendCDB]() {
+          std::cout << "Downloading dataset" << uuid << std::endl;
+          auto download = IncidentNode::DownloadDataset(uuid, token);
 
-              std::cout << "Extracting dataset" << uuid << std::endl;
-              auto extract = IncidentNode::ExtractDataset(uuid, appendCDB);
+          std::cout << "Extracting dataset" << uuid << std::endl;
+          auto extract = IncidentNode::ExtractDataset(uuid, appendCDB);
 
-              pEditor->GetGuiItem()->callJavascript(
-                  "IncidentNode.setDatasetReady", id, uuid, download && extract);
-            }))
-                .detach();
-          }));
+          pEditor->GetGuiItem()->callJavascript("IncidentNode.setDatasetReady",
+                                                id, uuid, download && extract);
+        }))
+            .detach();
+      }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IncidentNode::DownloadDataset(const std::string uuid, const std::string token) {
+bool IncidentNode::DownloadDataset(const std::string uuid,
+                                   const std::string token) {
   std::string downloadPath(csp::vestec::Plugin::vestecDownloadDir + "/" + uuid);
 
   if (boost::filesystem::exists(downloadPath)) {
@@ -96,7 +96,8 @@ bool IncidentNode::DownloadDataset(const std::string uuid, const std::string tok
   out.open(downloadPath, std::ofstream::out | std::ofstream::binary);
 
   if (!out) {
-    csp::vestec::logger().error("Failed to download vestec dataset '{}'.", uuid);
+    csp::vestec::logger().error("Failed to download vestec dataset '{}'.",
+                                uuid);
     return false;
   }
 
@@ -139,19 +140,21 @@ bool IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
   std::string extract;
 
   if (appendCDB) {
-    extract = csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid + ".cdb";
+    extract =
+        csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid + ".cdb";
   } else {
     extract = csp::vestec::Plugin::vestecDownloadDir + "/extracted/" + uuid;
   }
 
   if (!boost::filesystem::exists(zip)) {
-    csp::vestec::logger().debug(
-        "File '{}' does not exist on '{}'.", uuid, csp::vestec::Plugin::vestecDownloadDir);
+    csp::vestec::logger().debug("File '{}' does not exist on '{}'.", uuid,
+                                csp::vestec::Plugin::vestecDownloadDir);
     return false;
   }
 
   if (boost::filesystem::exists(extract)) {
-    csp::vestec::logger().debug("File '{}' already extracted in '{}'.", uuid, extract);
+    csp::vestec::logger().debug("File '{}' already extracted in '{}'.", uuid,
+                                extract);
     return true;
   }
 
@@ -166,7 +169,8 @@ bool IncidentNode::ExtractDataset(const std::string uuid, bool appendCDB) {
     return false;
   }
 
-  csp::vestec::logger().debug("Extracting {} files to '{}'.", unzipper.entries().size(), extract);
+  csp::vestec::logger().debug("Extracting {} files to '{}'.",
+                              unzipper.entries().size(), extract);
 
   unzipper.extract(extract);
   unzipper.close();
