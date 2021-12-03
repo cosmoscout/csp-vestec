@@ -48,9 +48,9 @@ class DiseasesSimulationNode {
         speed = parseInt(node.data.playbackSpeed[0], 10);
       }
 
-      return setTimeout(
-          () => { DiseasesSimulationNode.startAnimation(slider, node); },
-          60 / speed);
+      return setTimeout(() => {
+        DiseasesSimulationNode.startAnimation(slider, node);
+      }, 60 / speed);
     }
   }
 
@@ -70,8 +70,7 @@ class DiseasesSimulationNode {
         `<div class="row">
       <div class="col-10 text">Ensemble members:</div>
       <div class="col-2">
-        <div class="text" id="diseases-simulation-node_${
-            node.id}-ensemble_num"></div>
+        <div class="text" id="diseases-simulation-node_${node.id}-ensemble_num"></div>
       </div>
     </div>`,
         (element, control) => {
@@ -97,8 +96,7 @@ class DiseasesSimulationNode {
           </div>
         </div>
         <div class="row">
-          <button class="col-12" id="diseases-simulation-node_${
-            node.id}-play_mode">Play</button>
+          <button class="col-12" id="diseases-simulation-node_${node.id}-play_mode">Play</button>
         </div>
         <div class="row">
           <div class="col-3 text">Speed:</div>
@@ -114,27 +112,24 @@ class DiseasesSimulationNode {
             element.parentElement.classList.add('hidden');
           }
 
-          const select = element.querySelector(
-              `#diseases-simulation-node_${node.id}-sim_mode`);
-          const slider = element.querySelector(
-              `#diseases-simulation-node_${node.id}-slider_day`);
-          const playButton = element.querySelector(
-              `#diseases-simulation-node_${node.id}-play_mode`);
-          const playBackSpeed = element.querySelector(
-              `#diseases-simulation-node_${node.id}-playback_speed`);
+          const select = element.querySelector(`#diseases-simulation-node_${node.id}-sim_mode`);
+          const slider = element.querySelector(`#diseases-simulation-node_${node.id}-slider_day`);
+          const playButton =
+              element.querySelector(`#diseases-simulation-node_${node.id}-play_mode`);
+          const playBackSpeed =
+              element.querySelector(`#diseases-simulation-node_${node.id}-playback_speed`);
 
           $(select).selectpicker();
 
           // When combo box changes update the files and number of ensemble info
           select.addEventListener('change', (event) => {
             // console.log('Change combo box');
-            window.callNative(
-                'DiseasesSimulationNode.setNumberOfEnsembleMembers',
+            window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers',
                 parseInt(node.id, 10), event.target.value);
 
             // Get the files for the simulation mode and timestep
             const timestep = $(slider).val();
-            const simPath = $(select).val();
+            const simPath  = $(select).val();
 
             window.callNative(
                 'DiseasesSimulationNode.getFilesForTimeStep',
@@ -147,27 +142,26 @@ class DiseasesSimulationNode {
           playButton.addEventListener('click', (event) => {
             if (node.data.animate === false) {
               event.target.innerText = 'Pause';
-              node.data.animate = true;
+              node.data.animate      = true;
 
-              node.data.timeoutId =
-                  DiseasesSimulationNode.startAnimation(slider, node);
+              node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
             } else {
               clearTimeout(node.data.timeoutId);
               event.target.innerText = 'Play';
-              node.data.animate = false;
+              node.data.animate      = false;
             }
           });
 
           noUiSlider.create(
               playBackSpeed,
               {
-                start : 1,
-                animate : false,
-                range : {
-                  min : 0.1,
-                  max : 2,
+                start: 1,
+                animate: false,
+                range: {
+                  min: 0.1,
+                  max: 2,
                 },
-                step : 0.1,
+                step: 0.1,
               },
           );
 
@@ -175,8 +169,7 @@ class DiseasesSimulationNode {
             node.data.playbackSpeed = handles;
             if (node.data.animate) {
               clearTimeout(node.data.timeoutId);
-              node.data.timeoutId =
-                  DiseasesSimulationNode.startAnimation(slider, node);
+              node.data.timeoutId = DiseasesSimulationNode.startAnimation(slider, node);
             }
           });
         },
@@ -186,19 +179,17 @@ class DiseasesSimulationNode {
     node.addControl(simControl);
 
     // Define the output type
-    const output =
-        new D3NE.Output('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
+    const output = new D3NE.Output('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
 
     if (this._useVestec()) {
-      const input =
-          new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
+      const input = new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
       node.addInput(input);
 
       node.data.loaded = false;
     } else {
-      window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes',
-                        parseInt(node.id, 10), DiseasesSimulationNode.path);
+      window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes', parseInt(node.id, 10),
+          DiseasesSimulationNode.path);
     }
 
     return node;
@@ -214,8 +205,8 @@ class DiseasesSimulationNode {
    */
   worker(node, inputs, outputs) {
     if (this._useVestec()) {
-      if (typeof inputs[0] === 'undefined' ||
-          typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' ||
+          inputs[0].length === 0) {
         node.data.ensembleControlParent.classList.add('hidden');
         node.data.simControlParent.classList.add('hidden');
 
@@ -226,7 +217,7 @@ class DiseasesSimulationNode {
 
       if (!node.data.loaded) {
         window.callNative('DiseasesSimulationNode.readDiseasesSimulationModes',
-                          parseInt(node.id, 10), inputs[0][0]);
+            parseInt(node.id, 10), inputs[0][0]);
         node.data.loaded = true;
       }
     }
@@ -247,8 +238,8 @@ class DiseasesSimulationNode {
     this._checkD3NE();
 
     return new D3NE.Component('DiseasesSimulation', {
-      builder : this.builder.bind(this),
-      worker : this.worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 
@@ -268,35 +259,36 @@ class DiseasesSimulationNode {
    * @return {boolean}
    * @private
    */
-  _useVestec() { return typeof DiseasesSimulationNode.path === 'undefined'; }
+  _useVestec() {
+    return typeof DiseasesSimulationNode.path === 'undefined';
+  }
 
   /**
    * A path to load cinemadb data from
    *
    * @param {string} path
    */
-  static setPath(path) { DiseasesSimulationNode.path = `${path}/output/`; }
+  static setPath(path) {
+    DiseasesSimulationNode.path = `${path}/output/`;
+  }
 
   static setNumberOfEnsembleMembers(id, number, files) {
-    document.querySelector(`#diseases-simulation-node_${id}-ensemble_num`)
-        .innerText = number;
+    document.querySelector(`#diseases-simulation-node_${id}-ensemble_num`).innerText = number;
 
-    const node = CosmoScout.vestecNE.editor.nodes.find(
-        (editorNode) => editorNode.id === id);
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
     node.data.ensembleMembers = files;
 
-    const slider =
-        document.querySelector(`#diseases-simulation-node_${id}-slider_day`);
+    const slider = document.querySelector(`#diseases-simulation-node_${id}-slider_day`);
 
     if (typeof slider.noUiSlider !== 'undefined') {
       slider.noUiSlider.destroy();
     }
 
     noUiSlider.create(slider, {
-      start : 1,
-      step : 1,
-      animate : false,
-      range : {min : 0, max : files - 1},
+      start: 1,
+      step: 1,
+      animate: false,
+      range: {min: 0, max: files - 1},
     });
 
     // Event handling when slider changes
@@ -329,8 +321,7 @@ class DiseasesSimulationNode {
   static fillSimModes(id, modes) {
     const json = JSON.parse(modes);
 
-    const element =
-        document.querySelector(`#diseases-simulation-node_${id}-sim_mode`);
+    const element = document.querySelector(`#diseases-simulation-node_${id}-sim_mode`);
     $(element).selectpicker('destroy');
 
     CosmoScout.gui.clearHtml(element);
@@ -338,7 +329,7 @@ class DiseasesSimulationNode {
     json.forEach((mode) => {
       const option = document.createElement('option');
 
-      option.text = mode.split('/').pop();
+      option.text  = mode.split('/').pop();
       option.value = mode;
 
       element.appendChild(option);
@@ -346,14 +337,13 @@ class DiseasesSimulationNode {
 
     $(element).selectpicker();
 
-    const node = CosmoScout.vestecNE.editor.nodes.find(
-        (editorNode) => editorNode.id === id);
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
 
     if (typeof node !== 'undefined') {
       node.data.simMode = $(element).val();
       console.log('Set ensemble');
-      window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers',
-                        parseInt(node.id, 10), node.data.simMode);
+      window.callNative('DiseasesSimulationNode.setNumberOfEnsembleMembers', parseInt(node.id, 10),
+          node.data.simMode);
     } else {
       console.error(`Node with id ${id} not found.`);
     }
@@ -363,11 +353,10 @@ class DiseasesSimulationNode {
    * Receive the filelist from c++
    */
   static setFileListForTimeStep(id, fileList) {
-    const node = CosmoScout.vestecNE.editor.nodes.find(
-        (editorNode) => editorNode.id === id);
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
     if (typeof node !== 'undefined') {
       node.data.fileList = [];
-      const json = JSON.parse(fileList);
+      const json         = JSON.parse(fileList);
       for (let i = 0; i < json.length; i++) {
         node.data.fileList.push(json[i]);
       }

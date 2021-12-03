@@ -27,16 +27,10 @@ class TransferFunctionSourceNode {
     const transferFunction = new D3NE.Control(
         `<div id="tf-editor-${node.id}" class="container-fluid"></div>`,
         (element, control) => {
-          const fn = CosmoScout.transferFunctionEditor.create(
-              element, (transferFunction) => {
-                control.putData("transferFunction", transferFunction);
-                CosmoScout.vestecNE.updateEditor();
-              }, {
-                width : 300,
-                height : 120,
-                defaultFunction : "BlackBody.json",
-                fitToData : true
-              });
+          const fn = CosmoScout.transferFunctionEditor.create(element, (transferFunction) => {
+            control.putData("transferFunction", transferFunction);
+            CosmoScout.vestecNE.updateEditor();
+          }, {width: 300, height: 120, defaultFunction: "BlackBody.json", fitToData: true});
           control.putData('fn', fn);
         },
     );
@@ -45,8 +39,8 @@ class TransferFunctionSourceNode {
     node.addControl(transferFunction);
 
     // Define the output type
-    const output = new D3NE.Output(
-        'Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    const output =
+        new D3NE.Output('Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addOutput(output);
     return node;
   }
@@ -68,12 +62,11 @@ class TransferFunctionSourceNode {
         }
 
         if (eNode.outputs[0].connections.length > 0 &&
-            typeof eNode.outputs[0].connections[0].input.node.data.range !==
-                'undefined') {
+            typeof eNode.outputs[0].connections[0].input.node.data.range !== 'undefined') {
           const range = eNode.outputs[0].connections[0].input.node.data.range;
 
           if (node.data.range !== range) {
-            node.data.range = range;
+            node.data.range        = range;
             node.data.fn.fitToData = true;
             node.data.fn.setData(range);
           }
@@ -92,8 +85,8 @@ class TransferFunctionSourceNode {
     this._checkD3NE();
 
     return new D3NE.Component('TransferFunctionSourceNode', {
-      builder : this.builder.bind(this),
-      worker : this.worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 
@@ -112,6 +105,6 @@ class TransferFunctionSourceNode {
 
 (() => {
   const transferFunctionSourceNode = new TransferFunctionSourceNode();
-  CosmoScout.vestecNE.addNode('TransferFunctionSourceNode',
-                              transferFunctionSourceNode.getComponent());
+  CosmoScout.vestecNE.addNode(
+      'TransferFunctionSourceNode', transferFunctionSourceNode.getComponent());
 })();

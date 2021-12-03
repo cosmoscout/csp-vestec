@@ -49,7 +49,7 @@ class Vestec {
     }
 
     this._headers = new Headers({
-      'Content-Type' : 'application/json',
+      'Content-Type': 'application/json',
     });
   }
 
@@ -69,26 +69,34 @@ class Vestec {
    * @see {_server}
    * @returns {string}
    */
-  get server() { return this._server; }
+  get server() {
+    return this._server;
+  }
 
   /**
    * @see {_token}
    * @returns {string}
    */
-  get token() { return this._token; }
+  get token() {
+    return this._token;
+  }
 
   /**
    * Manually set an access token
    *
    * @param token {string}
    */
-  set token(token) { this._token = token; }
+  set token(token) {
+    this._token = token;
+  }
 
   /**
    *
    * @returns {boolean}
    */
-  isAuthorized() { return this._authorized === true; }
+  isAuthorized() {
+    return this._authorized === true;
+  }
 
   /**
    * This call enables a user to login with the VESTEC system and returns a
@@ -126,7 +134,7 @@ class Vestec {
 
     if (data.status === 200) {
       this._authorized = true;
-      this._token = data.access_token;
+      this._token      = data.access_token;
 
       if (this._headers.has('Authorization')) {
         this._headers.delete('Authorization');
@@ -183,7 +191,7 @@ class Vestec {
       return response;
     }
 
-    const data = await response.json();
+    const data       = await response.json();
     this._authorized = data.status === 200;
 
     return Vestec.buildResponse(data);
@@ -279,14 +287,13 @@ class Vestec {
   async getIncidents(...types) {
     types.forEach((type) => {
       if (!this.incidentTypes.includes(type)) {
-        throw new Error(`Incident type '${type}' not in [${
-            this.incidentTypes.concat(', ')}].`);
+        throw new Error(`Incident type '${type}' not in [${this.incidentTypes.concat(', ')}].`);
       }
     });
 
     const response = await fetch(
         this._buildRequest('getincidents', {
-          uriParams : types.reduce((obj, cur) => ({...obj, [cur] : true}), {}),
+          uriParams: types.reduce((obj, cur) => ({...obj, [cur]: true}), {}),
         }),
     );
 
@@ -331,14 +338,14 @@ class Vestec {
   async createIncident(incident) {
     const response = await fetch(
         this._buildRequest('createincident', {
-          name : incident.name,
-          kind : incident.kind,
-          upperLeftLatlong : incident.upperLeftLatlong,
-          lowerRightLatlong : incident.lowerRightLatlong,
-          duration : incident.duration,
-          simulationRuns : incident.simulationRuns,
-          mosquitoSpecies : incident.mosquitoSpecies,
-          diseaseOfInterest : incident.diseaseOfInterest,
+          name: incident.name,
+          kind: incident.kind,
+          upperLeftLatlong: incident.upperLeftLatlong,
+          lowerRightLatlong: incident.lowerRightLatlong,
+          duration: incident.duration,
+          simulationRuns: incident.simulationRuns,
+          mosquitoSpecies: incident.mosquitoSpecies,
+          diseaseOfInterest: incident.diseaseOfInterest,
         }),
     );
 
@@ -514,9 +521,9 @@ class Vestec {
   async getDatasetsMetadata(type, uuid) {
     const response = await fetch(
         this._buildRequest('datasets', {
-          uriParams : {
+          uriParams: {
             type,
-            incident_uuid : uuid,
+            incident_uuid: uuid,
           },
         }),
     );
@@ -557,9 +564,9 @@ class Vestec {
   async getIncidentDatasetMetadata(dataId, incidentId) {
     const response = await fetch(
         this._buildRequest('metadata', {
-          uriParams : {
-            data_uuid : dataId,
-            incident_uuid : incidentId,
+          uriParams: {
+            data_uuid: dataId,
+            incident_uuid: incidentId,
           },
         }),
     );
@@ -595,8 +602,8 @@ class Vestec {
   ) {
     const response = await fetch(
         this._buildRequest('metadata', {
-          data_uuid : dataId,
-          incident_uuid : incidentId,
+          data_uuid: dataId,
+          incident_uuid: incidentId,
           type,
           comments,
         }),
@@ -626,12 +633,12 @@ class Vestec {
   async deleteIncidentDataset(dataId, incidentId) {
     const response = await fetch(
         this._buildRequest('incident', {
-          uriParams : {
-            data_uuid : dataId,
-            incident_uuid : incidentId,
+          uriParams: {
+            data_uuid: dataId,
+            incident_uuid: incidentId,
           },
         },
-                           'DELETE'),
+            'DELETE'),
     );
 
     return Vestec.buildResponse(response);
@@ -771,7 +778,7 @@ class Vestec {
   async refreshSimulation(simulationId) {
     const response = await fetch(
         this._buildRequest('refreshsimulation', {
-          sim_uuid : simulationId,
+          sim_uuid: simulationId,
         }),
     );
 
@@ -795,11 +802,11 @@ class Vestec {
   async deleteSimulation(simulationId) {
     const response = await fetch(
         this._buildRequest('simulation', {
-          uriParams : {
-            sim_uuid : simulationId,
+          uriParams: {
+            sim_uuid: simulationId,
           },
         },
-                           'DELETE'),
+            'DELETE'),
     );
 
     return Vestec.buildResponse(response);
@@ -859,8 +866,8 @@ class Vestec {
 
     /** @type ResponseInit */
     const init = {
-      status : data.status,
-      statusText : typeof data.msg !== 'undefined' ? data.msg : '',
+      status: data.status,
+      statusText: typeof data.msg !== 'undefined' ? data.msg : '',
     };
 
     delete data.status;
@@ -868,14 +875,13 @@ class Vestec {
 
     const body = new Blob(
         [
-          typeof responseDataKey !== 'undefined' &&
-                  typeof data[responseDataKey] !== 'undefined'
-              ? typeof data[responseDataKey] === 'string'
+          typeof responseDataKey !== 'undefined' && typeof data[responseDataKey] !== 'undefined'
+              ? typeof                                     data[responseDataKey] === 'string'
                     ? data[responseDataKey]
                     : JSON.stringify(data[responseDataKey], null, 2)
               : JSON.stringify(data, null, 2),
         ],
-        {type : 'application/json'},
+        {type: 'application/json'},
     );
 
     return new Response(body, init);
@@ -898,7 +904,7 @@ class Vestec {
   _buildRequest(uri, data = undefined, method = 'GET') {
     const init = {
       method,
-      mode : 'cors',
+      mode: 'cors',
     };
 
     if (typeof this._server === 'undefined') {

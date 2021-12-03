@@ -211,7 +211,8 @@ void TextureRenderNode::SetMinMaxDataRange(std::string filePath) {
     m_Texture.dataRange[1] = max;
 
     m_pItem->callJavascript("TextureRenderNode.setRange", GetID(), min, max);
-  })).detach();
+  }))
+      .detach();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

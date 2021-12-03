@@ -16,16 +16,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------------
-template <typename T> class Singleton {
+template <typename T>
+class Singleton {
 
   ///////////////////////////////////////////////////////////////////////////////
   // ----------------------------------------------------------- public
   // interface
-public:
+ public:
   // Gets the instance. Singletons are classes, which are only instanciated
   // once. This method will create this instance if necessary and return a
   // reference to it.
-  static T &Get() {
+  static T& Get() {
     if (m_pIinstance == nullptr) {
       m_pIinstance = new T();
     }
@@ -45,20 +46,23 @@ public:
   ///////////////////////////////////////////////////////////////////////////////
   // -------------------------------------------------------- protected
   // interface
-protected:
+ protected:
   // Constructor. Has to be private in derived classe.
-  Singleton() {}
+  Singleton() {
+  }
 
   ///////////////////////////////////////////////////////////////////////////////
   // ---------------------------------------------------------- private
   // interface
-private:
-  Singleton(Singleton const &copy) {}
+ private:
+  Singleton(Singleton const& copy) {
+  }
 
-  static T *m_pIinstance;
+  static T* m_pIinstance;
 };
 
 // the actual instance of this template
-template <typename T> T *Singleton<T>::m_pIinstance = nullptr;
+template <typename T>
+T* Singleton<T>::m_pIinstance = nullptr;
 
 #endif // SINGLETON_HPP_HEADER_GUARD

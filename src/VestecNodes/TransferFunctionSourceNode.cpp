@@ -4,15 +4,15 @@
 #include "../../../../src/cs-utils/filesystem.hpp"
 
 TransferFunctionSourceNode::TransferFunctionSourceNode(
-    csp::vestec::Plugin::Settings const &config, cs::gui::GuiItem *pItem,
-    int id)
+    csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id)
     : VNE::Node(pItem, id, 0, 1) {
   mPluginConfig = config;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TransferFunctionSourceNode::~TransferFunctionSourceNode() {}
+TransferFunctionSourceNode::~TransferFunctionSourceNode() {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +22,7 @@ std::string TransferFunctionSourceNode::GetName() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TransferFunctionSourceNode::Init(VNE::NodeEditor *pEditor) {
+void TransferFunctionSourceNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScript content from file
   std::string code = cs::utils::filesystem::loadToString(
       "../share/resources/gui/js/csp-vestec-transfer-function-source-node.js");

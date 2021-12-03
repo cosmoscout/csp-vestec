@@ -26,21 +26,20 @@ class VistaBufferObject;
  * TODO
  */
 class UncertaintyOverlayRenderer : public IVistaOpenGLDraw {
-public:
+ public:
   enum RenderMode {
-    Average = 1,  //! Color by average scalar value per pixel (in z direction)
-    Variance = 2, //! Color by the variance value per pixel (in z direction)
-    Difference =
-        3, //! Color by absolute summed difference per pixel (in z direction)
-    Mixed_Variance = 4,  //! Color by Average * Variance
-    Mixed_Difference = 5 //! Color by Average * Variance
+    Average          = 1, //! Color by average scalar value per pixel (in z direction)
+    Variance         = 2, //! Color by the variance value per pixel (in z direction)
+    Difference       = 3, //! Color by absolute summed difference per pixel (in z direction)
+    Mixed_Variance   = 4, //! Color by Average * Variance
+    Mixed_Difference = 5  //! Color by Average * Variance
   };
 
   /**
    * Constructor requires the SolarSystem to get the current active planet
    * to get the model matrix
    */
-  UncertaintyOverlayRenderer(cs::core::SolarSystem *pSolarSystem);
+  UncertaintyOverlayRenderer(cs::core::SolarSystem* pSolarSystem);
   virtual ~UncertaintyOverlayRenderer();
 
   /**
@@ -62,8 +61,7 @@ public:
   /**
    * Adding a texture used for overlay rendering
    */
-  void
-  SetOverlayTextures(std::vector<GDALReader::GreyScaleTexture> &vecTextures);
+  void SetOverlayTextures(std::vector<GDALReader::GreyScaleTexture>& vecTextures);
 
   /**
    * Define the style of visualization
@@ -79,9 +77,9 @@ public:
   // INTERFACE IMPLEMENTATION OF IVistaOpenGLDraw
   // --------------------------------------------
   virtual bool Do();
-  virtual bool GetBoundingBox(VistaBoundingBox &bb);
+  virtual bool GetBoundingBox(VistaBoundingBox& bb);
 
-private:
+ private:
   /**
    * Uploads the textures in mvecTextures to the texture array in opengl
    */
@@ -92,25 +90,21 @@ private:
    */
   void getGLError(std::string name);
 
-private:
-  bool mUpdateTextures = false; //! Flag if a texture upload is required
-  float mOpacity = 1; //! Opacity value used in shader to adjust the overlay
-  long long lBufferSize = 0; //! Store size of the texture array
-  RenderMode mRenderMode =
-      RenderMode::Average; //! Specifies the render mode used in the shader
+ private:
+  bool       mUpdateTextures = false; //! Flag if a texture upload is required
+  float      mOpacity        = 1;     //! Opacity value used in shader to adjust the overlay
+  long long  lBufferSize     = 0;     //! Store size of the texture array
+  RenderMode mRenderMode     = RenderMode::Average; //! Specifies the render mode used in the shader
 
-  VistaGLSLShader *m_pSurfaceShader =
-      nullptr; //! Vista GLSL shader object used for rendering
-  VistaGLSLShader *m_pComputeShader =
-      nullptr; //! Vista GLSL shader object used for rendering
+  VistaGLSLShader* m_pSurfaceShader = nullptr; //! Vista GLSL shader object used for rendering
+  VistaGLSLShader* m_pComputeShader = nullptr; //! Vista GLSL shader object used for rendering
 
   static const std::string SURFACE_GEOM; //! Code for the geometry shader
   static const std::string SURFACE_VERT; //! Code for the vertex shader
   static const std::string SURFACE_FRAG; //! Code for the fragment shader
   static const std::string COMPUTE;      //! Code for the compute shader
 
-  VistaBufferObject
-      *m_pBufferSSBO; //! SSBO used by the compute shader to write results
+  VistaBufferObject* m_pBufferSSBO; //! SSBO used by the compute shader to write results
 
   /**
    * Struct which stores the depth buffer and color buffer from the previous
@@ -119,12 +113,11 @@ private:
    * texture coordinates for the overlay
    */
   struct GBufferData {
-    VistaTexture *mDepthBuffer = nullptr;
-    VistaTexture *mColorBuffer = nullptr;
+    VistaTexture* mDepthBuffer = nullptr;
+    VistaTexture* mColorBuffer = nullptr;
   };
 
-  std::unordered_map<VistaViewport *, GBufferData>
-      mGBufferData; //! Store one buffer per viewport
+  std::unordered_map<VistaViewport*, GBufferData> mGBufferData; //! Store one buffer per viewport
 
   std::mutex mLockTextureAccess; //! Mutex to lock texture access
   std::vector<GDALReader::GreyScaleTexture>
@@ -136,7 +129,7 @@ private:
       mTransferFunctionUncertainty; //! Transfer function used in shader for
                                     //! difference and variance
 
-  cs::core::SolarSystem *mSolarSystem; //! Pointer to the CosmoScout solar
+  cs::core::SolarSystem* mSolarSystem; //! Pointer to the CosmoScout solar
                                        //! system used to retriev matrices
 };
 

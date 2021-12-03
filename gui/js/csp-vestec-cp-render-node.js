@@ -38,26 +38,24 @@ class CriticalPointsNode {
                 </select>
             </div>`;
 
-    const renderModeControl =
-        new D3NE.Control(renderModeHtml, (element, _control) => {
-          // Initialize combobox for the visualization mode
-          const select = $(element).find(`#vis_mode_${node.id}`);
-          select.selectpicker();
-          select.on('change', (event) => {
-            window.callNative('setCriticalPointsVisualizationMode',
-                              parseInt(node.id, 10),
-                              parseInt(event.target.value, 10));
-          });
-        });
+    const renderModeControl = new D3NE.Control(renderModeHtml, (element, _control) => {
+      // Initialize combobox for the visualization mode
+      const select = $(element).find(`#vis_mode_${node.id}`);
+      select.selectpicker();
+      select.on('change', (event) => {
+        window.callNative('setCriticalPointsVisualizationMode', parseInt(node.id, 10),
+            parseInt(event.target.value, 10));
+      });
+    });
 
     const sliderOptions = {
-      start : 1,
-      step : 0.1,
-      snap : false,
-      animate : false,
-      range : {
-        min : 1,
-        max : 1000,
+      start: 1,
+      step: 0.1,
+      snap: false,
+      animate: false,
+      range: {
+        min: 1,
+        max: 1000,
       },
     };
 
@@ -68,17 +66,15 @@ class CriticalPointsNode {
                 </div> 
             </div>`;
 
-    const heightControl =
-        new D3NE.Control(heightControlHTML, (element, _control) => {
-          const heightScale = element.querySelector(`#height_scale_${node.id}`);
+    const heightControl = new D3NE.Control(heightControlHTML, (element, _control) => {
+      const heightScale = element.querySelector(`#height_scale_${node.id}`);
 
-          noUiSlider.create(heightScale, sliderOptions);
+      noUiSlider.create(heightScale, sliderOptions);
 
-          heightScale.noUiSlider.on('update', (value) => {
-            window.callNative('setCriticalPointsHeightScale',
-                              parseInt(node.id, 10), parseFloat(value));
-          });
-        });
+      heightScale.noUiSlider.on('update', (value) => {
+        window.callNative('setCriticalPointsHeightScale', parseInt(node.id, 10), parseFloat(value));
+      });
+    });
 
     const widthControlHTML = `<div class="row">
                 <div class="col-12 text text-left">Width Scale:</div>
@@ -88,27 +84,25 @@ class CriticalPointsNode {
             </div>`;
 
     const sliderWidthOptions = {
-      start : 0.01,
-      step : 0.01,
-      snap : false,
-      animate : false,
-      range : {
-        min : 0.01,
-        max : 1,
+      start: 0.01,
+      step: 0.01,
+      snap: false,
+      animate: false,
+      range: {
+        min: 0.01,
+        max: 1,
       },
     };
 
-    const widthControl =
-        new D3NE.Control(widthControlHTML, (element, _control) => {
-          const widthScale = element.querySelector(`#width_scale_${node.id}`);
+    const widthControl = new D3NE.Control(widthControlHTML, (element, _control) => {
+      const widthScale = element.querySelector(`#width_scale_${node.id}`);
 
-          noUiSlider.create(widthScale, sliderWidthOptions);
+      noUiSlider.create(widthScale, sliderWidthOptions);
 
-          widthScale.noUiSlider.on('update', (value) => {
-            window.callNative('setCriticalPointsWidthScale',
-                              parseInt(node.id, 10), parseFloat(value));
-          });
-        });
+      widthScale.noUiSlider.on('update', (value) => {
+        window.callNative('setCriticalPointsWidthScale', parseInt(node.id, 10), parseFloat(value));
+      });
+    });
 
     node.addControl(renderModeControl);
     node.addControl(heightControl);
@@ -117,11 +111,10 @@ class CriticalPointsNode {
     node.data.activeFile = null;
 
     // Define the input types
-    const inputPoints =
-        new D3NE.Input('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
+    const inputPoints = new D3NE.Input('Points', CosmoScout.vestecNE.sockets.POINT_ARRAY);
     node.addInput(inputPoints);
-    const inputTransferFunction = new D3NE.Input(
-        'Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
+    const inputTransferFunction =
+        new D3NE.Input('Transfer Function', CosmoScout.vestecNE.sockets.TRANSFER_FUNCTION);
     node.addInput(inputTransferFunction);
 
     return node;
@@ -151,8 +144,8 @@ class CriticalPointsNode {
     this._checkD3NE();
 
     return new D3NE.Component('CriticalPointsNode', {
-      builder : this.builder.bind(this),
-      worker : this.worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 
@@ -210,15 +203,14 @@ class CriticalPointsNode {
 
     this.lastTransferFunction = transferFunction;
 
-    window.callNative('CriticalPointsNode.setTransferFunction', node.id,
-                      transferFunction);
+    window.callNative('CriticalPointsNode.setTransferFunction', node.id, transferFunction);
   }
 
   // Set the min and max range of the added points
   static setRange(id, min, max) {
     CosmoScout.vestecNE.editor.nodes.forEach((node) => {
       if (node.id == id) {
-        node.data.range = [ min, max ];
+        node.data.range = [min, max];
       }
     });
   }

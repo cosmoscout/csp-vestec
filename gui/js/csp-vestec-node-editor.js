@@ -71,7 +71,8 @@
     /**
      * @inheritDoc
      */
-    init() {}
+    init() {
+    }
 
     /**
      * Initializes the d3 node editor
@@ -86,11 +87,11 @@
           this.menu,
       );
 
-      this.engine = new D3NE.Engine(`${this.name}NodeEditor${this._version}`,
-                                    this.components);
+      this.engine = new D3NE.Engine(`${this.name}NodeEditor${this._version}`, this.components);
 
-      this.engine.onError =
-          (msg, obj) => { console.error(`Node Editor Error: ${msg}`, obj); };
+      this.engine.onError = (msg, obj) => {
+        console.error(`Node Editor Error: ${msg}`, obj);
+      };
 
       this._addEventListener();
 
@@ -122,7 +123,9 @@
      * @param {string} name - Node name
      * @param {D3NE.Component} component - D3NE.Component
      */
-    addNode(name, component) { this.nodes[name] = component; }
+    addNode(name, component) {
+      this.nodes[name] = component;
+    }
 
     /**
      * Adds a new socket type to the node editor
@@ -152,8 +155,7 @@
      * @param {string} categoryName - The category name
      */
     addContextMenuCategory(categoryName) {
-      if (!Object.prototype.hasOwnProperty.call(this._contextMenuData,
-                                                categoryName)) {
+      if (!Object.prototype.hasOwnProperty.call(this._contextMenuData, categoryName)) {
         this._contextMenuData[categoryName] = {};
       }
     }
@@ -165,8 +167,7 @@
      * @param {string} node - The node name
      */
     addContextMenuContent(categoryName, node) {
-      if (!Object.prototype.hasOwnProperty.call(this._contextMenuData,
-                                                categoryName)) {
+      if (!Object.prototype.hasOwnProperty.call(this._contextMenuData, categoryName)) {
         console.error(`Context menu does not contain a category named ${
             categoryName}, call 'addContextMenuCategory' first.`);
         return;
@@ -207,46 +208,37 @@
           window.callNative('AddNewNode', parseInt(node.id, 10), node.title);
 
           this._addToggleBtnToNode(node);
-        } catch (e) {
-          console.error(`Error: AddNewNode #${node.id} (${node.title})`, e);
-        }
+        } catch (e) { console.error(`Error: AddNewNode #${node.id} (${node.title})`, e); }
       });
 
       this.editor.eventListener.on('noderemove', (node, persistent) => {
         try {
           window.callNative('DeleteNode', parseInt(node.id, 10), node.title);
+        } catch (e) { console.error(`Error: DeleteNode #${node.id} (${node.title})`, e); }
+      });
+
+      this.editor.eventListener.on('connectioncreate', (connection, persistent) => {
+        // TODO: Re-Enable
+        if (connection.output.node.title === 'IncidentNode') {
+          return;
+        }
+
+        try {
+          window.callNative(
+              'AddConnection',
+              parseInt(connection.output.node.id, 10),
+              parseInt(connection.input.node.id, 10),
+              connection.output.node.outputs.findIndex((output) => output === connection.output),
+              connection.input.node.inputs.findIndex((input) => input === connection.input),
+          );
         } catch (e) {
-          console.error(`Error: DeleteNode #${node.id} (${node.title})`, e);
+          console.error(`Error: AddConnection In #${connection.input.node.id} Out #${
+                            connection.output.node.id}`,
+              e);
         }
       });
 
-      this.editor.eventListener.on(
-          'connectioncreate', (connection, persistent) => {
-            // TODO: Re-Enable
-            if (connection.output.node.title === 'IncidentNode') {
-              return;
-            }
-
-            try {
-              window.callNative(
-                  'AddConnection',
-                  parseInt(connection.output.node.id, 10),
-                  parseInt(connection.input.node.id, 10),
-                  connection.output.node.outputs.findIndex(
-                      (output) => output === connection.output),
-                  connection.input.node.inputs.findIndex(
-                      (input) => input === connection.input),
-              );
-            } catch (e) {
-              console.error(
-                  `Error: AddConnection In #${connection.input.node.id} Out #${
-                      connection.output.node.id}`,
-                  e);
-            }
-          });
-
-      this.editor.eventListener.on('connectionremove', (connection,
-                                                        persistent) => {
+      this.editor.eventListener.on('connectionremove', (connection, persistent) => {
         // TODO: Re-Enable
         if (connection.output.node.title === 'IncidentNode') {
           return;
@@ -257,15 +249,12 @@
               'DeleteConnection',
               parseInt(connection.output.node.id, 10),
               parseInt(connection.input.node.id, 10),
-              connection.output.node.outputs.findIndex(
-                  (output) => output === connection.output),
-              connection.input.node.inputs.findIndex(
-                  (input) => input === connection.input),
+              connection.output.node.outputs.findIndex((output) => output === connection.output),
+              connection.input.node.inputs.findIndex((input) => input === connection.input),
           );
         } catch (e) {
-          console.error(
-              `Error: DeleteConnection In #${connection.input.node.id} Out #${
-                  connection.output.node.id}`,
+          console.error(`Error: DeleteConnection In #${connection.input.node.id} Out #${
+                            connection.output.node.id}`,
               e);
         }
       });
@@ -286,8 +275,7 @@
     _nodeExists(node) {
       if (!Object.prototype.hasOwnProperty.call(this.nodes, node)) {
         console.error(
-            `No node with name ${
-                node} is registered on the node editor. Call 'addNode' first.`,
+            `No node with name ${node} is registered on the node editor. Call 'addNode' first.`,
         );
         return false;
       }
@@ -312,9 +300,9 @@
       const controls = node.el.querySelectorAll('div.control');
 
       node.el.querySelector('div.title')
-          .addEventListener(
-              'click', () => {controls.forEach(
-                           control => { control.classList.toggle('off'); })})
+          .addEventListener('click', () => {controls.forEach(control => {
+            control.classList.toggle('off');
+          })})
     }
   }
 
