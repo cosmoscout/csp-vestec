@@ -95,9 +95,10 @@ void outputVertex(vec4 vPos, int i, int sides, vec4[5] positions)
 
 void main()
 {
-    float normalizedPersistence = (gs_in_vs[0].persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
-    float widthScale = uWidthScale * 3.14 / 180; //in degree
-    float heightScale = normalizedPersistence * uHeightScale * 1000; //m to km
+    float normalizedPersistence = (gs_in_vs[0].persistence - uMinPersistence) /
+(uMaxPersistence - uMinPersistence); float widthScale = uWidthScale * 3.14 /
+180; //in degree float heightScale = normalizedPersistence * uHeightScale *
+1000; //m to km
 
     // Total number of sides + center position
     vec4 position;
@@ -155,8 +156,8 @@ void main()
         discard;
     }
 
-    float value = (fs_in.persistence - uMinPersistence) / (uMaxPersistence - uMinPersistence);
-    vec4 color = texture(uTransferFunction, value);
+    float value = (fs_in.persistence - uMinPersistence) / (uMaxPersistence -
+uMinPersistence); vec4 color = texture(uTransferFunction, value);
 
 
     // calculate normal from texture coordinates

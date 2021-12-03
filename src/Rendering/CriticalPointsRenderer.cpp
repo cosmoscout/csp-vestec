@@ -40,7 +40,6 @@ CriticalPointsRenderer::CriticalPointsRenderer(
   m_pSurfaceShader->InitFragmentShaderFromString(SURFACE_FRAG);
   m_pSurfaceShader->Link();
 
-
   // create buffers ----------------------------------------------------------
   m_VBO = new VistaBufferObject();
   m_VAO = new VistaVertexArrayObject();
@@ -148,7 +147,6 @@ bool CriticalPointsRenderer::Do() {
   // glEnable(GL_BLEND);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
-
   double nearClip;
   double farClip;
 
@@ -225,7 +223,7 @@ bool CriticalPointsRenderer::Do() {
   m_pSurfaceShader->Release();
   m_VAO->Release();
 
-  //glDisable(GL_PROGRAM_POINT_SIZE);
+  // glDisable(GL_PROGRAM_POINT_SIZE);
   glPopAttrib();
   return true;
 }
