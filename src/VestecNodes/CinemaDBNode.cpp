@@ -30,59 +30,56 @@
 #include <nlohmann/json.hpp>
 #include <set>
 
-CinemaDBNode::CinemaDBNode(cs::gui::GuiItem *pItem, int id)
-    : VNE::Node(pItem, id, 1, 1) {}
+CinemaDBNode::CinemaDBNode(cs::gui::GuiItem* pItem, int id)
+    : VNE::Node(pItem, id, 1, 1) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CinemaDBNode::~CinemaDBNode() {}
+CinemaDBNode::~CinemaDBNode() {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::string CinemaDBNode::GetName() { return "CinemaDBNode"; }
+std::string CinemaDBNode::GetName() {
+  return "CinemaDBNode";
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CinemaDBNode::Init(VNE::NodeEditor *pEditor) {
+void CinemaDBNode::Init(VNE::NodeEditor* pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
 
-  const std::string node = cs::utils::filesystem::loadToString(
-      "../share/resources/gui/js/csp-vestec-cinemadb-node.js");
+  const std::string node =
+      cs::utils::filesystem::loadToString("../share/resources/gui/js/csp-vestec-cinemadb-node.js");
   pEditor->GetGuiItem()->executeJavascript(node);
 
   if (!csp::vestec::Plugin::dataDir.empty()) {
-    pEditor->GetGuiItem()->callJavascript("CinemaDBNode.setPath",
-                                          csp::vestec::Plugin::dataDir);
+    pEditor->GetGuiItem()->callJavascript("CinemaDBNode.setPath", csp::vestec::Plugin::dataDir);
   }
 
   // Example callback for communication from JavaScript to C++
-  pEditor->GetGuiItem()->registerCallback(
-      "CinemaDBNode.readCaseNames", "Returns available case names",
-      std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<CinemaDBNode>(std::lround(id))
-            ->ReadCaseNames(std::lround(id), path);
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.readCaseNames",
+      "Returns available case names", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<CinemaDBNode>(std::lround(id))->ReadCaseNames(std::lround(id), path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback(
-      "CinemaDBNode.getTimeSteps", "Returns time steps for a case",
-      std::function([pEditor](double id, std::string path) {
-        pEditor->GetNode<CinemaDBNode>(std::lround(id))
-            ->GetTimeSteps(std::lround(id), path);
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.getTimeSteps",
+      "Returns time steps for a case", std::function([pEditor](double id, std::string path) {
+        pEditor->GetNode<CinemaDBNode>(std::lround(id))->GetTimeSteps(std::lround(id), path);
       }));
 
-  pEditor->GetGuiItem()->registerCallback(
-      "CinemaDBNode.convertFile", "Converts a .vtu file to .json",
-      std::function([](const std::string caseName, std::string timeStep,
-                       std::string path) {
+  pEditor->GetGuiItem()->registerCallback("CinemaDBNode.convertFile",
+      "Converts a .vtu file to .json",
+      std::function([](const std::string caseName, std::string timeStep, std::string path) {
         CinemaDBNode::ConvertFile(caseName, timeStep, path);
       }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CinemaDBNode::ConvertFile(const std::string &caseName,
-                               const std::string &timeStep,
-                               const std::string &path) {
+void CinemaDBNode::ConvertFile(
+    const std::string& caseName, const std::string& timeStep, const std::string& path) {
   auto reader = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(path);
   reader->Update();
@@ -90,8 +87,8 @@ void CinemaDBNode::ConvertFile(const std::string &caseName,
   /////////////////
   auto cinemaQuery = vtkSmartPointer<ttkCinemaQuery>::New();
   cinemaQuery->SetInputConnection(reader->GetOutputPort());
-  cinemaQuery->SetSQLStatement("SELECT * FROM InputTable0 WHERE Area == '" +
-                               caseName + "' AND Month == " + (timeStep));
+  cinemaQuery->SetSQLStatement(
+      "SELECT * FROM InputTable0 WHERE Area == '" + caseName + "' AND Month == " + (timeStep));
   cinemaQuery->Update();
 
   auto cinemaProduct = vtkSmartPointer<ttkCinemaProductReader>::New();
@@ -101,41 +98,36 @@ void CinemaDBNode::ConvertFile(const std::string &caseName,
 
   auto polyFilter = vtkSmartPointer<vtkGeometryFilter>::New();
   polyFilter->SetInputData(
-      vtkMultiBlockDataSet::SafeDownCast(cinemaProduct->GetOutputDataObject(0))
-          ->GetBlock(0));
+      vtkMultiBlockDataSet::SafeDownCast(cinemaProduct->GetOutputDataObject(0))->GetBlock(0));
   polyFilter->Update();
 
   ///////////////// Dump to vtk js
-  auto *dumper = vtkHttpDataSetWriter::New();
-  dumper->SetFileName(
-      (path + "/converted/" + caseName + "_" + (timeStep)).c_str());
+  auto* dumper = vtkHttpDataSetWriter::New();
+  dumper->SetFileName((path + "/converted/" + caseName + "_" + (timeStep)).c_str());
   dumper->SetInputConnection(polyFilter->GetOutputPort());
   dumper->Write();
 
   csp::vestec::logger().debug(
-      "[{}::ConvertFile] JSON written to: {}/converted/{}_{}", GetName(), path,
-      caseName, timeStep);
+      "[{}::ConvertFile] JSON written to: {}/converted/{}_{}", GetName(), path, caseName, timeStep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CinemaDBNode::ReadCaseNames(int id, const std::string &path) {
+void CinemaDBNode::ReadCaseNames(int id, const std::string& path) {
   nlohmann::json args;
 
   csp::vestec::logger().debug(
-      "[{}::ReadCaseNames] Reading case names from cinema database: {}",
-      GetName(), path);
+      "[{}::ReadCaseNames] Reading case names from cinema database: {}", GetName(), path);
 
   ttk::globalDebugLevel_ = 3;
-  auto reader = vtkSmartPointer<ttkCinemaReader>::New();
+  auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(path);
   reader->Update();
 
-  auto *table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
+  auto* table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
 
   std::set<std::string> caseNames;
-  auto *caseNamesColumn =
-      vtkStringArray::SafeDownCast(table->GetColumnByName("Area"));
+  auto* caseNamesColumn = vtkStringArray::SafeDownCast(table->GetColumnByName("Area"));
 
   for (int x = 0; x < table->GetNumberOfRows(); ++x) {
     caseNames.insert(caseNamesColumn->GetValue(x));
@@ -149,21 +141,20 @@ void CinemaDBNode::ReadCaseNames(int id, const std::string &path) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CinemaDBNode::GetTimeSteps(int id, const std::string &path) {
+void CinemaDBNode::GetTimeSteps(int id, const std::string& path) {
   nlohmann::json args;
 
   csp::vestec::logger().debug(
-      "[{}::GetTimeSteps] Reading time info from cinema database: {}",
-      GetName(), path);
+      "[{}::GetTimeSteps] Reading time info from cinema database: {}", GetName(), path);
 
   ttk::globalDebugLevel_ = 3;
-  auto reader = vtkSmartPointer<ttkCinemaReader>::New();
+  auto reader            = vtkSmartPointer<ttkCinemaReader>::New();
   reader->SetDatabasePath(path);
   reader->Update();
 
-  auto *table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
+  auto*         table = vtkTable::SafeDownCast(reader->GetOutputDataObject(0));
   std::set<int> caseNames;
-  auto *timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("Month"));
+  auto*         timeColumn = vtkIntArray::SafeDownCast(table->GetColumnByName("Month"));
 
   int min = std::numeric_limits<int>::max();
   int max = std::numeric_limits<int>::min();

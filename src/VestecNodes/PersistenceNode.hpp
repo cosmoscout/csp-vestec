@@ -18,14 +18,14 @@ class NodeEditor;
  * @see https://github.com/octfx/PersistenceRenderer
  */
 class PersistenceNode : public VNE::Node {
-public:
-  PersistenceNode(cs::gui::GuiItem *pItem, int id);
+ public:
+  PersistenceNode(cs::gui::GuiItem* pItem, int id);
   virtual ~PersistenceNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor *pEditor);
+  static void Init(VNE::NodeEditor* pEditor);
 
   /**
    * Returns the unique identifier for the node as string

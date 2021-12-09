@@ -19,22 +19,22 @@ class NodeEditor;
  * in the connected texture
  */
 class TransferFunctionSourceNode : public VNE::Node {
-public:
-  TransferFunctionSourceNode(csp::vestec::Plugin::Settings const &config,
-                             cs::gui::GuiItem *pItem, int id);
+ public:
+  TransferFunctionSourceNode(
+      csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
   virtual ~TransferFunctionSourceNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor *pEditor);
+  static void Init(VNE::NodeEditor* pEditor);
 
   /**
    * Returns the unique identifier for the node as string
    */
   static std::string GetName();
 
-private:
+ private:
   csp::vestec::Plugin::Settings mPluginConfig;
 };
 

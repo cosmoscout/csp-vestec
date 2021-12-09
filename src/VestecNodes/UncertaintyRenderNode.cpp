@@ -14,19 +14,18 @@
 // Define PI
 #define M_PI 3.14159265358979323846 /* pi */
 
-UncertaintyRenderNode::UncertaintyRenderNode(
-    csp::vestec::Plugin::Settings const &config, cs::gui::GuiItem *pItem,
-    int id, cs::core::SolarSystem *pSolarSystem,
-    cs::scene::CelestialAnchorNode *pAnchor, cs::core::GraphicsEngine *pEngine)
-    : VNE::Node(pItem, id, 3, 0), m_pAnchor(pAnchor) {
+UncertaintyRenderNode::UncertaintyRenderNode(csp::vestec::Plugin::Settings const& config,
+    cs::gui::GuiItem* pItem, int id, cs::core::SolarSystem* pSolarSystem,
+    cs::scene::CelestialAnchorNode* pAnchor, cs::core::GraphicsEngine* pEngine)
+    : VNE::Node(pItem, id, 3, 0)
+    , m_pAnchor(pAnchor) {
   // Store config data for later usage
   mPluginConfig = config;
 
   m_pRenderer = new UncertaintyOverlayRenderer(pSolarSystem);
 
   // Add a TextureOverlayRenderer to the VISTA scene graph
-  VistaSceneGraph *pSG =
-      GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   m_pNode.reset(pSG->NewOpenGLNode(m_pAnchor, m_pRenderer));
 
   // Render after planets which are rendered at cs::utils::DrawOrder::ePlanets
@@ -46,11 +45,13 @@ UncertaintyRenderNode::~UncertaintyRenderNode() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::string UncertaintyRenderNode::GetName() { return "UncertaintyRenderNode"; }
+std::string UncertaintyRenderNode::GetName() {
+  return "UncertaintyRenderNode";
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UncertaintyRenderNode::Init(VNE::NodeEditor *pEditor) {
+void UncertaintyRenderNode::Init(VNE::NodeEditor* pEditor) {
   // Load JavaScipt content from file which defines the node
   // in the node editor
   std::string code = cs::utils::filesystem::loadToString(
@@ -58,48 +59,37 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor *pEditor) {
   pEditor->GetGuiItem()->executeJavascript(code);
 
   // Callback which reads simulation data (path+x is given from JavaScript)
-  pEditor->GetGuiItem()->registerCallback(
-      "UncertaintyRenderNode.setTextureFiles", "Reads simulation data",
-      std::function([pEditor](double id, std::string params) {
-        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))
-            ->SetTextureFiles(params);
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTextureFiles",
+      "Reads simulation data", std::function([pEditor](double id, std::string params) {
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetTextureFiles(params);
       }));
 
   // Callback to adjust the opacity of the rendering
-  pEditor->GetGuiItem()->registerCallback(
-      "UncertaintyRenderNode.setOpacityUncertainty",
-      "Adjusts the opacity of the rendering",
-      std::function([pEditor](double id, double val) {
-        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))
-            ->SetOpacity((float)val);
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setOpacityUncertainty",
+      "Adjusts the opacity of the rendering", std::function([pEditor](double id, double val) {
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetOpacity((float)val);
       }));
 
   // Callback to set a transfer function for the rendering
-  pEditor->GetGuiItem()->registerCallback(
-      "UncertaintyRenderNode.setTransferFunction",
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunction",
       "Sets the transfer function for rendering scalars",
       std::function([pEditor](double id, std::string val) {
-        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))
-            ->SetTransferFunction(val);
+        pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))->SetTransferFunction(val);
       }));
 
   // Callback to set a transfer function for the rendering
-  pEditor->GetGuiItem()->registerCallback(
-      "UncertaintyRenderNode.setTransferFunctionUncertainty",
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setTransferFunctionUncertainty",
       "Sets the transfer function for rendering difference and variance",
       std::function([pEditor](double id, std::string val) {
         pEditor->GetNode<UncertaintyRenderNode>(std::lround(id))
             ->SetTransferFunctionUncertainty(val);
       }));
 
-  pEditor->GetGuiItem()->registerCallback(
-      "UncertaintyRenderNode.setUncertaintyVisualizationMode",
-      "Sets the uncertainty visualization mode",
-      std::function([pEditor](double id, double val) {
+  pEditor->GetGuiItem()->registerCallback("UncertaintyRenderNode.setUncertaintyVisualizationMode",
+      "Sets the uncertainty visualization mode", std::function([pEditor](double id, double val) {
         UncertaintyOverlayRenderer::RenderMode renderMode;
 
-        csp::vestec::logger().debug("[{}] Switching cp vis to {}", GetName(),
-                                    std::to_string(val));
+        csp::vestec::logger().debug("[{}] Switching cp vis to {}", GetName(), std::to_string(val));
 
         switch ((int)val) {
         case 1:
@@ -129,7 +119,7 @@ void UncertaintyRenderNode::Init(VNE::NodeEditor *pEditor) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-UncertaintyOverlayRenderer *UncertaintyRenderNode::GetRenderNode() {
+UncertaintyOverlayRenderer* UncertaintyRenderNode::GetRenderNode() {
   return m_pRenderer;
 }
 
@@ -166,7 +156,7 @@ void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
     std::vector<GDALReader::GreyScaleTexture> vecTextures;
 
     // range-based for over persistence pairs
-    for (auto &filename : args) {
+    for (auto& filename : args) {
       // Read the GDAL texture (grayscale only 1 float channel)
       GDALReader::GreyScaleTexture texture;
       GDALReader::ReadGrayScaleTexture(texture, filename);
@@ -189,4 +179,6 @@ void UncertaintyRenderNode::SetTextureFiles(std::string jsonFilenames) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UncertaintyRenderNode::UnloadTexture() { m_pRenderer->UnloadTexture(); }
+void UncertaintyRenderNode::UnloadTexture() {
+  m_pRenderer->UnloadTexture();
+}

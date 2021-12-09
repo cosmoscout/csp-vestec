@@ -21,18 +21,16 @@ class NodeEditor;
  * @see csp::vestec::Rendering::CriticalPointsRenderer
  */
 class CriticalPointsNode : public VNE::Node {
-public:
-  CriticalPointsNode(csp::vestec::Plugin::Settings const &config,
-                     cs::gui::GuiItem *pItem, int id,
-                     cs::core::SolarSystem *pSolarSystem,
-                     cs::scene::CelestialAnchorNode *pAnchor,
-                     cs::core::GraphicsEngine *pEngine);
+ public:
+  CriticalPointsNode(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id,
+      cs::core::SolarSystem* pSolarSystem, cs::scene::CelestialAnchorNode* pAnchor,
+      cs::core::GraphicsEngine* pEngine);
   virtual ~CriticalPointsNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor *pEditor);
+  static void Init(VNE::NodeEditor* pEditor);
 
   /**
    * Returns the unique identifier for the node as string
@@ -42,7 +40,7 @@ public:
   /**
    * Set the points to be renderer stored in the json object
    */
-  void SetPoints(const std::string &jsonObj);
+  void SetPoints(const std::string& jsonObj);
 
   /**
    * Sets the opacity of the rendering
@@ -57,17 +55,16 @@ public:
   /**
    * Get the underlaying render node
    */
-  CriticalPointsRenderer *GetRenderNode();
+  CriticalPointsRenderer* GetRenderNode();
 
-private:
+ private:
   csp::vestec::Plugin::Settings
-      mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
-  cs::scene::CelestialAnchorNode *m_pAnchor =
+                                  mPluginConfig; //! Needed to access a path defined in the Plugin::Settings
+  cs::scene::CelestialAnchorNode* m_pAnchor =
       nullptr; //! Anchor on which the TextureOverlayRenderer is added (normally
                //! centered in earth)
-  CriticalPointsRenderer *m_pRenderer =
-      nullptr; //! The renderer to overlay a texture onto a
-               //! previous renderer image (depthBuffer)
+  CriticalPointsRenderer* m_pRenderer = nullptr; //! The renderer to overlay a texture onto a
+                                                 //! previous renderer image (depthBuffer)
 };
 
 #endif /* CRITICALPOINTS_SOURCE_NODE_HPP_ */
