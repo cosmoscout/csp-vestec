@@ -13,7 +13,7 @@ namespace csp::vestec {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-spdlog::logger& logger() {
+spdlog::logger &logger() {
   static auto logger = cs::utils::createLogger("csp-vestec");
   return *logger;
 }
