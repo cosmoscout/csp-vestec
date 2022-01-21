@@ -115,87 +115,62 @@ void Plugin::init() {
   mGuiManager->addTimelineButton("Toggle Vestec Node Editor", "dashboard",
                                  callback);
 
-  // Creates a movable mark to select upper / lower incident bounds
-  auto makeMark =
-      std::function([this]() -> std::shared_ptr<cs::core::tools::Mark> {
+  mGuiManager->getGui()->registerCallback(
+      "vestec.addStartMark", "", std::function([this]() {
         auto intersection = mInputManager->pHoveredObject.get().mObject;
 
         if (!intersection) {
-          return nullptr;
+          return;
         }
 
         auto body =
             std::dynamic_pointer_cast<cs::scene::CelestialBody>(intersection);
 
         if (!body || body->getCenterName() != "Earth") {
-          return nullptr;
+          return;
         }
 
         auto radii = body->getRadii();
 
-        auto tool = std::make_shared<cs::core::tools::Mark>(
-            mInputManager, mSolarSystem, mAllSettings, mTimeControl,
-            body->getCenterName(), body->getFrameName());
-        tool->pLngLat = cs::utils::convert::cartesianToLngLat(
-            mInputManager->pHoveredObject.get().mPosition, radii);
-
-        return tool;
-      });
-
-  mGuiManager->getGui()->registerCallback(
-      "vestec.addStartMark", "", std::function([this, makeMark]() {
-        if (mMarkStart != nullptr) {
-          return;
+        if (!mTool) {
+          mTool = std::make_shared<csp::vestec::IncidentsBoundsTool>(
+              mInputManager, mSolarSystem, mAllSettings, mTimeControl,
+              body->getCenterName(), body->getFrameName());
+        } else {
+          if (mPointsActive) {
+            mTool->reset();
+            mPointsActive = false;
+            return;
+          }
         }
 
-        auto mark = makeMark();
+        mTool->addPoints(cs::utils::convert::cartesianToLngLat(
+            mInputManager->pHoveredObject.get().mPosition, radii));
 
-        if (mark == nullptr) {
-          return;
-        }
-
-        mMarkStart = mark;
-        mark->pLngLat.connect([this](glm::vec2 latlong) {
+        mTool->pStartPosition.connect([this](glm::vec2 latlong) {
           std::string data =
               std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
               std::to_string(cs::utils::convert::toDegrees(latlong[1]));
           mGuiManager->getGui()->callJavascript(
               "CosmoScout.vestec.setStartLatLong", data);
         });
-      }));
 
-  mGuiManager->getGui()->registerCallback(
-      "vestec.addEndMark", "", std::function([this, makeMark]() {
-        if (mMarkEnd != nullptr) {
-          return;
-        }
-
-        auto mark = makeMark();
-
-        if (mark == nullptr) {
-          return;
-        }
-
-        mMarkEnd = mark;
-        mark->pLngLat.connect([this](glm::vec2 latlong) {
+        mTool->pEndPosition.connect([this](glm::vec2 latlong) {
           std::string data =
               std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
               std::to_string(cs::utils::convert::toDegrees(latlong[1]));
           mGuiManager->getGui()->callJavascript(
               "CosmoScout.vestec.setEndLatLong", data);
         });
+
+        mPointsActive = true;
       }));
 
   mGuiManager->getGui()->registerCallback("vestec.removeMarks", "",
                                           std::function([this]() {
-                                            if (mMarkStart != nullptr) {
-                                              mMarkStart.reset();
-                                              delete mMarkStart.get();
-                                            }
-
-                                            if (mMarkEnd != nullptr) {
-                                              mMarkEnd.reset();
-                                              delete mMarkEnd.get();
+                                            if (mTool) {
+                                              mTool->reset();
+                                              mPointsActive = false;
                                             }
                                           }));
 
@@ -364,20 +339,8 @@ void Plugin::update() {
   //    / 1000.0;
   // Update plugin per frame
 
-  if (mMarkStart != nullptr) {
-    if (mMarkStart->pShouldDelete.get()) {
-      mMarkStart.reset();
-    } else {
-      mMarkStart->update();
-    }
-  }
-
-  if (mMarkEnd != nullptr) {
-    if (mMarkEnd->pShouldDelete.get()) {
-      mMarkEnd.reset();
-    } else {
-      mMarkEnd->update();
-    }
+  if (mTool) {
+    mTool->update();
   }
 }
 
