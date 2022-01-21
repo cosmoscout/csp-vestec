@@ -11,10 +11,10 @@
 namespace VNE {
 
 class Node {
- public:
-  Node(cs::gui::GuiItem* pItem);
-  Node(cs::gui::GuiItem* pItem, int id);
-  Node(cs::gui::GuiItem* pItem, int id, int inportCount, int outportCount);
+public:
+  Node(cs::gui::GuiItem *pItem);
+  Node(cs::gui::GuiItem *pItem, int id);
+  Node(cs::gui::GuiItem *pItem, int id, int inportCount, int outportCount);
   virtual ~Node();
 
   /**
@@ -30,7 +30,7 @@ class Node {
   /**
    * Add an input connection to the node
    */
-  void AddInportNode(int id, Node* pNode, int outport, int inport);
+  void AddInportNode(int id, Node *pNode, int outport, int inport);
   /**
    * Remove a specified input connection
    */
@@ -39,7 +39,7 @@ class Node {
   /**
    * Connect the node to another node
    */
-  void AddOutportNode(int id, Node* pNode, int outport, int inport);
+  void AddOutportNode(int id, Node *pNode, int outport, int inport);
   /**
    * Remove an output connection
    */
@@ -48,24 +48,25 @@ class Node {
   /**
    * Retrieve all input ports
    */
-  std::vector<std::map<std::pair<int, int>, Node*>>& GetInputPorts();
+  std::vector<std::map<std::pair<int, int>, Node *>> &GetInputPorts();
 
   /**
    * Retrieve all output ports
    */
-  std::vector<std::map<std::pair<int, int>, Node*>>& GetOutputPorts();
+  std::vector<std::map<std::pair<int, int>, Node *>> &GetOutputPorts();
 
- protected:
-  cs::gui::GuiItem*                m_pItem;
-  std::unique_ptr<VistaOpenGLNode> m_pNode = nullptr; //! The VISTA OpenGL node in the scene graph
+protected:
+  cs::gui::GuiItem *m_pItem;
+  std::unique_ptr<VistaOpenGLNode> m_pNode =
+      nullptr; //! The VISTA OpenGL node in the scene graph
 
- private:
+private:
   int m_iID;
   /**
    * In and outport Nodes
    */
-  std::vector<std::map<std::pair<int, int>, Node*>> m_vecInportNodes;
-  std::vector<std::map<std::pair<int, int>, Node*>> m_vecOutportNodes;
+  std::vector<std::map<std::pair<int, int>, Node *>> m_vecInportNodes;
+  std::vector<std::map<std::pair<int, int>, Node *>> m_vecOutportNodes;
 };
 
 } /* namespace VNE */

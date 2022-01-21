@@ -19,14 +19,14 @@ class NodeEditor;
  * instance
  */
 class TextureUploadNode : public VNE::Node {
- public:
-  TextureUploadNode(cs::gui::GuiItem* pItem, int id);
+public:
+  TextureUploadNode(cs::gui::GuiItem *pItem, int id);
   virtual ~TextureUploadNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor* filePath);
+  static void Init(VNE::NodeEditor *filePath);
 
   /**
    * Returns the unique identifier for the node as string

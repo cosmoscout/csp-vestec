@@ -27,7 +27,7 @@ const int IncidentsBoundsTool::NUM_SAMPLES = 256;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const char* IncidentsBoundsTool::SHADER_VERT = R"(
+const char *IncidentsBoundsTool::SHADER_VERT = R"(
 #version 330
 
 layout(location=0) in vec3 iPosition;
@@ -46,7 +46,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const char* IncidentsBoundsTool::SHADER_FRAG = R"(
+const char *IncidentsBoundsTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;
@@ -69,27 +69,28 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 IncidentsBoundsTool::IncidentsBoundsTool(
-    std::shared_ptr<cs::core::InputManager> const& pInputManager,
-    std::shared_ptr<cs::core::SolarSystem> const&  pSolarSystem,
-    std::shared_ptr<cs::core::Settings> const&     settings,
-    std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
-    std::string const& sFrame)
-    : MultiPointTool(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame) {
+    std::shared_ptr<cs::core::InputManager> const &pInputManager,
+    std::shared_ptr<cs::core::SolarSystem> const &pSolarSystem,
+    std::shared_ptr<cs::core::Settings> const &settings,
+    std::shared_ptr<cs::core::TimeControl> const &pTimeControl,
+    std::string const &sCenter, std::string const &sFrame)
+    : MultiPointTool(pInputManager, pSolarSystem, settings, pTimeControl,
+                     sCenter, sFrame) {
 
   // Create the shader
   mShader.InitVertexShaderFromString(SHADER_VERT);
   mShader.InitFragmentShaderFromString(SHADER_FRAG);
   mShader.Link();
 
-  mUniforms.modelViewMatrix  = mShader.GetUniformLocation("uMatModelView");
+  mUniforms.modelViewMatrix = mShader.GetUniformLocation("uMatModelView");
   mUniforms.projectionMatrix = mShader.GetUniformLocation("uMatProjection");
-  mUniforms.color            = mShader.GetUniformLocation("uColor");
-  mUniforms.farClip          = mShader.GetUniformLocation("uFarClip");
+  mUniforms.color = mShader.GetUniformLocation("uColor");
+  mUniforms.farClip = mShader.GetUniformLocation("uFarClip");
 
   // Attach this as OpenGLNode to scenegraph's root (all line vertices
   // will be draw relative to the observer, therfore we do not want
   // any transformation)
-  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto *pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   mParent.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
 
   // VistaOpenSGMaterialTools::SetSortKeyOnSubtree(mParent.get(),
@@ -110,37 +111,40 @@ IncidentsBoundsTool::~IncidentsBoundsTool() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentsBoundsTool::setCenterName(std::string const& name) {
+void IncidentsBoundsTool::setCenterName(std::string const &name) {
   cs::core::tools::MultiPointTool::setCenterName(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentsBoundsTool::setFrameName(std::string const& name) {
+void IncidentsBoundsTool::setFrameName(std::string const &name) {
   cs::core::tools::MultiPointTool::setFrameName(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 glm::dvec4 IncidentsBoundsTool::getInterpolatedPosBetweenTwoMarks(
-    cs::core::tools::Mark const& l0, cs::core::tools::Mark const& l1, double value) {
-  double     h_scale = mSettings->mGraphics.pHeightScale.get();
-  auto       body    = mSolarSystem->getBody(getCenterName());
-  glm::dvec3 radii   = body->getRadii();
+    cs::core::tools::Mark const &l0, cs::core::tools::Mark const &l1,
+    double value) {
+  double h_scale = mSettings->mGraphics.pHeightScale.get();
+  auto body = mSolarSystem->getBody(getCenterName());
+  glm::dvec3 radii = body->getRadii();
 
   // Calculates the position for the new segment anchor
-  double h0 = mSolarSystem->pActiveBody.get()->getHeight(l0.pLngLat.get()) * h_scale;
-  double h1 = mSolarSystem->pActiveBody.get()->getHeight(l1.pLngLat.get()) * h_scale;
+  double h0 =
+      mSolarSystem->pActiveBody.get()->getHeight(l0.pLngLat.get()) * h_scale;
+  double h1 =
+      mSolarSystem->pActiveBody.get()->getHeight(l1.pLngLat.get()) * h_scale;
 
   // Gets cartesian coordinates for interpolation
-  glm::dvec3 p0              = cs::utils::convert::toCartesian(l0.pLngLat.get(), radii, h0);
-  glm::dvec3 p1              = cs::utils::convert::toCartesian(l1.pLngLat.get(), radii, h1);
+  glm::dvec3 p0 = cs::utils::convert::toCartesian(l0.pLngLat.get(), radii, h0);
+  glm::dvec3 p1 = cs::utils::convert::toCartesian(l1.pLngLat.get(), radii, h1);
   glm::dvec3 interpolatedPos = p0 + (value * (p1 - p0));
 
   // Calculates final position
-  glm::dvec2 ll     = cs::utils::convert::cartesianToLngLat(interpolatedPos, radii);
-  double     height = mSolarSystem->pActiveBody.get()->getHeight(ll) * h_scale;
-  glm::dvec3 pos    = cs::utils::convert::toCartesian(ll, radii, height);
+  glm::dvec2 ll = cs::utils::convert::cartesianToLngLat(interpolatedPos, radii);
+  double height = mSolarSystem->pActiveBody.get()->getHeight(ll) * h_scale;
+  glm::dvec3 pos = cs::utils::convert::toCartesian(ll, radii, height);
   return glm::dvec4(pos, height);
 }
 
@@ -148,9 +152,10 @@ glm::dvec4 IncidentsBoundsTool::getInterpolatedPosBetweenTwoMarks(
 
 void IncidentsBoundsTool::onPointMoved() {
   // Return if point is not on planet
-  for (auto const& mark : mPoints) {
+  for (auto const &mark : mPoints) {
     glm::dvec3 vec = mark->getAnchor()->getAnchorPosition();
-    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) || std::isnan(vec.z)) {
+    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) ||
+        std::isnan(vec.z)) {
       return;
     }
   }
@@ -162,9 +167,10 @@ void IncidentsBoundsTool::onPointMoved() {
 
 void IncidentsBoundsTool::onPointAdded() {
   // Return if point is not on planet
-  for (auto const& mark : mPoints) {
+  for (auto const &mark : mPoints) {
     glm::dvec3 vec = mark->getAnchor()->getAnchorPosition();
-    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) || std::isnan(vec.z)) {
+    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) ||
+        std::isnan(vec.z)) {
       return;
     }
   }
@@ -190,8 +196,9 @@ void IncidentsBoundsTool::updateLineVertices() {
 
   // Middle point of csp::vestec::NonMovableMarks
   glm::dvec3 averagePosition(0.0);
-  for (auto const& mark : mPoints) {
-    averagePosition += mark->getAnchor()->getAnchorPosition() / static_cast<double>(mPoints.size());
+  for (auto const &mark : mPoints) {
+    averagePosition += mark->getAnchor()->getAnchorPosition() /
+                       static_cast<double>(mPoints.size());
   }
 
   // This seems to be the first time the tool is moved, so we have to store the
@@ -200,10 +207,11 @@ void IncidentsBoundsTool::updateLineVertices() {
   if (pScaleDistance.get() < 0) {
     try {
       pScaleDistance = mSolarSystem->getObserver().getAnchorScale();
-    } catch (std::exception const& e) {
+    } catch (std::exception const &e) {
       // Getting the relative transformation may fail due to insufficient SPICE
       // data.
-      logger().warn("Failed to calculate scale distance of Polygon Tool: {}", e.what());
+      logger().warn("Failed to calculate scale distance of Polygon Tool: {}",
+                    e.what());
     }
   }
 
@@ -217,7 +225,8 @@ void IncidentsBoundsTool::updateLineVertices() {
     // Generates X points for each line segment
     for (int vertex_id = 0; vertex_id < NUM_SAMPLES; vertex_id++) {
       glm::dvec4 pos = getInterpolatedPosBetweenTwoMarks(
-          **lastMark, **currMark, (vertex_id / static_cast<double>(NUM_SAMPLES)));
+          **lastMark, **currMark,
+          (vertex_id / static_cast<double>(NUM_SAMPLES)));
       mSampledPositions.push_back(pos.xyz());
     }
 
@@ -256,11 +265,13 @@ void IncidentsBoundsTool::updateLineVertices() {
 
   // Upload new data
   mVBO.Bind(GL_ARRAY_BUFFER);
-  mVBO.BufferData(mSampledPositions.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+  mVBO.BufferData(mSampledPositions.size() * sizeof(glm::vec3), nullptr,
+                  GL_DYNAMIC_DRAW);
   mVBO.Release();
 
   mVAO.EnableAttributeArray(0);
-  mVAO.SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, &mVBO);
+  mVAO.SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
+                                  0, &mVBO);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -288,11 +299,11 @@ bool IncidentsBoundsTool::Do() {
   // precision coordinates
   std::vector<glm::vec3> vRelativePositions(mIndexCount);
 
-  auto        time     = mTimeControl->pSimulationTime.get();
-  auto const& observer = mSolarSystem->getObserver();
+  auto time = mTimeControl->pSimulationTime.get();
+  auto const &observer = mSolarSystem->getObserver();
 
   cs::scene::CelestialAnchor centerAnchor(getCenterName(), getFrameName());
-  auto                       mat = observer.getRelativeTransform(time, centerAnchor);
+  auto mat = observer.getRelativeTransform(time, centerAnchor);
 
   for (uint32_t i(0); i < mIndexCount; ++i) {
     vRelativePositions[i] = (mat * glm::dvec4(mSampledPositions[i], 1.0)).xyz();
@@ -300,7 +311,8 @@ bool IncidentsBoundsTool::Do() {
 
   // Uploads the new points to the GPU
   mVBO.Bind(GL_ARRAY_BUFFER);
-  mVBO.BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3), vRelativePositions.data());
+  mVBO.BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3),
+                     vRelativePositions.data());
   mVBO.Release();
 
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
@@ -326,7 +338,8 @@ bool IncidentsBoundsTool::Do() {
 
   mShader.SetUniform(mUniforms.farClip, cs::utils::getCurrentFarClipDistance());
 
-  mShader.SetUniform(mUniforms.color, pColor.get().r, pColor.get().g, pColor.get().b, 1.F);
+  mShader.SetUniform(mUniforms.color, pColor.get().r, pColor.get().g,
+                     pColor.get().b, 1.F);
 
   // Draws the linestrip
   glDrawArrays(GL_LINE_STRIP, 0, static_cast<int32_t>(mIndexCount));
@@ -340,7 +353,7 @@ bool IncidentsBoundsTool::Do() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool IncidentsBoundsTool::GetBoundingBox(VistaBoundingBox& bb) {
+bool IncidentsBoundsTool::GetBoundingBox(VistaBoundingBox &bb) {
   std::array fMin{-0.1F, -0.1F, -0.1F};
   std::array fMax{0.1F, 0.1F, 0.1F};
 
@@ -350,15 +363,18 @@ bool IncidentsBoundsTool::GetBoundingBox(VistaBoundingBox& bb) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentsBoundsTool::addPoint(std::optional<glm::dvec2> const& lngLat, bool movable) {
+void IncidentsBoundsTool::addPoint(std::optional<glm::dvec2> const &lngLat,
+                                   bool movable) {
   if (movable) {
     // Add the Mark to the list.
     mPoints.emplace_back(std::make_shared<cs::core::tools::Mark>(
-        mInputManager, mSolarSystem, mSettings, mTimeControl, getCenterName(), getFrameName()));
+        mInputManager, mSolarSystem, mSettings, mTimeControl, getCenterName(),
+        getFrameName()));
   } else {
     // Add the Mark to the list.
     mPoints.emplace_back(std::make_shared<NonMovableMark>(
-        mInputManager, mSolarSystem, mSettings, mTimeControl, getCenterName(), getFrameName()));
+        mInputManager, mSolarSystem, mSettings, mTimeControl, getCenterName(),
+        getFrameName()));
   }
 
   // if there is a planet intersection, move the point to the intersection
@@ -368,11 +384,13 @@ void IncidentsBoundsTool::addPoint(std::optional<glm::dvec2> const& lngLat, bool
   } else {
     auto intersection = mInputManager->pHoveredObject.get();
     if (intersection.mObject) {
-      auto body = std::dynamic_pointer_cast<cs::scene::CelestialBody>(intersection.mObject);
+      auto body = std::dynamic_pointer_cast<cs::scene::CelestialBody>(
+          intersection.mObject);
 
       if (body) {
-        auto       radii = body->getRadii();
-        glm::dvec2 pos   = cs::utils::convert::cartesianToLngLat(intersection.mPosition, radii);
+        auto radii = body->getRadii();
+        glm::dvec2 pos = cs::utils::convert::cartesianToLngLat(
+            intersection.mPosition, radii);
         mPoints.back()->pLngLat = pos;
       }
     }
@@ -380,7 +398,8 @@ void IncidentsBoundsTool::addPoint(std::optional<glm::dvec2> const& lngLat, bool
 
   // register callback to update line vertices when the landmark position has
   // been changed
-  mPoints.back()->pLngLat.connect([this](glm::dvec2 const& /*unused*/) { onPointMoved(); });
+  mPoints.back()->pLngLat.connect(
+      [this](glm::dvec2 const & /*unused*/) { onPointMoved(); });
 
   // Update the color.
   mPoints.back()->pColor.connectFrom(pColor);
@@ -394,7 +413,7 @@ void IncidentsBoundsTool::addPoint(std::optional<glm::dvec2> const& lngLat, bool
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void IncidentsBoundsTool::addPoints(glm::dvec2 const& upperLeft) {
+void IncidentsBoundsTool::addPoints(glm::dvec2 const &upperLeft) {
   if (!mPoints.empty()) {
     reset();
     return;
@@ -453,7 +472,7 @@ void IncidentsBoundsTool::reset() {
     mark = mPoints.erase(mark);
   }
   mSampledPositions.clear();
-  mIndexCount    = 0;
+  mIndexCount = 0;
   mVerticesDirty = true;
 
   pStartPosition.disconnectAll();

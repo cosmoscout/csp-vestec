@@ -35,15 +35,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EXPORT_FN cs::core::PluginBase* create() {
-  return new csp::vestec::Plugin;
-}
+EXPORT_FN cs::core::PluginBase *create() { return new csp::vestec::Plugin; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
-  delete pluginBase;
-}
+EXPORT_FN void destroy(cs::core::PluginBase *pluginBase) { delete pluginBase; }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,13 +56,15 @@ namespace csp::vestec {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+void from_json(nlohmann::json const &j, Plugin::Settings &o) {
   cs::core::Settings::deserialize(j, "vestec-topo-dir", o.mVestecDataDir);
   cs::core::Settings::deserialize(j, "vestec-fire-dir", o.mFireDir);
   cs::core::Settings::deserialize(j, "vestec-diseases-dir", o.mDiseasesDir);
   cs::core::Settings::deserialize(j, "vestec-server", o.mVestecServer);
-  cs::core::Settings::deserialize(j, "vestec-download-dir", o.mVestecDownloadDir);
-  cs::core::Settings::deserialize(j, "vestec-textures-dir", o.mVestecTexturesDir);
+  cs::core::Settings::deserialize(j, "vestec-download-dir",
+                                  o.mVestecDownloadDir);
+  cs::core::Settings::deserialize(j, "vestec-textures-dir",
+                                  o.mVestecTexturesDir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,19 +80,25 @@ void Plugin::init() {
   mGuiManager->addCssToGui("third-party/css/jquery-ui.min.css");
   mGuiManager->addCssToGui("css/vestec.css");
 
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/alight.min.js");
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/jquery-ui.min.js");
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/third-party/js/d3-node-editor.js");
+  mGuiManager->addScriptToGuiFromJS(
+      "../share/resources/gui/third-party/js/alight.min.js");
+  mGuiManager->addScriptToGuiFromJS(
+      "../share/resources/gui/third-party/js/jquery-ui.min.js");
+  mGuiManager->addScriptToGuiFromJS(
+      "../share/resources/gui/third-party/js/d3-node-editor.js");
 
-  auto vestecNodeEditorHtml =
-      cs::utils::filesystem::loadToString("../share/resources/gui/vestec_node_editor.html");
-  mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecNodeEditorHtml, "body");
-  auto vestecIncidentHtml =
-      cs::utils::filesystem::loadToString("../share/resources/gui/vestec_incident_window.html");
-  mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml", vestecIncidentHtml, "body");
+  auto vestecNodeEditorHtml = cs::utils::filesystem::loadToString(
+      "../share/resources/gui/vestec_node_editor.html");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml",
+                                        vestecNodeEditorHtml, "body");
+  auto vestecIncidentHtml = cs::utils::filesystem::loadToString(
+      "../share/resources/gui/vestec_incident_window.html");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.addHtml",
+                                        vestecIncidentHtml, "body");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.initDraggableWindows");
 
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec-node-editor.js");
+  mGuiManager->addScriptToGuiFromJS(
+      "../share/resources/gui/js/csp-vestec-node-editor.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/vestec.js");
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-vestec.js");
 
@@ -108,60 +112,70 @@ void Plugin::init() {
       }));
 
   // Add a timeline button to toggle the node editor.
-  mGuiManager->addTimelineButton("Toggle Vestec Node Editor", "dashboard", callback);
+  mGuiManager->addTimelineButton("Toggle Vestec Node Editor", "dashboard",
+                                 callback);
 
-  mGuiManager->getGui()->registerCallback("vestec.addStartMark", "", std::function([this]() {
-    auto intersection = mInputManager->pHoveredObject.get().mObject;
+  mGuiManager->getGui()->registerCallback(
+      "vestec.addStartMark", "", std::function([this]() {
+        auto intersection = mInputManager->pHoveredObject.get().mObject;
 
-    if (!intersection) {
-      return;
-    }
+        if (!intersection) {
+          return;
+        }
 
-    auto body = std::dynamic_pointer_cast<cs::scene::CelestialBody>(intersection);
+        auto body =
+            std::dynamic_pointer_cast<cs::scene::CelestialBody>(intersection);
 
-    if (!body || body->getCenterName() != "Earth") {
-      return;
-    }
+        if (!body || body->getCenterName() != "Earth") {
+          return;
+        }
 
-    auto radii = body->getRadii();
+        auto radii = body->getRadii();
 
-    if (!mTool) {
-      mTool = std::make_shared<csp::vestec::IncidentsBoundsTool>(mInputManager, mSolarSystem,
-          mAllSettings, mTimeControl, body->getCenterName(), body->getFrameName());
-    } else {
-      if (mPointsActive) {
-        mTool->reset();
-        mPointsActive = false;
-        return;
-      }
-    }
+        if (!mTool) {
+          mTool = std::make_shared<csp::vestec::IncidentsBoundsTool>(
+              mInputManager, mSolarSystem, mAllSettings, mTimeControl,
+              body->getCenterName(), body->getFrameName());
+        } else {
+          if (mPointsActive) {
+            mTool->reset();
+            mPointsActive = false;
+            return;
+          }
+        }
 
-    mTool->addPoints(cs::utils::convert::cartesianToLngLat(
-        mInputManager->pHoveredObject.get().mPosition, radii));
+        mTool->addPoints(cs::utils::convert::cartesianToLngLat(
+            mInputManager->pHoveredObject.get().mPosition, radii));
 
-    mTool->pStartPosition.connect([this](glm::vec2 latlong) {
-      std::string data = std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
-                         std::to_string(cs::utils::convert::toDegrees(latlong[1]));
-      mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setStartLatLong", data);
-    });
+        mTool->pStartPosition.connect([this](glm::vec2 latlong) {
+          std::string data =
+              std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
+              std::to_string(cs::utils::convert::toDegrees(latlong[1]));
+          mGuiManager->getGui()->callJavascript(
+              "CosmoScout.vestec.setStartLatLong", data);
+        });
 
-    mTool->pEndPosition.connect([this](glm::vec2 latlong) {
-      std::string data = std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
-                         std::to_string(cs::utils::convert::toDegrees(latlong[1]));
-      mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setEndLatLong", data);
-    });
+        mTool->pEndPosition.connect([this](glm::vec2 latlong) {
+          std::string data =
+              std::to_string(cs::utils::convert::toDegrees(latlong[0])) + " " +
+              std::to_string(cs::utils::convert::toDegrees(latlong[1]));
+          mGuiManager->getGui()->callJavascript(
+              "CosmoScout.vestec.setEndLatLong", data);
+        });
 
-    mPointsActive = true;
-  }));
+        mPointsActive = true;
+      }));
 
-  mGuiManager->getGui()->registerCallback("vestec.removeMarks", "", std::function([this]() {
-    if (mTool) {
-      mTool->reset();
-      mPointsActive = false;
-    }
-  }));
+  mGuiManager->getGui()->registerCallback("vestec.removeMarks", "",
+                                          std::function([this]() {
+                                            if (mTool) {
+                                              mTool->reset();
+                                              mPointsActive = false;
+                                            }
+                                          }));
 
-  mGuiManager->getGui()->registerCallback("vestec.setServer", "",
+  mGuiManager->getGui()->registerCallback(
+      "vestec.setServer", "",
       std::function([](std::string server) { Plugin::vestecServer = server; }));
 
   // Read the plugin settings from the scene config
@@ -169,12 +183,13 @@ void Plugin::init() {
 
   // add anchor node and register to solar system
   mVestecTransform = std::make_shared<cs::scene::CelestialAnchorNode>(
-      mSceneGraph->GetRoot(), mSceneGraph->GetNodeBridge(), "", "Earth", "IAU_Earth");
+      mSceneGraph->GetRoot(), mSceneGraph->GetNodeBridge(), "", "Earth",
+      "IAU_Earth");
   mSolarSystem->registerAnchor(mVestecTransform);
 
   // Set the data dir which is used by other classes
-  Plugin::dataDir           = mPluginSettings.mVestecDataDir;
-  Plugin::vestecServer      = mPluginSettings.mVestecServer;
+  Plugin::dataDir = mPluginSettings.mVestecDataDir;
+  Plugin::vestecServer = mPluginSettings.mVestecServer;
   Plugin::vestecDownloadDir = mPluginSettings.mVestecDownloadDir;
   Plugin::vestecDiseasesDir = mPluginSettings.mDiseasesDir;
   Plugin::vestecTexturesDir = mPluginSettings.mVestecTexturesDir;
@@ -197,15 +212,21 @@ void Plugin::init() {
   m_pNodeEditor->RegisterSocketType("TRANSFER_FUNCTION");
 
   // Register our node types for the flow editor
-  m_pNodeEditor->RegisterNodeType(TransferFunctionSourceNode::GetName(), "Sources",
-      [this](cs::gui::GuiItem* webView, int id) {
+  m_pNodeEditor->RegisterNodeType(
+      TransferFunctionSourceNode::GetName(), "Sources",
+      [this](cs::gui::GuiItem *webView, int id) {
         return new TransferFunctionSourceNode(mPluginSettings, webView, id);
       },
-      [](VNE::NodeEditor* editor) { TransferFunctionSourceNode::Init(editor); });
+      [](VNE::NodeEditor *editor) {
+        TransferFunctionSourceNode::Init(editor);
+      });
 
-  m_pNodeEditor->RegisterNodeType(CinemaDBNode::GetName(), "Sources",
-      [](cs::gui::GuiItem* webView, int id) { return new CinemaDBNode(webView, id); },
-      [](VNE::NodeEditor* editor) { CinemaDBNode::Init(editor); });
+  m_pNodeEditor->RegisterNodeType(
+      CinemaDBNode::GetName(), "Sources",
+      [](cs::gui::GuiItem *webView, int id) {
+        return new CinemaDBNode(webView, id);
+      },
+      [](VNE::NodeEditor *editor) { CinemaDBNode::Init(editor); });
 
   // m_pNodeEditor->RegisterNodeType(
   //    WildFireSourceNode::GetName(), "Sources",
@@ -228,39 +249,58 @@ void Plugin::init() {
   //    },
   //    [](VNE::NodeEditor* editor) { DiseasesSimulation::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(TextureUploadNode::GetName(), "Sources",
-      [](cs::gui::GuiItem* webView, int id) { return new TextureUploadNode(webView, id); },
-      [](VNE::NodeEditor* editor) { TextureUploadNode::Init(editor); });
+  m_pNodeEditor->RegisterNodeType(
+      TextureUploadNode::GetName(), "Sources",
+      [](cs::gui::GuiItem *webView, int id) {
+        return new TextureUploadNode(webView, id);
+      },
+      [](VNE::NodeEditor *editor) { TextureUploadNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(TextureLoaderNode::GetName(), "Sources",
-      [](cs::gui::GuiItem* webView, int id) { return new TextureLoaderNode(webView, id); },
-      [](VNE::NodeEditor* editor) { TextureLoaderNode::Init(editor); });
+  m_pNodeEditor->RegisterNodeType(
+      TextureLoaderNode::GetName(), "Sources",
+      [](cs::gui::GuiItem *webView, int id) {
+        return new TextureLoaderNode(webView, id);
+      },
+      [](VNE::NodeEditor *editor) { TextureLoaderNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(IncidentNode::GetName(), "Sources",
-      [](cs::gui::GuiItem* webView, int id) { return new IncidentNode(webView, id); },
-      [](VNE::NodeEditor* editor) { IncidentNode::Init(editor); });
+  m_pNodeEditor->RegisterNodeType(
+      IncidentNode::GetName(), "Sources",
+      [](cs::gui::GuiItem *webView, int id) {
+        return new IncidentNode(webView, id);
+      },
+      [](VNE::NodeEditor *editor) { IncidentNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(IncidentConfigNode::GetName(), "Sources",
-      [](cs::gui::GuiItem* webView, int id) { return new IncidentConfigNode(webView, id); },
-      [](VNE::NodeEditor* editor) { IncidentConfigNode::Init(editor); });
+  m_pNodeEditor->RegisterNodeType(
+      IncidentConfigNode::GetName(), "Sources",
+      [](cs::gui::GuiItem *webView, int id) {
+        return new IncidentConfigNode(webView, id);
+      },
+      [](VNE::NodeEditor *editor) { IncidentConfigNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(PersistenceNode::GetName(), "Renderer",
-      [](cs::gui::GuiItem* webView, int id) { return new PersistenceNode(webView, id); },
-      [](VNE::NodeEditor* editor) { PersistenceNode::Init(editor); });
+  m_pNodeEditor->RegisterNodeType(
+      PersistenceNode::GetName(), "Renderer",
+      [](cs::gui::GuiItem *webView, int id) {
+        return new PersistenceNode(webView, id);
+      },
+      [](VNE::NodeEditor *editor) { PersistenceNode::Init(editor); });
 
-  m_pNodeEditor->RegisterNodeType(TextureRenderNode::GetName(), "Renderer",
-      [this](cs::gui::GuiItem* webView, int id) {
-        return new TextureRenderNode(mPluginSettings, webView, id, mSolarSystem.get(),
+  m_pNodeEditor->RegisterNodeType(
+      TextureRenderNode::GetName(), "Renderer",
+      [this](cs::gui::GuiItem *webView, int id) {
+        return new TextureRenderNode(mPluginSettings, webView, id,
+                                     mSolarSystem.get(), mVestecTransform.get(),
+                                     mGraphicsEngine.get());
+      },
+      [](VNE::NodeEditor *editor) { TextureRenderNode::Init(editor); });
+
+  m_pNodeEditor->RegisterNodeType(
+      CriticalPointsNode::GetName(), "Renderer",
+      [this](cs::gui::GuiItem *webView, int id) {
+        return new CriticalPointsNode(
+            mPluginSettings, webView, id, mSolarSystem.get(),
             mVestecTransform.get(), mGraphicsEngine.get());
       },
-      [](VNE::NodeEditor* editor) { TextureRenderNode::Init(editor); });
-
-  m_pNodeEditor->RegisterNodeType(CriticalPointsNode::GetName(), "Renderer",
-      [this](cs::gui::GuiItem* webView, int id) {
-        return new CriticalPointsNode(mPluginSettings, webView, id, mSolarSystem.get(),
-            mVestecTransform.get(), mGraphicsEngine.get());
-      },
-      [](VNE::NodeEditor* editor) { CriticalPointsNode::Init(editor); });
+      [](VNE::NodeEditor *editor) { CriticalPointsNode::Init(editor); });
 
   // m_pNodeEditor->RegisterNodeType(
   //    UncertaintyRenderNode::GetName(), "Renderer",
@@ -274,10 +314,10 @@ void Plugin::init() {
   // Initialize the editor in HTML and JavaScript
   m_pNodeEditor->InitNodeEditor();
 
-  mGuiManager->getGui()->callJavascript(
-      "CosmoScout.vestec.setServer", mPluginSettings.mVestecServer);
-  mGuiManager->getGui()->callJavascript(
-      "CosmoScout.vestec.setDownloadDir", mPluginSettings.mVestecDownloadDir);
+  mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setServer",
+                                        mPluginSettings.mVestecServer);
+  mGuiManager->getGui()->callJavascript("CosmoScout.vestec.setDownloadDir",
+                                        mPluginSettings.mVestecDownloadDir);
 
   logger().info("[CSP::VESTEC::Initialize] Done");
 }

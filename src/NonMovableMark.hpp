@@ -23,25 +23,25 @@ namespace csp::vestec {
 
 /// A Mark with a delete symbol above when it is selected.
 class NonMovableMark : public cs::core::tools::Mark {
- public:
-  NonMovableMark(std::shared_ptr<cs::core::InputManager> const& pInputManager,
-      std::shared_ptr<cs::core::SolarSystem> const&             pSolarSystem,
-      std::shared_ptr<cs::core::Settings> const&                settings,
-      std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
-      std::string const& sFrame);
+public:
+  NonMovableMark(std::shared_ptr<cs::core::InputManager> const &pInputManager,
+                 std::shared_ptr<cs::core::SolarSystem> const &pSolarSystem,
+                 std::shared_ptr<cs::core::Settings> const &settings,
+                 std::shared_ptr<cs::core::TimeControl> const &pTimeControl,
+                 std::string const &sCenter, std::string const &sFrame);
 
-  NonMovableMark(NonMovableMark const& other) = delete;
-  NonMovableMark(NonMovableMark&& other)      = delete;
+  NonMovableMark(NonMovableMark const &other) = delete;
+  NonMovableMark(NonMovableMark &&other) = delete;
 
-  NonMovableMark& operator=(NonMovableMark const& other) = delete;
-  NonMovableMark& operator=(NonMovableMark&& other) = delete;
+  NonMovableMark &operator=(NonMovableMark const &other) = delete;
+  NonMovableMark &operator=(NonMovableMark &&other) = delete;
 
   ~NonMovableMark() override;
 
   /// Called from Tools class.
   void update() override;
 
- private:
+private:
   int mButtonsConnection = -1;
 };
 

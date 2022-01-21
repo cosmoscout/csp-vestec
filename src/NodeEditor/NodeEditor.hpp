@@ -13,21 +13,22 @@
 namespace VNE {
 
 class NodeEditor {
- public:
-  NodeEditor(cs::gui::GuiItem* pWebView);
+public:
+  NodeEditor(cs::gui::GuiItem *pWebView);
   virtual ~NodeEditor();
 
   /**
    * Register a new node to the editor
    */
-  void RegisterNodeType(const std::string& name, std::string category,
-      std::function<Node*(cs::gui::GuiItem*, int id)> fFactory,
-      std::function<void(NodeEditor*)>                fInit);
+  void
+  RegisterNodeType(const std::string &name, std::string category,
+                   std::function<Node *(cs::gui::GuiItem *, int id)> fFactory,
+                   std::function<void(NodeEditor *)> fInit);
 
   /**
    * Register a new socket connection with own type
    */
-  void RegisterSocketType(const std::string& name);
+  void RegisterSocketType(const std::string &name);
 
   /**
    * Initialize the D§-node editor. Inserts javascript code to the document
@@ -37,7 +38,7 @@ class NodeEditor {
   /**
    * Add a new node to the manager
    */
-  void AddNewNode(int id, const std::string& name);
+  void AddNewNode(int id, const std::string &name);
 
   /**
    * Delete an existing node
@@ -67,29 +68,29 @@ class NodeEditor {
   /**
    * The Gui item
    */
-  cs::gui::GuiItem* GetGuiItem();
+  cs::gui::GuiItem *GetGuiItem();
 
   /**
    * Retrieve a vestec node by id
    */
-  template <typename T>
-  T* GetNode(int id) const {
+  template <typename T> T *GetNode(int id) const {
     auto it = m_mapNodes.find(id);
     if (it == m_mapNodes.end())
       return nullptr;
 
-    return dynamic_cast<T*>(it->second);
+    return dynamic_cast<T *>(it->second);
   }
 
- private:
-  cs::gui::GuiItem* m_pWebView;
+private:
+  cs::gui::GuiItem *m_pWebView;
 
-  std::map<int, Node*> m_mapNodes;
+  std::map<int, Node *> m_mapNodes;
 
-  std::vector<std::string>                                               m_vecSockets;
-  std::map<std::string, std::function<Node*(cs::gui::GuiItem*, int id)>> m_mapCreatorFunctions;
-  std::map<std::string, std::function<void(NodeEditor*)>>                m_mapInitFunctions;
-  std::map<std::string, std::vector<std::string>>                        m_mapCategories;
+  std::vector<std::string> m_vecSockets;
+  std::map<std::string, std::function<Node *(cs::gui::GuiItem *, int id)>>
+      m_mapCreatorFunctions;
+  std::map<std::string, std::function<void(NodeEditor *)>> m_mapInitFunctions;
+  std::map<std::string, std::vector<std::string>> m_mapCategories;
 };
 } // namespace VNE
 

@@ -26,18 +26,20 @@
 namespace csp::vestec {
 
 class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
- public:
-  static std::string dataDir;           ///< Directory where simulation data is stored
+public:
+  static std::string dataDir; ///< Directory where simulation data is stored
   static std::string vestecServer;      ///< Vestec Server
   static std::string vestecDownloadDir; ///< Downloaded files location
   static std::string vestecDiseasesDir; ///< Diseases
-  static std::string vestecTexturesDir; ///< Textures to be loaded by the texture loader node
+  static std::string
+      vestecTexturesDir; ///< Textures to be loaded by the texture loader node
 
   struct Settings {
     std::string mVestecDataDir; ///< Directory where cinemaDB is stored
-    std::string mFireDir;       ///< Directory where the fire simulation output is stored
-    std::string mDiseasesDir;   ///< Directory where the diseases simulation and
-                                ///< sensor data is stored
+    std::string
+        mFireDir; ///< Directory where the fire simulation output is stored
+    std::string mDiseasesDir; ///< Directory where the diseases simulation and
+                              ///< sensor data is stored
 
     std::string mVestecServer;      ///< Vestec Server - Login / Workflows
     std::string mVestecDownloadDir; ///< Vestec Downloaded files location
@@ -57,12 +59,12 @@ class Plugin : public cs::core::PluginBase, Singleton<Plugin> {
    */
   friend class Singleton<Plugin>;
 
- private:
-  Settings                                        mPluginSettings;
+private:
+  Settings mPluginSettings;
   std::shared_ptr<cs::scene::CelestialAnchorNode> mVestecTransform;
 
   // Node editor for VESTEC
-  VNE::NodeEditor* m_pNodeEditor;
+  VNE::NodeEditor *m_pNodeEditor;
 
   std::shared_ptr<IncidentsBoundsTool> mTool;
 

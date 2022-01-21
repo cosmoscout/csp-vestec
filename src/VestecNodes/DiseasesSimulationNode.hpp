@@ -15,38 +15,39 @@ class NodeEditor;
  * Textures are then fed to a texture or uncertainty renderer
  */
 class DiseasesSimulation : public VNE::Node {
- public:
-  DiseasesSimulation(csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
+public:
+  DiseasesSimulation(csp::vestec::Plugin::Settings const &config,
+                     cs::gui::GuiItem *pItem, int id);
   virtual ~DiseasesSimulation();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor* pEditor);
+  static void Init(VNE::NodeEditor *pEditor);
 
   /**
    * Returns the unique identifier for the node as string
    */
   static std::string GetName();
 
- private:
+private:
   /**
    * Read available filename for a given timestep. In each ensemble member there
    * should be one
    */
-  void GetFileNamesForTimeStep(int id, const std::string& mode, double t);
+  void GetFileNamesForTimeStep(int id, const std::string &mode, double t);
 
   /**
    * Set the number of ensemble members to the FlowEditor node
    */
-  void SetNumberOfEnsembleMembers(int id, const std::string& path);
+  void SetNumberOfEnsembleMembers(int id, const std::string &path);
 
   /**
    * Set the simulation modes
    */
-  void SetSimulationModes(int id, const std::string& path);
+  void SetSimulationModes(int id, const std::string &path);
 
- private:
+private:
   csp::vestec::Plugin::Settings mPluginConfig;
 };
 

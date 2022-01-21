@@ -26,7 +26,8 @@ class WildFireSourceNode {
   builder(node) {
     // Combobox for simulation mode selection
     const simulationMode = new D3NE.Control(
-        `<select id="simulation_mode_${node.id}" class="combobox"><option>none</option></select>`,
+        `<select id="simulation_mode_${
+            node.id}" class="combobox"><option>none</option></select>`,
         (element, control) => {
           const select = $(element);
           select.selectpicker();
@@ -36,14 +37,13 @@ class WildFireSourceNode {
           select.on('change', function() {
             // Now, since simulation mode changed, read the files for that
             // simulation mode
-            window.callNative('readSimulationFileNames', node.id, $(this).val());
+            window.callNative('readSimulationFileNames', node.id,
+                              $(this).val());
 
             CosmoScout.vestecNE.updateEditor();
 
             // Hack
-            setTimeout(() => {
-              CosmoScout.vestecNE.updateEditor();
-            }, 200)
+            setTimeout(() => { CosmoScout.vestecNE.updateEditor(); }, 200)
           });
 
           // Initially fill the combobox with simulation mode values (read from
@@ -54,7 +54,8 @@ class WildFireSourceNode {
 
     // Combobox for file selection
     const simulationFile = new D3NE.Control(
-        `<select id="simulation_file_${node.id}" class="combobox"><option>none</option></select>`,
+        `<select id="simulation_file_${
+            node.id}" class="combobox"><option>none</option></select>`,
         (element, control) => {
           const select = $(element);
           select.selectpicker();
@@ -73,7 +74,8 @@ class WildFireSourceNode {
     node.addControl(simulationFile);
 
     // Define the output type
-    const output = new D3NE.Output('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
+    const output =
+        new D3NE.Output('Texture(s)', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
     return node;
   }
@@ -104,8 +106,8 @@ class WildFireSourceNode {
     this._checkD3NE();
 
     return new D3NE.Component('WildFireSourceNode', {
-      builder: this.builder.bind(this),
-      worker: this.worker.bind(this),
+      builder : this.builder.bind(this),
+      worker : this.worker.bind(this),
     });
   }
 
@@ -123,11 +125,11 @@ class WildFireSourceNode {
 
   // Fill the combobox with the different simulation modes read from disc in c++
   static fillSimulationModes(id, simModes) {
-    const json  = JSON.parse(simModes);
+    const json = JSON.parse(simModes);
     let liModes = '';
 
     for (let i = 0; i < json.length; i++) {
-      const obj      = json[i];
+      const obj = json[i];
       const fileName = obj.split('/').pop();
       liModes += `<option value='${obj}'>${fileName}</option>`;
     }
@@ -140,11 +142,11 @@ class WildFireSourceNode {
 
   // Fill the combobox with the different simulation output files per mode
   static fillSimulationOutputs(id, simOutputs) {
-    const json    = JSON.parse(simOutputs);
+    const json = JSON.parse(simOutputs);
     let liOutputs = '';
 
     for (let i = 0; i < json.length; i++) {
-      const obj      = json[i];
+      const obj = json[i];
       const modeName = obj.split('/').pop();
       liOutputs += `<option value='${obj}'>${modeName}</option>`;
     }
@@ -158,5 +160,6 @@ class WildFireSourceNode {
 
 (() => {
   const wildFireNode = new WildFireSourceNode();
-  CosmoScout.vestecNE.addNode('WildFireSourceNode', wildFireNode.getComponent());
+  CosmoScout.vestecNE.addNode('WildFireSourceNode',
+                              wildFireNode.getComponent());
 })();
