@@ -10,28 +10,28 @@ class NodeEditor;
 }
 
 class DiseasesSensorInputNode : public VNE::Node {
-public:
-  DiseasesSensorInputNode(csp::vestec::Plugin::Settings const &config,
-                          cs::gui::GuiItem *pItem, int id);
+ public:
+  DiseasesSensorInputNode(
+      csp::vestec::Plugin::Settings const& config, cs::gui::GuiItem* pItem, int id);
   virtual ~DiseasesSensorInputNode();
 
   /**
    * These static functions are required and needs to be implemented
    */
-  static void Init(VNE::NodeEditor *pEditor);
+  static void Init(VNE::NodeEditor* pEditor);
 
   /**
    * Returns the unique identifier for the node as string
    */
   static std::string GetName();
 
-private:
+ private:
   /**
    * Read available textures and fill combo box
    */
-  void ReadSensorFileNames(int id, const std::string &path);
+  void ReadSensorFileNames(int id, const std::string& path);
 
-private:
+ private:
   csp::vestec::Plugin::Settings mPluginConfig;
 };
 

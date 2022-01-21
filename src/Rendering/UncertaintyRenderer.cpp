@@ -24,15 +24,12 @@
 #include <sstream>
 #include <vector>
 
-UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(
-    cs::core::SolarSystem *pSolarSystem)
-    : mTransferFunction(
-          std::make_unique<cs::graphics::ColorMap>(boost::filesystem::path(
-              "../share/resources/transferfunctions/BlackBody.json"))),
-      mTransferFunctionUncertainty(
-          std::make_unique<cs::graphics::ColorMap>(boost::filesystem::path(
-              "../share/resources/transferfunctions/Grayscale.json"))),
-      mSolarSystem(pSolarSystem) {
+UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(cs::core::SolarSystem* pSolarSystem)
+    : mTransferFunction(std::make_unique<cs::graphics::ColorMap>(
+          boost::filesystem::path("../share/resources/transferfunctions/BlackBody.json")))
+    , mTransferFunctionUncertainty(std::make_unique<cs::graphics::ColorMap>(
+          boost::filesystem::path("../share/resources/transferfunctions/Grayscale.json")))
+    , mSolarSystem(pSolarSystem) {
   csp::vestec::logger().debug("[UncertaintyOverlayRenderer] Compiling shader");
 
   m_pSurfaceShader = nullptr;
@@ -51,8 +48,7 @@ UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(
   m_pBufferSSBO = new VistaBufferObject();
 
   // create textures ---------------------------------------------------------
-  for (auto const &viewport :
-       GetVistaSystem()->GetDisplayManager()->GetViewports()) {
+  for (auto const& viewport : GetVistaSystem()->GetDisplayManager()->GetViewports()) {
     GBufferData bufferData;
 
     // Texture for previous renderer depth buffer
@@ -75,8 +71,7 @@ UncertaintyOverlayRenderer::UncertaintyOverlayRenderer(
 
     mGBufferData[viewport.second] = bufferData;
   }
-  csp::vestec::logger().debug(
-      "[UncertaintyOverlayRenderer] Compiling shader done");
+  csp::vestec::logger().debug("[UncertaintyOverlayRenderer] Compiling shader done");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +85,9 @@ UncertaintyOverlayRenderer::~UncertaintyOverlayRenderer() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UncertaintyOverlayRenderer::SetOpacity(float val) { mOpacity = val; }
+void UncertaintyOverlayRenderer::SetOpacity(float val) {
+  mOpacity = val;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -100,18 +97,17 @@ void UncertaintyOverlayRenderer::SetTransferFunction(std::string json) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UncertaintyOverlayRenderer::SetTransferFunctionUncertainty(
-    std::string json) {
+void UncertaintyOverlayRenderer::SetTransferFunctionUncertainty(std::string json) {
   mTransferFunctionUncertainty = std::make_unique<cs::graphics::ColorMap>(json);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyOverlayRenderer::SetOverlayTextures(
-    std::vector<GDALReader::GreyScaleTexture> &vecTextures) {
+    std::vector<GDALReader::GreyScaleTexture>& vecTextures) {
   mLockTextureAccess.lock();
   mvecTextures.clear();
-  mvecTextures = std::move(vecTextures);
+  mvecTextures    = std::move(vecTextures);
   mUpdateTextures = true;
   mLockTextureAccess.unlock();
 }
@@ -129,17 +125,13 @@ bool UncertaintyOverlayRenderer::Do() {
     return false;
   }
   // Get viewport information required to get previous depth buffer
-  auto *viewport = GetVistaSystem()
-                       ->GetDisplayManager()
-                       ->GetCurrentRenderInfo()
-                       ->m_pViewport;
-  auto const &data = mGBufferData[viewport];
+  auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
+  auto const& data     = mGBufferData[viewport];
   {
     // get active planet
     if (mSolarSystem->pActiveBody.get() == nullptr ||
         mSolarSystem->pActiveBody.get()->getCenterName() != "Earth") {
-      csp::vestec::logger().info(
-          "[UncertaintyOverlayRenderer::Do] No active planet set");
+      csp::vestec::logger().info("[UncertaintyOverlayRenderer::Do] No active planet set");
 
       mLockTextureAccess.unlock();
       return false;
@@ -155,7 +147,7 @@ bool UncertaintyOverlayRenderer::Do() {
     glEnable(GL_BLEND);
 
     double nearClip = NAN;
-    double farClip = NAN;
+    double farClip  = NAN;
     GetVistaSystem()
         ->GetDisplayManager()
         ->GetCurrentRenderInfo()
@@ -169,8 +161,8 @@ bool UncertaintyOverlayRenderer::Do() {
     glGetIntegerv(GL_VIEWPORT, iViewport);
 
     data.mDepthBuffer->Bind();
-    glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0],
-                     iViewport[1], iViewport[2], iViewport[3], 0);
+    glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0], iViewport[1],
+        iViewport[2], iViewport[3], 0);
     data.mDepthBuffer->Unbind();
     //################################## Upload textures
     //###################################
@@ -181,14 +173,12 @@ bool UncertaintyOverlayRenderer::Do() {
     //###################################
     std::vector<float> result;
     {
-      cs::utils::FrameTimings::ScopedTimer timer(
-          "UncertaintyOverlayRenderer::Compute");
+      cs::utils::FrameTimings::ScopedTimer timer("UncertaintyOverlayRenderer::Compute");
       m_pComputeShader->Bind();
 
       // Provide access to simulations results (2D TEXTURE ARRAY)
       data.mColorBuffer->Bind(GL_TEXTURE0);
-      m_pComputeShader->SetUniform(
-          m_pComputeShader->GetUniformLocation("uSimBuffer"), 0);
+      m_pComputeShader->SetUniform(m_pComputeShader->GetUniformLocation("uSimBuffer"), 0);
 
       // Provide texture sizes for correct lookups
       m_pComputeShader->SetUniform(
@@ -198,8 +188,7 @@ bool UncertaintyOverlayRenderer::Do() {
           m_pComputeShader->GetUniformLocation("uSizeTexY"), mvecTextures[0].y);
 
       m_pComputeShader->SetUniform(
-          m_pComputeShader->GetUniformLocation("uSizeTexZ"),
-          static_cast<int>(mvecTextures.size()));
+          m_pComputeShader->GetUniformLocation("uSizeTexZ"), static_cast<int>(mvecTextures.size()));
 
       // Provide access to write the output into a SSBO
       int group_size_x = (mvecTextures[0].x / 16) + 1;
@@ -209,8 +198,7 @@ bool UncertaintyOverlayRenderer::Do() {
       m_pBufferSSBO->BindBufferBase(GL_SHADER_STORAGE_BUFFER, 1);
 
       // Execute shader
-      glDispatchComputeGroupSizeARB(group_size_x, group_size_y, 1, group_size_x,
-                                    group_size_y, 1);
+      glDispatchComputeGroupSizeARB(group_size_x, group_size_y, 1, group_size_x, group_size_y, 1);
 
       // Barrier to wait for SSBO results
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -249,24 +237,21 @@ bool UncertaintyOverlayRenderer::Do() {
     //################################## Compute Shader done
     //###################################
 
-    cs::utils::FrameTimings::ScopedTimer timer(
-        "UncertaintyOverlayRenderer::Rendering");
+    cs::utils::FrameTimings::ScopedTimer timer("UncertaintyOverlayRenderer::Rendering");
     // get matrices and related values -----------------------------------------
     GLfloat glMatP[16];
     GLfloat glMatMV[16];
     glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
     glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
 
-    std::string closestPlanet =
-        mSolarSystem->pActiveBody.get()->getCenterName();
-    auto activeBody = mSolarSystem->pActiveBody.get();
-    glm::dmat4 matWorldTransform = activeBody->getWorldTransform();
+    std::string closestPlanet     = mSolarSystem->pActiveBody.get()->getCenterName();
+    auto        activeBody        = mSolarSystem->pActiveBody.get();
+    glm::dmat4  matWorldTransform = activeBody->getWorldTransform();
 
     VistaTransformMatrix matM(glm::value_ptr(matWorldTransform), true);
     VistaTransformMatrix matMV(matM);
     VistaTransformMatrix matInvMV(matMV.GetInverted());
-    VistaTransformMatrix matInvP(
-        VistaTransformMatrix(glMatP, true).GetInverted());
+    VistaTransformMatrix matInvP(VistaTransformMatrix(glMatP, true).GetInverted());
     VistaTransformMatrix matInvMVP(matInvMV * matInvP);
     // get matrices and related values -----------------------------------------
 
@@ -279,20 +264,16 @@ bool UncertaintyOverlayRenderer::Do() {
     mTransferFunction->bind(GL_TEXTURE2);
     mTransferFunctionUncertainty->bind(GL_TEXTURE3);
 
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uDepthBuffer"), 0);
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uSimBuffer"), 1);
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uDepthBuffer"), 0);
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSimBuffer"), 1);
 
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uTransferFunction"), 2);
     m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uTransferFunction"), 2);
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uTransferFunctionUncertainty"),
-        3);
+        m_pSurfaceShader->GetUniformLocation("uTransferFunctionUncertainty"), 3);
 
     // Why is there no set uniform for matrices??? //TODO: There is one
     glm::dmat4 InverseWorldTransform = glm::inverse(matWorldTransform);
-    GLint loc = m_pSurfaceShader->GetUniformLocation("uMatInvMV");
+    GLint      loc                   = m_pSurfaceShader->GetUniformLocation("uMatInvMV");
     // glUniformMatrix4fv(loc, 1, GL_FALSE, matInvMV.GetData());
     glUniformMatrix4dv(loc, 1, GL_FALSE, glm::value_ptr(InverseWorldTransform));
     loc = m_pSurfaceShader->GetUniformLocation("uMatInvMVP");
@@ -303,35 +284,27 @@ bool UncertaintyOverlayRenderer::Do() {
     glUniformMatrix4fv(loc, 1, GL_FALSE, matMV.GetData());
 
     m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uFarClip"),
-        static_cast<float>(farClip));
+        m_pSurfaceShader->GetUniformLocation("uFarClip"), static_cast<float>(farClip));
 
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uNumTextures"),
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uNumTextures"),
         static_cast<int>(mvecTextures.size()));
     loc = m_pSurfaceShader->GetUniformLocation("uBounds");
     glUniform4dv(loc, 1, mvecTextures[0].lnglatBounds.data());
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uOpacity"), mOpacity);
     m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uOpacity"), mOpacity);
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uVisMode"),
-        static_cast<int>(mRenderMode));
+        m_pSurfaceShader->GetUniformLocation("uVisMode"), static_cast<int>(mRenderMode));
 
     auto sunDirection =
         glm::normalize(glm::inverse(matWorldTransform) *
-                       (mSolarSystem->getSun()->getWorldTransform()[3] -
-                        matWorldTransform[3]));
-    m_pSurfaceShader->SetUniform(
-        m_pSurfaceShader->GetUniformLocation("uSunDirection"),
+                       (mSolarSystem->getSun()->getWorldTransform()[3] - matWorldTransform[3]));
+    m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uSunDirection"),
         (float)sunDirection[0], (float)sunDirection[1], (float)sunDirection[2]);
 
     // provide radii to shader
-    auto mRadii = cs::core::SolarSystem::getRadii(
-        mSolarSystem->pActiveBody.get()->getCenterName());
+    auto mRadii = cs::core::SolarSystem::getRadii(mSolarSystem->pActiveBody.get()->getCenterName());
     m_pSurfaceShader->SetUniform(m_pSurfaceShader->GetUniformLocation("uRadii"),
-                                 static_cast<float>(mRadii[0]),
-                                 static_cast<float>(mRadii[1]),
-                                 static_cast<float>(mRadii[2]));
+        static_cast<float>(mRadii[0]), static_cast<float>(mRadii[1]),
+        static_cast<float>(mRadii[2]));
 
     // Provide SSBO with min, max average values on location 3
     m_pBufferSSBO->BindBufferBase(GL_SHADER_STORAGE_BUFFER, 3);
@@ -365,19 +338,15 @@ void UncertaintyOverlayRenderer::getGLError(std::string name) {
   int error = glGetError();
   if (error != 0) {
     csp::vestec::logger().error(
-        "[UncertaintyOverlayRenderer]  Error in {} Error code: {}", name,
-        std::to_string(error));
+        "[UncertaintyOverlayRenderer]  Error in {} Error code: {}", name, std::to_string(error));
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void UncertaintyOverlayRenderer::UploadTextures() {
-  auto *viewport = GetVistaSystem()
-                       ->GetDisplayManager()
-                       ->GetCurrentRenderInfo()
-                       ->m_pViewport;
-  auto const &data = mGBufferData[viewport];
+  auto*       viewport = GetVistaSystem()->GetDisplayManager()->GetCurrentRenderInfo()->m_pViewport;
+  auto const& data     = mGBufferData[viewport];
 
   // Get the first texture
   GDALReader::GreyScaleTexture texture0 = mvecTextures[0];
@@ -387,23 +356,22 @@ void UncertaintyOverlayRenderer::UploadTextures() {
   int group_size_y = (mvecTextures[0].y / 16) + 1;
 
   m_pBufferSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
-  m_pBufferSSBO->BufferData(8 * group_size_x * group_size_y * sizeof(float),
-                            nullptr, GL_DYNAMIC_COPY);
+  m_pBufferSSBO->BufferData(
+      8 * group_size_x * group_size_y * sizeof(float), nullptr, GL_DYNAMIC_COPY);
   m_pBufferSSBO->Release();
 
   // Allocate texture array
   data.mColorBuffer->Bind();
-  if (lBufferSize !=
-      static_cast<long>(texture0.x * texture0.y * mvecTextures.size())) {
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, texture0.x, texture0.y,
-                   (GLsizei)mvecTextures.size());
+  if (lBufferSize != static_cast<long>(texture0.x * texture0.y * mvecTextures.size())) {
+    glTexStorage3D(
+        GL_TEXTURE_2D_ARRAY, 1, GL_R32F, texture0.x, texture0.y, (GLsizei)mvecTextures.size());
     lBufferSize = texture0.x * texture0.y * mvecTextures.size();
   }
 
   int layerCount = 0;
   for (auto texture : mvecTextures) {
-    glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layerCount, texture.x,
-                    texture.y, 1, GL_RED, GL_FLOAT, texture.buffer);
+    glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layerCount, texture.x, texture.y, 1, GL_RED,
+        GL_FLOAT, texture.buffer);
     layerCount++;
   }
   mUpdateTextures = false;
@@ -418,8 +386,7 @@ void UncertaintyOverlayRenderer::SetVisualizationMode(RenderMode mode) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool UncertaintyOverlayRenderer::GetBoundingBox(
-    VistaBoundingBox &oBoundingBox) {
+bool UncertaintyOverlayRenderer::GetBoundingBox(VistaBoundingBox& oBoundingBox) {
   float fMin[3] = {-6371000.0f, -6371000.0f, -6371000.0f};
   float fMax[3] = {6371000.0f, 6371000.0f, 6371000.0f};
 
@@ -430,4 +397,6 @@ bool UncertaintyOverlayRenderer::GetBoundingBox(
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UncertaintyOverlayRenderer::UnloadTexture() { mvecTextures.clear(); }
+void UncertaintyOverlayRenderer::UnloadTexture() {
+  mvecTextures.clear();
+}

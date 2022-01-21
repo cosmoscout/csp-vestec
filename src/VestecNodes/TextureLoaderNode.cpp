@@ -11,20 +11,24 @@
 #include "../Plugin.hpp"
 #include <nlohmann/json.hpp>
 
-TextureLoaderNode::TextureLoaderNode(cs::gui::GuiItem *pItem, int id)
-    : VNE::Node(pItem, id, 0, 1) {}
+TextureLoaderNode::TextureLoaderNode(cs::gui::GuiItem* pItem, int id)
+    : VNE::Node(pItem, id, 0, 1) {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TextureLoaderNode::~TextureLoaderNode() {}
+TextureLoaderNode::~TextureLoaderNode() {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::string TextureLoaderNode::GetName() { return "TextureLoaderNode"; }
+std::string TextureLoaderNode::GetName() {
+  return "TextureLoaderNode";
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void TextureLoaderNode::Init(VNE::NodeEditor *pEditor) {
+void TextureLoaderNode::Init(VNE::NodeEditor* pEditor) {
   csp::vestec::logger().debug("[{}] Init", GetName());
 
   const std::string node = cs::utils::filesystem::loadToString(
@@ -32,10 +36,8 @@ void TextureLoaderNode::Init(VNE::NodeEditor *pEditor) {
   pEditor->GetGuiItem()->executeJavascript(node);
 
   pEditor->GetGuiItem()->registerCallback<double>(
-      "TextureLoaderNode.readFileNames", "Reads file names",
-      std::function([pEditor](double id) {
-        pEditor->GetNode<TextureLoaderNode>(std::lround(id))
-            ->ReadFileNames(std::lround(id));
+      "TextureLoaderNode.readFileNames", "Reads file names", std::function([pEditor](double id) {
+        pEditor->GetNode<TextureLoaderNode>(std::lround(id))->ReadFileNames(std::lround(id));
       }));
 }
 
@@ -50,6 +52,5 @@ void TextureLoaderNode::ReadFileNames(int id) {
       cs::utils::filesystem::listFiles(csp::vestec::Plugin::vestecTexturesDir));
   nlohmann::json args(lFiles);
 
-  m_pItem->callJavascript("TextureLoaderNode.fillTextureSelect", args.dump(),
-                          id);
+  m_pItem->callJavascript("TextureLoaderNode.fillTextureSelect", args.dump(), id);
 }

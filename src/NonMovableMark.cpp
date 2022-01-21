@@ -11,21 +11,20 @@ namespace csp::vestec {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NonMovableMark::NonMovableMark(
-    std::shared_ptr<cs::core::InputManager> const &pInputManager,
-    std::shared_ptr<cs::core::SolarSystem> const &pSolarSystem,
-    std::shared_ptr<cs::core::Settings> const &settings,
-    std::shared_ptr<cs::core::TimeControl> const &pTimeControl,
-    std::string const &sCenter, std::string const &sFrame)
-    : Mark(pInputManager, pSolarSystem, settings, pTimeControl, sCenter,
-           sFrame) {
+NonMovableMark::NonMovableMark(std::shared_ptr<cs::core::InputManager> const& pInputManager,
+    std::shared_ptr<cs::core::SolarSystem> const&                             pSolarSystem,
+    std::shared_ptr<cs::core::Settings> const&                                settings,
+    std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
+    std::string const& sFrame)
+    : Mark(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame) {
 
   mInputManager->unregisterSelectable(mParent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NonMovableMark::~NonMovableMark() {}
+NonMovableMark::~NonMovableMark() {
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

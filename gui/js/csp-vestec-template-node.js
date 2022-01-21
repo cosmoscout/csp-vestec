@@ -42,11 +42,9 @@ class TemplateNode {
   builder(node) {
     // Socket types get registered in Plugin::init()
     // E.g.: m_pNodeEditor->RegisterSocketType("TEMPLATE");
-    const input =
-        new D3NE.Input('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
+    const input = new D3NE.Input('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
 
-    const output =
-        new D3NE.Output('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
+    const output = new D3NE.Output('Template', CosmoScout.vestecNE.sockets.TEMPLATE);
 
     const exampleControl = new D3NE.Control(
         // Write IDs as class_name_type_node_id
@@ -98,8 +96,8 @@ class TemplateNode {
     this._checkD3NE();
 
     return new D3NE.Component('TemplateNode', {
-      builder : this.builder.bind(this),
-      worker : this.worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 

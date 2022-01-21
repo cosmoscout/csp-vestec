@@ -51,9 +51,8 @@ class DiseasesSensorInputNode {
           } else {
             // Now, since simulation mode changed, read the files for that
             // simulation mode
-            window.callNative('DiseasesSensorInputNode.readSensorFileNames',
-                              parseInt(node.id, 10),
-                              DiseasesSensorInputNode.path);
+            window.callNative('DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10),
+                DiseasesSensorInputNode.path);
           }
 
           select.on('change', (event) => {
@@ -71,13 +70,11 @@ class DiseasesSensorInputNode {
     node.addControl(simulationFile);
 
     // Define the output type
-    const output =
-        new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
+    const output = new D3NE.Output('Texture', CosmoScout.vestecNE.sockets.TEXTURES);
     node.addOutput(output);
 
     if (this._useVestec()) {
-      const input =
-          new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
+      const input = new D3NE.Input('File Path', CosmoScout.vestecNE.sockets.PATH);
       node.addInput(input);
     }
 
@@ -94,18 +91,17 @@ class DiseasesSensorInputNode {
    */
   worker(node, inputs, outputs) {
     if (this._useVestec()) {
-      if (typeof inputs[0] === 'undefined' ||
-          typeof inputs[0][0] === 'undefined' || inputs[0].length === 0) {
+      if (typeof inputs[0] === 'undefined' || typeof inputs[0][0] === 'undefined' ||
+          inputs[0].length === 0) {
         node.data.sensorFileSelectParent.classList.add('hidden');
         node.data.sensorFile = null;
         delete node.data.sensorFilePath;
         return;
       }
 
-      if (node.data.sensorFile === null ||
-          node.data.sensorFilePath !== inputs[0][0]) {
-        window.callNative('DiseasesSensorInputNode.readSensorFileNames',
-                          parseInt(node.id, 10), inputs[0][0]);
+      if (node.data.sensorFile === null || node.data.sensorFilePath !== inputs[0][0]) {
+        window.callNative(
+            'DiseasesSensorInputNode.readSensorFileNames', parseInt(node.id, 10), inputs[0][0]);
         node.data.sensorFilePath = inputs[0][0];
       }
     }
@@ -128,8 +124,8 @@ class DiseasesSensorInputNode {
     this._checkD3NE();
 
     return new D3NE.Component('DiseasesSensorInput', {
-      builder : this.builder.bind(this),
-      worker : this.worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 
@@ -138,7 +134,9 @@ class DiseasesSensorInputNode {
    * @return {boolean}
    * @private
    */
-  _useVestec() { return typeof DiseasesSensorInputNode.path === 'undefined'; }
+  _useVestec() {
+    return typeof DiseasesSensorInputNode.path === 'undefined';
+  }
 
   /**
    * A path to load cinemadb data from
@@ -171,8 +169,7 @@ class DiseasesSensorInputNode {
    * @returns void
    */
   static fillWithSensorFiles(id, simOutputs) {
-    const element = document.querySelector(
-        `#diseases-sensor-node_${id}-sensor-file-select`);
+    const element = document.querySelector(`#diseases-sensor-node_${id}-sensor-file-select`);
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -182,15 +179,14 @@ class DiseasesSensorInputNode {
     sensorFiles.forEach((sensorFile) => {
       const option = document.createElement('option');
       option.value = sensorFile;
-      option.text = sensorFile.split('/').pop().toString();
+      option.text  = sensorFile.split('/').pop().toString();
 
       element.appendChild(option);
     });
 
     $(element).selectpicker();
 
-    const node = CosmoScout.vestecNE.editor.nodes.find(
-        (editorNode) => editorNode.id === id);
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === id);
 
     if (typeof node !== 'undefined') {
       node.data.sensorFile = element.value;
@@ -202,6 +198,5 @@ class DiseasesSensorInputNode {
 
 (() => {
   const diseasesInput = new DiseasesSensorInputNode();
-  CosmoScout.vestecNE.addNode('DiseasesSensorInput',
-                              diseasesInput.getComponent());
+  CosmoScout.vestecNE.addNode('DiseasesSensorInput', diseasesInput.getComponent());
 })();

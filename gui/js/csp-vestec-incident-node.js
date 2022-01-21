@@ -76,8 +76,8 @@ class IncidentNode {
    *         index: Output Index
    */
   static outputTypes = {
-    'INCIDENT' : {
-      name : 'Incident',
+    'INCIDENT': {
+      name: 'Incident',
       root: 'INCIDENT',
       mappings: [],
       index: 0,
@@ -131,8 +131,7 @@ class IncidentNode {
   builder(node) {
     // Dropdown for selecting different incidents
     const incidentControl = new D3NE.Control(
-        `<select id="incident_node_select_${
-            node.id}" class="combobox"></select>`,
+        `<select id="incident_node_select_${node.id}" class="combobox"></select>`,
         /**
          * @param {HTMLElement} element
          * @param {{putData: Function}} control
@@ -143,8 +142,7 @@ class IncidentNode {
           element.parentElement.style.maxWidth = '220px';
 
           control.putData('incidentSelect', element);
-          control.putData('incidentSelectContainer',
-                          element.parentElement.parentElement);
+          control.putData('incidentSelectContainer', element.parentElement.parentElement);
           control.putData('incidentsLoaded', false);
 
           element.parentElement.parentElement.classList.add('hidden');
@@ -163,12 +161,11 @@ class IncidentNode {
             node.data.activeIncident = event.target.value;
             IncidentNode.updateControlVisibility(node);
 
-            node.data.incidentDatasetLoaded =
-                await IncidentNode.loadIncidentDatasets(
-                    node.data.incidentDatasetSelect,
-                    event.target.value,
-                    node,
-                );
+            node.data.incidentDatasetLoaded = await IncidentNode.loadIncidentDatasets(
+                node.data.incidentDatasetSelect,
+                event.target.value,
+                node,
+            );
 
             // Displays output type
             CosmoScout.vestecNE.updateEditor();
@@ -181,11 +178,10 @@ class IncidentNode {
         `<div><select id="incident_dataset_node_select_${
             node.id}" class="combobox" multiple></select></div>`,
         (element, control) => {
-          const select =
-              element.querySelector(`#incident_dataset_node_select_${node.id}`);
+          const select = element.querySelector(`#incident_dataset_node_select_${node.id}`);
           $(select).selectpicker();
 
-          const container = element.parentElement;
+          const container          = element.parentElement;
           container.style.maxWidth = '220px';
 
           control.putData('incidentDatasetSelect', select);
@@ -198,8 +194,8 @@ class IncidentNode {
           // The 'oof.' check is necessary as a change event is generated even
           // when not changing anything
           element.addEventListener('change', (event) => {
-            const selectedEntries = Array.from(event.target.selectedOptions)
-                                        .map(option => option.value);
+            const selectedEntries =
+                Array.from(event.target.selectedOptions).map(option => option.value);
 
             // oof.
             if (JSON.stringify(node.data.activeIncidentDatasets) ===
@@ -226,12 +222,12 @@ class IncidentNode {
             node.id}_incident_test_stage_button" class="btn glass">Run Workflow</button>
 </div>`,
         (element, control) => {
-          const incidentStartButton = element.querySelector(
-              `#incident_node_${node.id}_incident_start_button`);
-          const incidentDeleteButton = element.querySelector(
-              `#incident_node_${node.id}_incident_delete_button`);
-          const incidentTestStageButton = element.querySelector(
-              `#incident_node_${node.id}_incident_test_stage_button`);
+          const incidentStartButton =
+              element.querySelector(`#incident_node_${node.id}_incident_start_button`);
+          const incidentDeleteButton =
+              element.querySelector(`#incident_node_${node.id}_incident_delete_button`);
+          const incidentTestStageButton =
+              element.querySelector(`#incident_node_${node.id}_incident_test_stage_button`);
 
           control.putData('incidentButtonContainer', element.parentElement);
           control.putData('incidentStartButton', incidentStartButton);
@@ -248,13 +244,10 @@ class IncidentNode {
           // wasn't activated
           incidentStartButton.addEventListener('click', async () => {
             const activationResponse =
-                await CosmoScout.vestec.api
-                    .activateIncident(node.data.activeIncident)
-                    .catch(() => {
-                      CosmoScout.notifications.print(
-                          'Activation failed', 'Could not activate Incident',
-                          'error');
-                    });
+                await CosmoScout.vestec.api.activateIncident(node.data.activeIncident).catch(() => {
+                  CosmoScout.notifications.print(
+                      'Activation failed', 'Could not activate Incident', 'error');
+                });
 
             if (activationResponse.status !== 200) {
               CosmoScout.notifications.print(
@@ -266,8 +259,7 @@ class IncidentNode {
                   'done',
               );
 
-              node.data.incidents
-                  .find(incident => incident.uuid === node.data.activeIncident)
+              node.data.incidents.find(incident => incident.uuid === node.data.activeIncident)
                   .status = 'ACTIVE';
               IncidentNode.updateControlVisibility(node);
             }
@@ -276,13 +268,10 @@ class IncidentNode {
           // Deletes the incident and updates the dropdown
           incidentDeleteButton.addEventListener('click', async () => {
             const deletionResponse =
-                await CosmoScout.vestec.api
-                    .deleteIncident(node.data.activeIncident)
-                    .catch(() => {
-                      CosmoScout.notifications.print(
-                          'Deletion failed', 'Could not delete Incident',
-                          'error');
-                    });
+                await CosmoScout.vestec.api.deleteIncident(node.data.activeIncident).catch(() => {
+                  CosmoScout.notifications.print(
+                      'Deletion failed', 'Could not delete Incident', 'error');
+                });
 
             if (typeof deletionResponse === 'undefined') {
               return;
@@ -308,13 +297,11 @@ class IncidentNode {
           incidentTestStageButton.addEventListener('click', async () => {
             const testStageResponse =
                 await CosmoScout.vestec.api.testIncident(node.data.activeIncident, node.data?.testStageConfig[0] ?? {}).catch(() => {
-          CosmoScout.notifications.print('Test failed',
-                                         'Could not run Workflow', 'error');
+          CosmoScout.notifications.print('Test failed', 'Could not run Workflow', 'error');
                 });
 
             if (testStageResponse.status !== 200) {
-              CosmoScout.notifications.print('Test failed',
-                                             'Could not run Workflow', 'error');
+              CosmoScout.notifications.print('Test failed', 'Could not run Workflow', 'error');
             } else {
               clearInterval(node.data.simulationUpdateInterval);
               node.data.simulationUpdateIncidentUUID = node.data.activeIncident;
@@ -335,18 +322,14 @@ class IncidentNode {
     // Displays a progress bar that advances after a stage was completed
     const incidentTestStageStatusControl = new D3NE.Control(
         `<div id="incident_node_${node.id}_test_stage_status_container">
-            <span id="incident_node_${
-            node.id}_test_stage_status" class="text"></span>
+            <span id="incident_node_${node.id}_test_stage_status" class="text"></span>
             <progress id="incident_node_${node.id}_test_stage_progress" max="${
-            IncidentNode
-                .NUM_WORKITEMS_PER_STAGE}" value="0" style="display: block"></progress>
+            IncidentNode.NUM_WORKITEMS_PER_STAGE}" value="0" style="display: block"></progress>
         </div>`,
         (element, control) => {
           control.putData('incidentTestStageStatusContainer', element);
-          control.putData('incidentTestStageStatusText',
-                          element.querySelector('span'));
-          control.putData('incidentTestStageProgress',
-                          element.querySelector('progress'));
+          control.putData('incidentTestStageStatusText', element.querySelector('span'));
+          control.putData('incidentTestStageProgress', element.querySelector('progress'));
           element.parentElement.classList.add('hidden');
         });
 
@@ -367,8 +350,8 @@ class IncidentNode {
         },
     );
 
-    const configInput = new D3NE.Input(
-        'Workflow Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG);
+    const configInput =
+        new D3NE.Input('Workflow Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG);
 
     node.addControl(loginMessageControl);
 
@@ -386,7 +369,7 @@ class IncidentNode {
 
     node.data['INCIDENT_CONFIG'] = configInput;
     // Checks for new incidents and datasets
-    node.data.updateIntervalId = setInterval(this._updateNode, 5000, node);
+    node.data.updateIntervalId         = setInterval(this._updateNode, 5000, node);
     node.data.simulationUpdateInterval = null;
 
     node.data.downloadStatus = new Map();
@@ -395,8 +378,7 @@ class IncidentNode {
 
     // Listens to node removals, to clear the update interval
     CosmoScout.vestecNE.editor.eventListener.on('noderemove', (node, _) => {
-      if (typeof node.data.updateIntervalId !== 'undefined' &&
-          node.title === 'IncidentNode') {
+      if (typeof node.data.updateIntervalId !== 'undefined' && node.title === 'IncidentNode') {
         clearInterval(node.data.updateIntervalId);
       }
     });
@@ -425,8 +407,7 @@ class IncidentNode {
     IncidentNode.handleAuthorized(node);
     IncidentNode.updateControlVisibility(node);
 
-    node.data.incidentsLoaded =
-        await IncidentNode.loadIncidents(node.data.incidentSelect, node);
+    node.data.incidentsLoaded = await IncidentNode.loadIncidents(node.data.incidentSelect, node);
 
     const incidentId = node.data.incidentSelect.value;
 
@@ -445,7 +426,9 @@ class IncidentNode {
     }
 
     // Clear output data
-    outputs.forEach((_, index) => { delete outputs[index]; });
+    outputs.forEach((_, index) => {
+      delete outputs[index];
+    });
 
     // 0 = Incident output
     outputs[0] = node.data.activeIncident;
@@ -455,11 +438,10 @@ class IncidentNode {
     }
 
     // Nullish coalescing operator breaks clang format...
-    const datasetIds =
-        (typeof node.data.activeIncidentDatasets !== 'undefined' &&
-         node.data.activeIncidentDatasets !== null)
-            ? node.data.activeIncidentDatasets
-            : [];
+    const datasetIds = (typeof node.data.activeIncidentDatasets !== 'undefined' &&
+                           node.data.activeIncidentDatasets !== null)
+                           ? node.data.activeIncidentDatasets
+                           : [];
 
     if (incidentId.length === 0) {
       return;
@@ -472,21 +454,18 @@ class IncidentNode {
 
       const activeDatasets =
           Object.values(node.data.currentMetadata)
-              .filter(dataset => node.data.activeIncidentDatasets.includes(
-                          dataset.uuid));
+              .filter(dataset => node.data.activeIncidentDatasets.includes(dataset.uuid));
 
       IncidentNode.showOutputType(node, activeDatasets);
     } catch (e) {
       console.error(`Error loading metadata for dataset '${
-          JSON.stringify(
-              datasetIds)}'. Incident: '${incidentId}. Message: ${e}`);
+          JSON.stringify(datasetIds)}'. Incident: '${incidentId}. Message: ${e}`);
       console.error(e);
       return;
     }
 
     node.data.fn.getOutputs().forEach((out, index) => {
-      if (typeof out.hash !== 'undefined' &&
-          typeof outputData[out.hash] !== 'undefined' &&
+      if (typeof out.hash !== 'undefined' && typeof outputData[out.hash] !== 'undefined' &&
           node.data.downloadStatus.get(out.uuid) === true) {
         outputs[index] = outputData[out.hash];
       }
@@ -503,8 +482,8 @@ class IncidentNode {
     this._checkD3NE();
 
     return new D3NE.Component('IncidentNode', {
-      builder : this.builder.bind(this),
-      worker : this.worker.bind(this),
+      builder: this.builder.bind(this),
+      worker: this.worker.bind(this),
     });
   }
 
@@ -532,24 +511,23 @@ class IncidentNode {
       return;
     }
 
-    IncidentNode.loadIncidents(node.data.incidentSelect, node)
-        .then(incidentsLoaded => {
-          IncidentNode.updateControlVisibility(node);
+    IncidentNode.loadIncidents(node.data.incidentSelect, node).then(incidentsLoaded => {
+      IncidentNode.updateControlVisibility(node);
 
-          node.data.incidentsLoaded = incidentsLoaded;
+      node.data.incidentsLoaded = incidentsLoaded;
 
-          if (node.data.incidentSelect.value !== node.data.activeIncident) {
-            IncidentNode
-                .loadIncidentDatasets(
-                    node.data.incidentDatasetSelect,
-                    node.data.activeIncident,
-                    node,
-                    )
-                .then(datasetsLoaded => {
-                  node.data.incidentDatasetLoaded = datasetsLoaded;
-                });
-          }
-        });
+      if (node.data.incidentSelect.value !== node.data.activeIncident) {
+        IncidentNode
+            .loadIncidentDatasets(
+                node.data.incidentDatasetSelect,
+                node.data.activeIncident,
+                node,
+                )
+            .then(datasetsLoaded => {
+              node.data.incidentDatasetLoaded = datasetsLoaded;
+            });
+      }
+    });
   }
 
   /**
@@ -569,10 +547,9 @@ class IncidentNode {
 
     // Only check simulations from the last 60 minutes
     const includeMinutes = 60;
-    const includeDate = new Date(Date.now() - (1000 * 60 * includeMinutes));
+    const includeDate    = new Date(Date.now() - (1000 * 60 * includeMinutes));
 
-    const activeIncident =
-        await CosmoScout.vestec.getIncident(node.data.activeIncident);
+    const activeIncident = await CosmoScout.vestec.getIncident(node.data.activeIncident);
 
     if (activeIncident !== node.data.simulationUpdateIncidentUUID) {
       clearInterval(node.data.simulationUpdateInterval);
@@ -588,11 +565,11 @@ class IncidentNode {
           let datePart, timePart;
 
           [datePart, timePart] = date.split(', ');
-          const dateParts = datePart.split('/');
+          const dateParts      = datePart.split('/');
 
           // Creates a ISO8601 Date Time String
-          const parsedDate = new Date(Date.parse(
-              `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${timePart}`));
+          const parsedDate =
+              new Date(Date.parse(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${timePart}`));
 
           // GMT+2
           parsedDate.setHours(parsedDate.getHours() + 2);
@@ -600,15 +577,14 @@ class IncidentNode {
           return parsedDate;
         }
 
-    let currentSimulations =
-        activeIncident.simulations
-            .filter(simulation => {
-              return (parseDate(simulation.created) - includeDate) >= 0;
-            })
-            .sort((a, b) => {
-              // So the latest timestamp is first
-              return parseDate(b.created) - parseDate(a.created);
-            });
+    let currentSimulations = activeIncident.simulations
+                                 .filter(simulation => {
+                                   return (parseDate(simulation.created) - includeDate) >= 0;
+                                 })
+                                 .sort((a, b) => {
+                                   // So the latest timestamp is first
+                                   return parseDate(b.created) - parseDate(a.created);
+                                 });
 
     // There are active simulations
     if (currentSimulations.length > 0) {
@@ -617,14 +593,13 @@ class IncidentNode {
       const statusText = currentSimulations[0].status.charAt(0).toUpperCase() +
                          currentSimulations[0].status.slice(1).toLowerCase();
       const statusElement = document.createTextNode(`Workflow: ${statusText}`);
-      node.data.incidentTestStageStatusContainer.parentElement.classList.remove(
-          'hidden');
+      node.data.incidentTestStageStatusContainer.parentElement.classList.remove('hidden');
 
       // Just a spinning element indicating that something is active
       const spinner = document.createElement('i');
       spinner.classList.add('material-icons');
-      spinner.innerText = 'autorenew';
-      spinner.style.animation = 'spin infinite 3s linear';
+      spinner.innerText        = 'autorenew';
+      spinner.style.animation  = 'spin infinite 3s linear';
       spinner.style.marginLeft = '5px';
 
       CosmoScout.gui.clearHtml(node.data.incidentTestStageStatusText);
@@ -645,11 +620,10 @@ class IncidentNode {
     } else if (currentSimulations.length === 0 ||
                parseInt(node.data.incidentTestStageProgress.value) ===
                    IncidentNode.NUM_WORKITEMS_PER_STAGE) {
-      node.data.incidentTestStageStatusContainer.parentElement.classList.add(
-          'hidden');
+      node.data.incidentTestStageStatusContainer.parentElement.classList.add('hidden');
       node.data.incidentTestStageStatusText.innerText = '';
-      node.data.incidentTestStageProgress.value = 0;
-      node.data.simulationUpdateIncidentUUID = null;
+      node.data.incidentTestStageProgress.value       = 0;
+      node.data.simulationUpdateIncidentUUID          = null;
       clearInterval(node.data.simulationUpdateInterval);
     }
   }
@@ -665,14 +639,13 @@ class IncidentNode {
    * @private
    */
   async _makeOutputData(node, datasetIds, incidentId) {
-    let output = {};
+    let output          = {};
     let datasetMetadata = {};
-    let activeHashes = [];
+    let activeHashes    = [];
 
     for (const id of datasetIds) {
-      const {metadata, hash} =
-          await IncidentNode.loadIncidentDatasetMetadata(node, id, incidentId);
-      let datasetOutput;
+      const {metadata, hash} = await IncidentNode.loadIncidentDatasetMetadata(node, id, incidentId);
+      let                            datasetOutput;
 
       metadata.hash = hash;
       activeHashes.push(metadata);
@@ -688,12 +661,11 @@ class IncidentNode {
           // this hard code should be removed
           const addCDB = metadata.type === 'MOSQUITO TOPOLOGICAL OUTPUT';
 
-          window.callNative('incidentNode.downloadAndExtractDataSet', node.id,
-                            metadata.uuid, CosmoScout.vestec.getToken(),
-                            addCDB);
+          window.callNative('incidentNode.downloadAndExtractDataSet', node.id, metadata.uuid,
+              CosmoScout.vestec.getToken(), addCDB);
         } else {
-          window.callNative('incidentNode.downloadDataSet', node.id,
-                            metadata.uuid, CosmoScout.vestec.getToken());
+          window.callNative(
+              'incidentNode.downloadDataSet', node.id, metadata.uuid, CosmoScout.vestec.getToken());
         }
 
         node.data.downloadStatus.set(metadata.uuid, false);
@@ -702,21 +674,20 @@ class IncidentNode {
       // This creates the corresponding output object based on the metadata type
       switch (metadata.type) {
       case 'CINEMA_DB_JSON': {
-        const [caseName, timeStep] =
-            metadata.name.replace('.zip', '').split('_');
+        const [caseName, timeStep] = metadata.name.replace('.zip', '').split('_');
 
         datasetOutput = {
           caseName,
           timeStep,
-          uuid : id,
+          uuid: id,
         };
         break;
       }
 
       case 'PATH':
       case 'CINEMA_DB':
-        datasetOutput = `${CosmoScout.vestec.downloadDir}/extracted/${id}/${
-            metadata.name.replace('.zip', '')}`;
+        datasetOutput =
+            `${CosmoScout.vestec.downloadDir}/extracted/${id}/${metadata.name.replace('.zip', '')}`;
         break;
 
       case 'MOSQUITO TOPOLOGICAL OUTPUT':
@@ -730,7 +701,7 @@ class IncidentNode {
       output[hash] = datasetOutput;
     }
 
-    node.data.currentMetadata = datasetMetadata;
+    node.data.currentMetadata  = datasetMetadata;
     node.data.loadedDataHashes = activeHashes;
 
     return output;
@@ -748,8 +719,7 @@ class IncidentNode {
    * @param {Node} node - The node to add outputs to
    */
   static addStaticOutputs(node) {
-    const incidentOut =
-        new D3NE.Output('Incident', CosmoScout.vestecNE.sockets['INCIDENT']);
+    const incidentOut = new D3NE.Output('Incident', CosmoScout.vestecNE.sockets['INCIDENT']);
     node.addOutput(incidentOut);
 
     node.data['INCIDENT'] = incidentOut;
@@ -764,13 +734,11 @@ class IncidentNode {
    */
   static addTypeMapping(from, to) {
     if (typeof IncidentNode.outputTypes[to.toUpperCase()] === 'undefined') {
-      console.error(
-          `Output type ${to} does not exist on CosmoScout.vestecNE.sockets.`);
+      console.error(`Output type ${to} does not exist on CosmoScout.vestecNE.sockets.`);
       return;
     }
 
-    IncidentNode.outputTypes[to.toUpperCase()].mappings.push(
-        from.toUpperCase());
+    IncidentNode.outputTypes[to.toUpperCase()].mappings.push(from.toUpperCase());
   }
 
   /**
@@ -800,7 +768,7 @@ class IncidentNode {
 
     node.data.info.classList.remove('hidden');
 
-    node.data.incidentsLoaded = false;
+    node.data.incidentsLoaded       = false;
     node.data.incidentDatasetLoaded = false;
     IncidentNode.unsetNodeValues(node);
     IncidentNode.showOutputType(node, 'none', true);
@@ -832,18 +800,17 @@ class IncidentNode {
     // Metadata already loaded
     if (node.data.loadedDataHashes.includes(datasetId + incidentId)) {
       return {
-        metadata : node.data.currentMetadata[datasetId + incidentId],
-        hash : datasetId + incidentId,
+        metadata: node.data.currentMetadata[datasetId + incidentId],
+        hash: datasetId + incidentId,
       };
     }
 
-    const metadata = await CosmoScout.vestec
-                         .getIncidentDatasetMetadata(datasetId, incidentId)
-                         .catch(() => ({
-                                  type : null,
-                                  name : null,
-                                  uuid : null,
-                                }));
+    const metadata =
+        await CosmoScout.vestec.getIncidentDatasetMetadata(datasetId, incidentId).catch(() => ({
+          type: null,
+          name: null,
+          uuid: null,
+        }));
 
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
       // Normalize the type
@@ -851,7 +818,7 @@ class IncidentNode {
 
       return {
         metadata,
-        hash : datasetId + incidentId,
+        hash: datasetId + incidentId,
       };
     }
 
@@ -872,7 +839,7 @@ class IncidentNode {
       return false;
     }
 
-    const incidents = await CosmoScout.vestec.getIncidents();
+    const incidents      = await CosmoScout.vestec.getIncidents();
     const activeIncident = incidentSelect.value;
 
     if (incidents.length === 0 && node.data.incidents.length === 0 ||
@@ -881,7 +848,7 @@ class IncidentNode {
     }
 
     // Don't clear dropdown if incident count didn't change
-    const oldLen = node.data.incidents.length;
+    const oldLen        = node.data.incidents.length;
     node.data.incidents = incidents;
 
     if (oldLen !== incidents.length) {
@@ -892,9 +859,8 @@ class IncidentNode {
         CosmoScout.notifications.print(
             'New Incidents', `Added ${added} new incident(s)`, 'post_add');
       } else {
-        CosmoScout.notifications.print('Incidents removed',
-                                       `${Math.abs(added)} incident(s) removed`,
-                                       'delete');
+        CosmoScout.notifications.print(
+            'Incidents removed', `${Math.abs(added)} incident(s) removed`, 'delete');
       }
     }
 
@@ -914,45 +880,43 @@ class IncidentNode {
 
     // Creates optgroups for each workflow kind. Incidents are further sorted by
     // status (active, completed, ...)
-    Object.entries(sorted)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .forEach(entry => {
-          const [kind, incidents] = entry;
-          const group = document.createElement('optgroup');
-          group.label =
-              `${kind.charAt(0).toUpperCase()}${kind.slice(1).toLowerCase()}`
+    Object.entries(sorted).sort((a, b) => a[0].localeCompare(b[0])).forEach(entry => {
+      const [kind, incidents] = entry;
+      const group             = document.createElement('optgroup');
+      group.label             = `${kind.charAt(0).toUpperCase()}${kind.slice(1).toLowerCase()}`
 
-          incidents.sort((a, b) => { return a.status.localeCompare(b.status); })
-              .forEach((incident, index, incidents) => {
-                // Add a divider if the previous incident has a different status
-                // than the current one
-                const addDivider =
-                    typeof incidents[index - 1] !== 'undefined' &&
-                    incident.status !== incidents[index - 1].status &&
-                    incidents.length - 1 !== index;
+      incidents
+          .sort((a, b) => {
+            return a.status.localeCompare(b.status);
+          })
+          .forEach((incident, index, incidents) => {
+            // Add a divider if the previous incident has a different status
+            // than the current one
+            const addDivider = typeof incidents[index - 1] !== 'undefined' &&
+                               incident.status !== incidents[index - 1].status &&
+                               incidents.length - 1 !== index;
 
-                if (addDivider === true) {
-                  const divider = document.createElement('option');
-                  divider.dataset.divider = true;
-                  group.appendChild(divider);
-                }
+            if (addDivider === true) {
+              const divider           = document.createElement('option');
+              divider.dataset.divider = true;
+              group.appendChild(divider);
+            }
 
-                const option = document.createElement('option');
-                option.text = `${incident.name} - ${
-                    incident.status.charAt(0).toUpperCase()}${
-                    incident.status.slice(1).toLowerCase()}`;
-                option.value = incident.uuid;
+            const option = document.createElement('option');
+            option.text  = `${incident.name} - ${incident.status.charAt(0).toUpperCase()}${
+                incident.status.slice(1).toLowerCase()}`;
+            option.value = incident.uuid;
 
-                if (incident.uuid === activeIncident) {
-                  node.data.activeIncident = activeIncident;
-                  option.selected = true;
-                }
+            if (incident.uuid === activeIncident) {
+              node.data.activeIncident = activeIncident;
+              option.selected          = true;
+            }
 
-                group.appendChild(option);
-              });
+            group.appendChild(option);
+          });
 
-          incidentSelect.appendChild(group);
-        });
+      incidentSelect.appendChild(group);
+    });
 
     // If new incidents are present - Re-create the selectpicker
     if (oldLen !== incidents.length) {
@@ -992,15 +956,14 @@ class IncidentNode {
       datasets = [];
     }
 
-    const activeDataset =
-        Array.from(element.selectedOptions).map(option => option.value);
+    const activeDataset = Array.from(element.selectedOptions).map(option => option.value);
 
     if (datasets.length === 0 && node.data.incidentDatasets.length === 0) {
       return false;
     }
 
     // Don't load if incidents are the same
-    const oldLen = node.data.incidentDatasets.length;
+    const oldLen               = node.data.incidentDatasets.length;
     node.data.incidentDatasets = datasets;
 
     if (oldLen === datasets.length) {
@@ -1008,15 +971,14 @@ class IncidentNode {
     } else {
       const added = datasets.length - oldLen;
       if (added > 0) {
-        CosmoScout.notifications.print(
-            'New Dataset', `Added ${added} new dataset(s)`, 'note_add');
+        CosmoScout.notifications.print('New Dataset', `Added ${added} new dataset(s)`, 'note_add');
       } else {
         CosmoScout.notifications.print(
             'Datasets removed', `${Math.abs(added)} were removed`, 'delete');
       }
     }
 
-    node.data.activeIncidentDatasets = [ datasets[0].uuid ];
+    node.data.activeIncidentDatasets = [datasets[0].uuid];
 
     $(element).selectpicker('destroy');
     CosmoScout.gui.clearHtml(element);
@@ -1024,24 +986,23 @@ class IncidentNode {
     datasets.forEach((dataset, index, datasets) => {
       // Insert a divider, if the day of the previous created date differs from
       // the current one (we only check the days)
-      const addDivider = typeof datasets[index - 1] !== 'undefined' &&
-                         dataset.date_created.substr(0, 2) !==
-                             datasets[index - 1].date_created.substr(0, 2) &&
-                         datasets.length - 1 !== index;
+      const addDivider =
+          typeof datasets[index - 1] !== 'undefined' &&
+          dataset.date_created.substr(0, 2) !== datasets[index - 1].date_created.substr(0, 2) &&
+          datasets.length - 1 !== index;
 
       if (addDivider === true) {
-        const divider = document.createElement('option');
+        const divider           = document.createElement('option');
         divider.dataset.divider = true;
         element.appendChild(divider);
       }
 
       const option = document.createElement('option');
-      option.text =
-          `${dataset.name.replaceAll('.zip', '')} - ${dataset.date_created}`;
+      option.text  = `${dataset.name.replaceAll('.zip', '')} - ${dataset.date_created}`;
       option.value = dataset.uuid;
 
       if (activeDataset.includes(dataset.uuid)) {
-        option.selected = true;
+        option.selected                  = true;
         node.data.activeIncidentDatasets = activeDataset;
       }
 
@@ -1083,10 +1044,9 @@ class IncidentNode {
    * Number}|null}
    */
   static getOutputDefinitionForType(type) {
-    const outputType =
-        Object.entries(IncidentNode.outputTypes).find(outputDefinition => {
+    const outputType = Object.entries(IncidentNode.outputTypes).find(outputDefinition => {
             return type === outputDefinition[0] || (outputDefinition[1].mappings ?? []).includes(type);
-        });
+    });
 
     if (typeof outputType !== 'undefined') {
       return outputType[1];
@@ -1101,14 +1061,14 @@ class IncidentNode {
    * @param {Node} node
    */
   static unsetNodeValues(node) {
-    node.data.activeOutputTypes = [];
-    node.data.loadedDataHashes = [];
-    node.data.currentMetadata = {};
-    node.data.activeIncident = '';
+    node.data.activeOutputTypes      = [];
+    node.data.loadedDataHashes       = [];
+    node.data.currentMetadata        = {};
+    node.data.activeIncident         = '';
     node.data.activeIncidentDatasets = [];
-    node.data.incidents = [];
-    node.data.incidentDatasets = [];
-    node.data.incidentDatasetLoaded = false;
+    node.data.incidents              = [];
+    node.data.incidentDatasets       = [];
+    node.data.incidentDatasetLoaded  = false;
 
     if (typeof node.data.incidentDatasetSelect === 'object') {
       $(node.data.incidentDatasetSelect).selectpicker('destroy');
@@ -1127,8 +1087,8 @@ class IncidentNode {
       return;
     }
 
-    const activeIncident = node.data.incidents.find(
-        incident => incident.uuid === node.data.activeIncident);
+    const activeIncident =
+        node.data.incidents.find(incident => incident.uuid === node.data.activeIncident);
 
     if (typeof activeIncident === 'undefined') {
       return;
@@ -1192,24 +1152,21 @@ class IncidentNode {
      * @param {Array} metadata
      */
     node.data.fn.addOutputs = metadata => {
-      const added =
-          node.outputs.filter(output => typeof output.hash !== 'undefined')
-              .map(output => output.hash);
+      const added = node.outputs.filter(output => typeof output.hash !== 'undefined')
+                        .map(output => output.hash);
 
-      metadata.filter(dataset => !added.includes(dataset.hash))
-          .forEach(dataset => {
-            const definition =
-                IncidentNode.getOutputDefinitionForType(dataset.type);
+      metadata.filter(dataset => !added.includes(dataset.hash)).forEach(dataset => {
+        const definition = IncidentNode.getOutputDefinitionForType(dataset.type);
 
-            const output = new D3NE.Output(
-                `${dataset.name.replaceAll('.zip', '')} - ${definition.name}`,
-                CosmoScout.vestecNE.sockets[definition.root],
-            );
-            output.hash = dataset.hash;
-            output.uuid = dataset.uuid;
+        const output = new D3NE.Output(
+            `${dataset.name.replaceAll('.zip', '')} - ${definition.name}`,
+            CosmoScout.vestecNE.sockets[definition.root],
+        );
+        output.hash = dataset.hash;
+        output.uuid = dataset.uuid;
 
-            node.addOutput(output);
-          });
+        node.addOutput(output);
+      });
     };
 
     /**
@@ -1225,13 +1182,12 @@ class IncidentNode {
 
       let outputsToRemove = [];
       node.outputs.forEach((output, idx) => {
-        if (typeof output.hash !== 'undefined' &&
-            !activeHashes.includes(output.hash)) {
+        if (typeof output.hash !== 'undefined' && !activeHashes.includes(output.hash)) {
           outputsToRemove.push(idx);
         }
       });
 
-      outputsToRemove = outputsToRemove.sort();
+      outputsToRemove      = outputsToRemove.sort();
       const outputsRemoved = outputsToRemove.length > 0;
 
       while (outputsToRemove.length) {
@@ -1252,7 +1208,9 @@ class IncidentNode {
      *
      * @returns {Array}
      */
-    node.data.fn.getOutputs = () => { return node.outputs; };
+    node.data.fn.getOutputs = () => {
+      return node.outputs;
+    };
   }
 
   /**
@@ -1271,8 +1229,7 @@ class IncidentNode {
    * @param {boolean|number} ready
    */
   static setDatasetReady(nodeId, datasetUuid, ready = true) {
-    const node = CosmoScout.vestecNE.editor.nodes.find(
-        (editorNode) => editorNode.id === nodeId);
+    const node = CosmoScout.vestecNE.editor.nodes.find((editorNode) => editorNode.id === nodeId);
 
     if (typeof node === 'undefined') {
       return;

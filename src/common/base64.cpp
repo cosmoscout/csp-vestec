@@ -34,18 +34,18 @@
 #include <algorithm>
 #include <stdexcept>
 
-static const char *base64_chars[1] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+static const char* base64_chars[1] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                       "abcdefghijklmnopqrstuvwxyz"
                                       "0123456789"
                                       "+/"};
 
-std::string encode_base64(unsigned char const *bytes_to_encode, size_t in_len) {
+std::string encode_base64(unsigned char const* bytes_to_encode, size_t in_len) {
 
   size_t len_encoded = (in_len + 2) / 3 * 4;
 
   unsigned char trailing_char = '=';
 
-  const char *base64_chars_ = base64_chars[0];
+  const char* base64_chars_ = base64_chars[0];
 
   std::string ret;
   ret.reserve(len_encoded);
