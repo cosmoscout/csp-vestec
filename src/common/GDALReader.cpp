@@ -110,6 +110,10 @@ void GDALReader::ReadGrayScaleTexture(GreyScaleTexture &texture,
     return;
   }
 
+  if (poDatasetSrc->GetRasterCount() < layer) {
+    layer = 1;
+  }
+
   if (poDatasetSrc->GetProjectionRef() == nullptr) {
     csp::vestec::logger().error(
         "[GDALReader::ReadGrayScaleTexture] No projection defined for {}",

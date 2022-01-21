@@ -1,0 +1,14 @@
+Area,Disease,Month,Barycenter,FILE
+rome,zika,0,0,data/rome_zika_0_0.vtu
+rome,zika,1,0,data/rome_zika_1_0.vtu
+rome,zika,2,0,data/rome_zika_2_0.vtu
+rome,zika,3,0,data/rome_zika_3_0.vtu
+rome,zika,4,0,data/rome_zika_4_0.vtu
+rome,zika,5,0,data/rome_zika_5_0.vtu
+rome,zika,6,0,data/rome_zika_6_0.vtu
+rome,zika,7,0,data/rome_zika_7_0.vtu
+rome,zika,8,0,data/rome_zika_8_0.vtu
+rome,zika,9,0,data/rome_zika_9_0.vtu
+rome,zika,10,0,data/rome_zika_10_0.vtu
+rome,zika,11,0,data/rome_zika_11_0.vtu
+rome,zika,-1,1,data/rome_zika_-1_1.vtu

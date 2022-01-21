@@ -96,7 +96,7 @@ class TextureRenderNode {
 
     // Slider to control the layer
     const layerControl = new D3NE.Control(
-        `<div class="row">
+        `<div class="row" id="texture-node_${node.id}-layer_group">
       <div class="col-6 text">Layer:</div>
       <div class="col-6">
         <div id="texture-node_${node.id}-layer"></div>
@@ -107,6 +107,8 @@ class TextureRenderNode {
               element.querySelector(`#texture-node_${node.id}-layer`);
           noUiSlider.create(
               slider, {start : 1, animate : false, range : {min : 1, max : 1}});
+
+          $(element).hide();
 
           // Read the files for the given simulation mode and fill combobox when
           // mode is changed
@@ -465,11 +467,18 @@ class TextureRenderNode {
    * @param {Number} layers
    */
   static setNumberOfTextureLayers(id, layers) {
-    console.log("setNumberOfTextureLayers: " + layers);
     const node = CosmoScout.vestecNE.editor.nodes.find(node => node.id === id);
 
     if (typeof node === 'undefined') {
       return;
+    }
+
+    const group =
+        document.querySelector(`#texture-node_${node.id}-layer_group`);
+    if (layers == 1) {
+      $(group).hide();
+    } else {
+      $(group).show();
     }
 
     node.data.layers = layers;

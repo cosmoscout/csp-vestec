@@ -68,8 +68,9 @@ vec3 geodeticSurfaceNormal(vec2 lngLat) {
 
 vec3 toCartesian(vec2 lonLat, float h) {
   vec3 n = geodeticSurfaceNormal(lonLat);
-  vec3 k = n * (uRadii + h);
-  return k;
+  vec3 k = n * (uRadii + h) * (uRadii + h);
+  float gamma = sqrt(dot(k, n));
+  return k / gamma;
 }
 
 
@@ -92,6 +93,33 @@ void outputVertex(vec4 vPos, int i, int sides, vec4[5] positions)
     EmitVertex();
 }
 
+// ===========================================================================
+vec3 scaleToGeodeticSurface(vec3 cartesian, vec3 radii) {
+    vec3 radii2        = radii * radii;
+    vec3 radii4        = radii2 * radii2;
+    vec3 oneOverRadii2 = 1.0 / radii2;
+    vec3 cartesian2    = cartesian * cartesian;
+
+    float beta  = 1.0 / sqrt(dot(cartesian2, oneOverRadii2));
+    float n     = length(beta * cartesian * oneOverRadii2);
+    float alpha = (1.0 - beta) * (length(cartesian) / n);
+    float s     = 0.0;
+    float dSdA  = 1.0;
+
+    vec3 d;
+
+    do {
+        alpha -= (s / dSdA);
+
+        d    = vec3(1.0) + (alpha * oneOverRadii2);
+        s    = dot(cartesian2, 1.0 / (radii2 * d * d)) - 1.0;
+        dSdA = dot(cartesian2, 1.0 / (radii4 * d * d * d)) * -2.0;
+
+    } while (abs(s) > 0.00000000001);
+
+    return cartesian / d;
+}
+
 void main()
 {
     const int sides = 4;
@@ -111,11 +139,10 @@ void main()
     for (int i = 0; i < sides; i++) {
         float ang = (PI * 2.0 / sides * i) - PI / 4;
         vec4 offset = vec4(cos(ang), -sin(ang), 0.0, 0.0);
-        vec4 inPos = gl_in[0].gl_Position + offset * widthScale;
+        vec4 inPos = gl_in[0].gl_Position + offset * (widthScale*widthScale);
 
         vec3 posV = toCartesian(inPos.xy, heightScale);
-
-        vec3 scaledPos = posV;
+        vec3 scaledPos = posV;//scaleToGeodeticSurface(posV, uRadii);
 
         positions[i] = vec4(scaledPos.xyz, 1);
     }
@@ -175,7 +202,7 @@ void main()
     float ambientStrength = 0.2;
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
-    float diff = max(dot(fs_in.normal, -uSunDirection), 0.0);
+    float diff = max(dot(fs_in.normal, uSunDirection), 0.0);
     vec3 diffuse = diff * lightColor;
     vec3 ambient = ambientStrength * lightColor;
 
