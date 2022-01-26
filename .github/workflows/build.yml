@@ -1,0 +1,38 @@
+name: Clang-Format
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  clang_format:
+    name: Run Clang-Format
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Download Utilities
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang-format dos2unix
+      - name: Run Clang-Format
+        run: |
+          SRC_DIR="$( cd "$( dirname "$0" )" && pwd )"
+
+          find "./src" "./gui" -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.inl' -o -name '*.js' \) -and ! -path '*third-party*' -exec sh -c '
+            for file do
+              dos2unix "$file"
+              echo "Formatting $file..."
+              clang-format -i "$file"
+            done
+          ' sh {} +
+      - name: Commit report
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'cosmoscout-vr@users.noreply.github.com'
+          git commit -am ":sparkles: Automated Clang-Format" || echo "Nothing to commit"
+          git push

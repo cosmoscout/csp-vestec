@@ -1,0 +1,5 @@
+This folder is at the beginning just for testing our developments. The real data will be received from the object store later on
+
+You can find the test data on DLR FTP server
+ftp://VESTEC@ftp.dlr.de/datasets/
+PW: RYisfeL2
