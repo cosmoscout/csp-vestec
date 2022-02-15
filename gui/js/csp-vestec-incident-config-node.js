@@ -41,26 +41,6 @@ class IncidentConfigNode {
         },
     );
 
-    const regionSelect = new D3NE.Control(
-        `<div class="row">
-<div class="col-4"><label for="incident_config_node_select_region_${
-            node.id}">Region</label></div>
-<div class="col-8">
-  <select id="incident_config_node_select_region_${node.id}" class="combobox">
-    <option value="rome">Rome</option>
-    <option value="trento">Trento</option>
-  </select>
-</div></div>`,
-        (element, control) => {
-          const select = element.querySelector(
-              `#incident_config_node_select_region_${node.id}`);
-          $(select).selectpicker();
-
-          control.putData('regionSelect', select);
-          $(element).selectpicker();
-        },
-    );
-
     const diseaseSelect = new D3NE.Control(
         `<div class="row">
 <div class="col-4"><label for="incident_config_node_select_disease_${
@@ -84,7 +64,7 @@ class IncidentConfigNode {
     const countInput = new D3NE.Control(
         `<div class="row">
 <div class="col-4"><label for="incident_config_node_count_input_${
-            node.id}">Count</label></div>
+            node.id}">Sim. count</label></div>
 <div class="col-8"><input id="incident_config_node_count_input_${
             node.id}" type="number" min="1" value="200" style="display: block; width: 100%" /></div>
 </div>`,
@@ -95,13 +75,27 @@ class IncidentConfigNode {
         },
     );
 
+    const tileInput = new D3NE.Control(
+      `<div class="row">
+<div class="col-4"><label for="incident_config_node_tile_input_${
+          node.id}">Num. tiles</label></div>
+<div class="col-8"><input id="incident_config_node_tile_input_${
+          node.id}" type="number" min="1" value="64" style="display: block; width: 100%" /></div>
+</div>`,
+      (element, control) => {
+        control.putData('tileInput',
+                        element.querySelector(
+                            `#incident_config_node_tile_input_${node.id}`));
+      },
+  );
+
     node.addControl(mosquitoSpecies);
-    node.addControl(regionSelect);
     node.addControl(diseaseSelect);
     node.addControl(countInput);
+    node.addControl(tileInput);
 
     const configOutput = new D3NE.Output(
-        'Test Stage Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG)
+        'Workflow Config', CosmoScout.vestecNE.sockets.INCIDENT_CONFIG)
 
     node.addOutput(configOutput);
 
@@ -113,12 +107,20 @@ class IncidentConfigNode {
    * @param {Array} _inputs - Unused
    * @param {Array} outputs - The config
    */
+  // species, disease, count, lat_first_point, lon_first_point, lat_second_point, lon_second_point, n_max_tiles):
+  // 200, 41, 12, 42, 13, 4
   async worker(node, _inputs, outputs) {
+    
     outputs[0] = {
       species : node.data.speciesSelect.value,
-      region : node.data.regionSelect.value,
+      //region : node.data.regionSelect.value,
       disease : node.data.diseaseSelect.value,
       count : node.data.countInput.value,
+      lat_first_point: 50,
+      lon_first_point: 13,
+      lat_second_point: 53,
+      lon_second_point: 14,
+      n_max_tiles: node.data.tileInput.value
     };
   }
 

@@ -34,7 +34,7 @@ class TransferFunctionSourceNode {
               }, {
                 width : 300,
                 height : 120,
-                defaultFunction : "BlackBody.json",
+                defaultFunction : "BuRd.json",
                 fitToData : true
               });
           control.putData('fn', fn);

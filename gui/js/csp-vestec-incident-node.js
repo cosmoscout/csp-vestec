@@ -64,7 +64,7 @@ class IncidentNode {
    *
    * @type {number}
    */
-  static NUM_WORKITEMS_PER_STAGE = 4;
+  static NUM_WORKITEMS_PER_STAGE = 2;
 
   /**
    * Supported output types
@@ -92,6 +92,7 @@ class IncidentNode {
             '2D_FIRE',
             'MOSQUITO MOSAIC OUTPUT',
             'MOSQUITO CONVERT OUTPUT',
+            'MOSQUITO SIMULATION OUTPUT'
           ],
       index: 1,
     },
@@ -306,6 +307,21 @@ class IncidentNode {
           // Uses the input from 'Test Stage Config' if the node is present
           // TODO: Support for incident configs need to be re-added to vestec
           incidentTestStageButton.addEventListener('click', async () => {
+            const metaDataResponse = await CosmoScout.vestec.api.getIncident(node.data.activeIncident);
+            const metaData = await metaDataResponse.json();
+          
+            var ul = metaData.upper_left_latlong.split(" ");
+            var lr = metaData.lower_right_latlong.split(" ");
+
+            var p1 = Math.min(parseInt(ul[1]), parseInt(lr[1]));
+            var p2 = Math.max(parseInt(ul[1]), parseInt(lr[1]));
+            var p3 = Math.min(parseInt(ul[0]), parseInt(lr[0]));
+            var p4 = Math.max(parseInt(ul[0]), parseInt(lr[0]));
+
+            node.data.testStageConfig[0].lat_first_point = p1;
+            node.data.testStageConfig[0].lat_second_point = p2;
+            node.data.testStageConfig[0].lon_first_point = p3;
+            node.data.testStageConfig[0].lon_second_point = p4;
             const testStageResponse =
                 await CosmoScout.vestec.api.testIncident(node.data.activeIncident, node.data?.testStageConfig[0] ?? {}).catch(() => {
           CosmoScout.notifications.print('Test failed',
@@ -568,13 +584,13 @@ class IncidentNode {
     }
 
     // Only check simulations from the last 60 minutes
-    const includeMinutes = 60;
+    const includeMinutes = 20;
     const includeDate = new Date(Date.now() - (1000 * 60 * includeMinutes));
 
     const activeIncident =
         await CosmoScout.vestec.getIncident(node.data.activeIncident);
 
-    if (activeIncident !== node.data.simulationUpdateIncidentUUID) {
+    if (node.data.activeIncident !== node.data.simulationUpdateIncidentUUID) {
       clearInterval(node.data.simulationUpdateInterval);
       node.data.simulationUpdateIncidentUUID = null;
       return;
@@ -632,15 +648,16 @@ class IncidentNode {
 
       if (currentSimulations[0].status !== 'COMPLETED') {
         node.data.incidentTestStageStatusText.appendChild(spinner)
-        console.log(`Workflow: ${statusText}`);
+        return;
       }
       else {
-        CosmoScout.notifications.print(
+        if (parseInt(node.data.incidentTestStageProgress.value) !== IncidentNode.NUM_WORKITEMS_PER_STAGE)
+        {
+            CosmoScout.notifications.print(
             'Simulation Step Done', `A simulation step was completed`, 'done');
-
-        // Increment the progress bar
-        node.data.incidentTestStageProgress.value =
-            parseInt(node.data.incidentTestStageProgress.value) + 1;
+              // Increment the progress bar
+            node.data.incidentTestStageProgress.value = parseInt(node.data.incidentTestStageProgress.value) + 1;
+        }
       }
     } else if (currentSimulations.length === 0 ||
                parseInt(node.data.incidentTestStageProgress.value) ===
@@ -848,7 +865,6 @@ class IncidentNode {
     if (typeof metadata.type !== 'undefined' && metadata.type !== null) {
       // Normalize the type
       metadata.type = metadata.type.toUpperCase();
-
       return {
         metadata,
         hash : datasetId + incidentId,

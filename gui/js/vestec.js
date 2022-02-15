@@ -341,6 +341,8 @@ class Vestec {
           diseaseOfInterest : incident.diseaseOfInterest,
         }),
     );
+    console.log(incident.upperLeftLatlong);
+    console.log(incident.lowerRightLatlong);
 
     return Vestec.buildResponse(response, 'incidentid');
   }
@@ -728,6 +730,7 @@ class Vestec {
    * @returns {Promise<Response>}
    */
   async testIncident(incidentId, data) {
+    console.log("JSON: " + JSON.stringify(data));
     const response = await fetch(
         this._buildRequest(`EDI/test_stage_${incidentId}`, data, 'POST'),
     );
