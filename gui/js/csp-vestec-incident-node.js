@@ -87,12 +87,8 @@ class IncidentNode {
       root: 'TEXTURES',
       mappings:
           [
-            'TEXTURE',
-            'DISEASES_TEXTURE',
-            '2D_FIRE',
-            'MOSQUITO MOSAIC OUTPUT',
-            'MOSQUITO CONVERT OUTPUT',
-            'MOSQUITO SIMULATION OUTPUT'
+            'TEXTURE', 'DISEASES_TEXTURE', '2D_FIRE', 'MOSQUITO MOSAIC OUTPUT',
+            'MOSQUITO CONVERT OUTPUT', 'MOSQUITO SIMULATION OUTPUT'
           ],
       index: 1,
     },
@@ -307,9 +303,10 @@ class IncidentNode {
           // Uses the input from 'Test Stage Config' if the node is present
           // TODO: Support for incident configs need to be re-added to vestec
           incidentTestStageButton.addEventListener('click', async () => {
-            const metaDataResponse = await CosmoScout.vestec.api.getIncident(node.data.activeIncident);
+            const metaDataResponse = await CosmoScout.vestec.api.getIncident(
+                node.data.activeIncident);
             const metaData = await metaDataResponse.json();
-          
+
             var ul = metaData.upper_left_latlong.split(" ");
             var lr = metaData.lower_right_latlong.split(" ");
 
@@ -651,12 +648,14 @@ class IncidentNode {
         return;
       }
       else {
-        if (parseInt(node.data.incidentTestStageProgress.value) !== IncidentNode.NUM_WORKITEMS_PER_STAGE)
-        {
-            CosmoScout.notifications.print(
-            'Simulation Step Done', `A simulation step was completed`, 'done');
-              // Increment the progress bar
-            node.data.incidentTestStageProgress.value = parseInt(node.data.incidentTestStageProgress.value) + 1;
+        if (parseInt(node.data.incidentTestStageProgress.value) !==
+            IncidentNode.NUM_WORKITEMS_PER_STAGE) {
+          CosmoScout.notifications.print('Simulation Step Done',
+                                         `A simulation step was completed`,
+                                         'done');
+          // Increment the progress bar
+          node.data.incidentTestStageProgress.value =
+              parseInt(node.data.incidentTestStageProgress.value) + 1;
         }
       }
     } else if (currentSimulations.length === 0 ||

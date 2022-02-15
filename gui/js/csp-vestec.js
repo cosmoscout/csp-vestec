@@ -152,23 +152,16 @@
       // Todo format according to vestec
       this._incidentLowerRightInput.value = data;
     }
-    
-     /**
-     * @returns {string}
-     */
-    get getStartLatLong()
-    {
-      return this._incidentUpperLeftInput.value;
-    }
 
-     
-     /**
+    /**
      * @returns {string}
      */
-    get getEndLatLong()
-    {
-      return this._incidentLowerRightInput.value;
-    }
+    get getStartLatLong() { return this._incidentUpperLeftInput.value; }
+
+    /**
+     * @returns {string}
+     */
+    get getEndLatLong() { return this._incidentLowerRightInput.value; }
 
     /**
      * GETTER | SETTER
